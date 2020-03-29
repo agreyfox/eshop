@@ -273,7 +273,7 @@ func setFieldView(field *generateField, viewType string) error {
 		return err
 	}
 
-	tmplDir := filepath.Join(pwd, "cmd", "dms", "templates")
+	tmplDir := filepath.Join(pwd, "cmd", "dmss", "templates")
 	tmplFromWithDelims := func(filename string, delim [2]string) (*template.Template, error) {
 		if delim[0] == "" || delim[1] == "" {
 			delim = [2]string{"{{", "}}"}
@@ -384,7 +384,7 @@ func generateContentType(args []string) error {
 		return fmt.Errorf("Failed to parse type args: %s", err.Error())
 	}
 
-	tmplPath := filepath.Join(pwd, "cmd", "dms", "templates", "gen-content.tmpl")
+	tmplPath := filepath.Join(pwd, "cmd", "dmss", "templates", "gen-content.tmpl")
 	tmpl, err := template.ParseFiles(tmplPath)
 	if err != nil {
 		return fmt.Errorf("Failed to parse template: %s", err.Error())

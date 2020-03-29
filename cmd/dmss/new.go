@@ -208,7 +208,7 @@ func createProjectInDir(path string) error {
 	if err != nil {
 		return err
 	}
-	staticSrc := filepath.Join(dir, "dms", "system", "admin", "static")
+	staticSrc := filepath.Join(dir, "dmss", "system", "admin", "static")
 
 	fmt.Printf("==>Copy the static dir  %s to %s \n", staticSrc, staticPath)
 	err = copyAll(staticSrc, staticPath)

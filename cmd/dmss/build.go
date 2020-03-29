@@ -22,14 +22,14 @@ func buildDmsServer() error {
 
 	// copy all ./addons files & dirs to internal vendor directory
 	src = "addons"
-	dst = filepath.Join("cmd", "dms", "vendor")
+	dst = filepath.Join("cmd", "dmss", "vendor")
 	err = copyFilesWarnConflicts(src, dst, nil)
 	if err != nil {
 		return err
 	}
 
 	// execute go build -o ponzu-cms cmd/ponzu/*.go
-	cmdPackageName := strings.Join([]string{".", "cmd", "dms"}, "/")
+	cmdPackageName := strings.Join([]string{".", "cmd", "dmss"}, "/")
 	buildOptions := []string{"build", "-o", buildOutputName(), cmdPackageName}
 	return execAndWait(gocmd, buildOptions...)
 }

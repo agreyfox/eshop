@@ -15,13 +15,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/agreyfox/internal/system/db"
-
-	_ "eshop/content"
-
+	_ "github.com/agreyfox/eshop/content"
 	"github.com/agreyfox/internal/system/admin"
 	"github.com/agreyfox/internal/system/api"
 	"github.com/agreyfox/internal/system/api/analytics"
+	"github.com/agreyfox/internal/system/db"
 	"github.com/agreyfox/internal/system/tls"
 
 	"github.com/spf13/cobra"

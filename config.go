@@ -1,5 +1,2 @@
-package github.com/agreyfox/eshop
+package github.com/agreyfox/eshop/content
 
-func Config() string {
-  return "modlib config"
-}

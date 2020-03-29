@@ -35,14 +35,14 @@ $ dms version --cli
 func version(isCLI bool) (map[string]interface{}, error) {
 	kv := make(map[string]interface{})
 
-	info := filepath.Join("cmd", "dms", "dms.json")
+	info := filepath.Join("cmd", "dmss", "dms.json")
 	if isCLI {
 		gopath, err := getGOPATH()
 		if err != nil {
 			return nil, err
 		}
-		repo := filepath.Join(gopath, "dms")
-		info = filepath.Join(repo, "cmd", "dms", "dms.json")
+		repo := filepath.Join(gopath, "dmss")
+		info = filepath.Join(repo, "cmd", "dmss", "dms.json")
 	}
 
 	b, err := ioutil.ReadFile(info)
