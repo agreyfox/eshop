@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "/home/lq/ifb"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"git.ignoreLimitWarning": true
+	}
+}
