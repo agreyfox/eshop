@@ -13,7 +13,9 @@ import (
 )
 
 func searchContentHandler(res http.ResponseWriter, req *http.Request) {
+
 	qs := req.URL.Query()
+
 	t := qs.Get("type")
 	// type must be set, future version may compile multi-type result set
 	if t == "" {

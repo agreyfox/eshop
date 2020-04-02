@@ -17,11 +17,20 @@ import (
 
 // User defines a admin user in the system
 type User struct {
-	ID    int    `json:"id"`
-	Email string `json:"email"`
-	Hash  string `json:"hash"`
-	Salt  string `json:"salt"`
+	ID     int         `json:"id"`
+	Email  string      `json:"email"`
+	Hash   string      `json:"hash"`
+	Salt   string      `json:"salt"`
+	Locale string      `json:"locale"`
+	Perm   Permissions `json:"perm"`
+	Phone  string      `json:phone`
+	meta   string      `json:metadata`
 }
+
+const (
+	// use for cookie name
+	Lqcmstoken string = "lqcms_token"
+)
 
 var (
 	r = mrand.New(mrand.NewSource(time.Now().Unix()))
@@ -43,6 +52,29 @@ func New(email, password string) (*User, error) {
 		Email: email,
 		Hash:  string(hash),
 		Salt:  base64.StdEncoding.EncodeToString(salt),
+		Perm:  AdminPermmission,
+	}
+
+	return user, nil
+}
+
+// New creates a customer user from web
+func NewCustomer(email, password string) (*User, error) {
+	salt, err := randSalt()
+	if err != nil {
+		return nil, err
+	}
+
+	hash, err := hashPassword([]byte(password), salt)
+	if err != nil {
+		return nil, err
+	}
+
+	user := &User{
+		Email: email,
+		Hash:  string(hash),
+		Salt:  base64.StdEncoding.EncodeToString(salt),
+		Perm:  CustomerPermission,
 	}
 
 	return user, nil
@@ -61,10 +93,25 @@ func Auth(next http.HandlerFunc) http.HandlerFunc {
 	})
 }
 
+// Auth is HTTP middleware to ensure the request has proper token credentials
+func CustomerAuth(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
+		//redir := req.URL.Scheme + req.URL.Host + "/api/login"
+
+		if IsValid(req) {
+			next.ServeHTTP(res, req)
+		} else {
+			http.Redirect(res, req, "/", http.StatusForbidden)
+		}
+	})
+}
+
 // IsValid checks if the user request is authenticated
 func IsValid(req *http.Request) bool {
+	log.Println("User is trying to login ")
+	log.Printf("%v", req)
 	// check if token exists in cookie
-	cookie, err := req.Cookie("_token")
+	cookie, err := req.Cookie(Lqcmstoken)
 	if err != nil {
 		return false
 	}

@@ -4,13 +4,21 @@
 package api
 
 import (
-	"fmt"
 	"net/http"
+
+	"github.com/agreyfox/eshop/system/api/user"
+	"github.com/agreyfox/eshop/system/logs"
+	"go.uber.org/zap"
+)
+
+var (
+	err    error
+	logger *zap.SugaredLogger = logs.Log.Sugar()
 )
 
 // Run adds Handlers to default http listener for API
 func Run() {
-	fmt.Println("run api interface")
+	logger.Debug("Start api interface")
 	http.HandleFunc("/api/contents", Record(CORS(Gzip(contentsHandler))))
 
 	http.HandleFunc("/api/content", Record(CORS(Gzip(contentHandler))))
@@ -21,7 +29,14 @@ func Run() {
 
 	http.HandleFunc("/api/content/delete", Record(CORS(deleteContentHandler)))
 
-	http.HandleFunc("/api/search", Record(CORS(Gzip(searchContentHandler))))
+	http.HandleFunc("/api/search", Record(user.CustomerAuth(CORS(Gzip(searchContentHandler)))))
 
-	http.HandleFunc("/api/uploads", Record(CORS(Gzip(uploadsHandler))))
+	http.HandleFunc("/api/uploads", Record(user.CustomerAuth(CORS(Gzip(uploadsHandler)))))
+
+	http.HandleFunc("/api/user/register", user.RegisterUsersHandler)
+	http.HandleFunc("/api/user/login", user.LoginHandler)
+
+	http.HandleFunc("/api/user/logout", user.CustomerAuth(user.LogoutHandler))
+	http.HandleFunc("/api/user/forgot", user.CustomerAuth(user.ForgotPasswordHandler))
+	http.HandleFunc("/api/user/recovery", user.RecoveryKeyHandler)
 }

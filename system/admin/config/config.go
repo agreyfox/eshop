@@ -27,6 +27,8 @@ type Config struct {
 	CacheInvalidate         []string `json:"cache"`
 	BackupBasicAuthUser     string   `json:"backup_basic_auth_user"`
 	BackupBasicAuthPassword string   `json:"backup_basic_auth_password"`
+	LogLevel                string   `json:"log_level"`
+	LogFile                 string   `json:"log_file"`
 }
 
 const (

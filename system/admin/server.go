@@ -2,7 +2,6 @@ package admin
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -11,10 +10,18 @@ import (
 	"github.com/agreyfox/eshop/system/admin/user"
 	"github.com/agreyfox/eshop/system/api"
 	"github.com/agreyfox/eshop/system/db"
+	"github.com/agreyfox/eshop/system/logs"
+	"go.uber.org/zap"
+)
+
+var (
+	err    error
+	logger *zap.SugaredLogger = logs.Log.Sugar()
 )
 
 // Run adds Handlers to default http listener for Admin
 func Run() {
+	logger.Debug("Start admin interface")
 	http.HandleFunc("/admin", user.Auth(adminHandler))
 
 	http.HandleFunc("/admin/init", initHandler)
@@ -48,14 +55,20 @@ func Run() {
 
 	pwd, err := os.Getwd()
 	if err != nil {
-		log.Fatalln("Couldn't find current directory for file server.")
+		logger.Error("Couldn't find current directory for file server.")
 	}
 
 	staticDir := filepath.Join(pwd, "static")
 
-	fmt.Printf("Server static  root is %s\n", staticDir)
+	logger.Infof("Server static  root is %s\n", staticDir)
 
 	http.Handle("/admin/static/", http.StripPrefix("/admin/static/", db.CacheControl(http.FileServer(restrict(http.Dir(staticDir))))))
+	pageDir := filepath.Join(pwd, "pages")
+
+	logger.Debugf("Magement server   root is %s\n", pageDir)
+
+	http.Handle("/admin/pages/", http.StripPrefix("/admin/pages/", http.FileServer(restrict(http.Dir(pageDir)))))
+
 	//http.Handle("/admin/static/", http.StripPrefix("/admin/static/", http.FileServer(http.Dir(staticDir))))
 	// API path needs to be registered within server package so that it is handled
 	// even if the API server is not running. Otherwise, images/files uploaded
@@ -72,7 +85,7 @@ func Run() {
 func Docs(port int) {
 	pwd, err := os.Getwd()
 	if err != nil {
-		log.Fatalln("Couldn't find current directory for file server.")
+		logger.Fatal("Couldn't find current directory for file server.")
 	}
 
 	docsDir := filepath.Join(pwd, "docs", "build")

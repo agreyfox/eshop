@@ -54,3 +54,7 @@ func init() {
 func (s *Site) String() string {
 	return fmt.Sprintf("Site: %s", s.UUID)
 }
+
+func (s *Site) IndexContent() bool {
+	return true
+}

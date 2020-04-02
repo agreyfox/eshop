@@ -5,7 +5,9 @@ import (
 	"log"
 	"time"
 
+	"github.com/agreyfox/eshop/system/logs"
 	"github.com/spf13/pflag"
+	"go.uber.org/zap"
 )
 
 var (
@@ -23,17 +25,20 @@ var (
 	dev   bool
 
 	year = fmt.Sprintf("%d", time.Now().Year())
+
+	logger *zap.SugaredLogger = logs.Log.Sugar()
 )
 
 func init() {
 	//cobra.OnInitialize(initConfig)
 
-	rootCmd.SetVersionTemplate("Lhcs version {{printf \"%s\" .Version}}\n")
-
+	rootCmd.SetVersionTemplate("lqcms version {{printf \"%s\" .Version}}\n")
+	logger.Info("lqcms starting.......")
 	pflags := rootCmd.PersistentFlags()
 	pflags.StringVar(&gocmd, "gocmd", "go", "custom go command if using beta or new release of Go")
 	//fmt.Println(pflags)
 	//	addServerFlags(flags)
+
 }
 
 func addServerFlags(flags *pflag.FlagSet) {
