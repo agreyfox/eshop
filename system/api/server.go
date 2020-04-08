@@ -4,10 +4,9 @@
 package api
 
 import (
-	"net/http"
-
 	"github.com/agreyfox/eshop/system/api/user"
 	"github.com/agreyfox/eshop/system/logs"
+	"github.com/go-zoo/bone"
 	"go.uber.org/zap"
 )
 
@@ -17,26 +16,29 @@ var (
 )
 
 // Run adds Handlers to default http listener for API
-func Run() {
+func Run(mainMux *bone.Mux) {
 	logger.Debug("Start api interface")
-	http.HandleFunc("/api/contents", Record(CORS(Gzip(contentsHandler))))
+	apiv1Mux := bone.New().Prefix("/v1")
+	apiv1Mux.HandleFunc("/contents", Record(CORS(Gzip(contentsHandler))))
 
-	http.HandleFunc("/api/content", Record(CORS(Gzip(contentHandler))))
+	apiv1Mux.HandleFunc("/content", Record(CORS(Gzip(contentHandler))))
 
-	http.HandleFunc("/api/content/create", Record(CORS(createContentHandler)))
+	apiv1Mux.HandleFunc("/content/create", Record(CORS(createContentHandler)))
 
-	http.HandleFunc("/api/content/update", Record(CORS(updateContentHandler)))
+	apiv1Mux.HandleFunc("/content/update", Record(CORS(updateContentHandler)))
 
-	http.HandleFunc("/api/content/delete", Record(CORS(deleteContentHandler)))
+	apiv1Mux.HandleFunc("/content/delete", Record(CORS(deleteContentHandler)))
 
-	http.HandleFunc("/api/search", Record(user.CustomerAuth(CORS(Gzip(searchContentHandler)))))
+	apiv1Mux.HandleFunc("/search", Record(user.CustomerAuth(CORS(Gzip(searchContentHandler)))))
 
-	http.HandleFunc("/api/uploads", Record(user.CustomerAuth(CORS(Gzip(uploadsHandler)))))
+	apiv1Mux.HandleFunc("/uploads", Record(user.CustomerAuth(CORS(Gzip(uploadsHandler)))))
 
-	http.HandleFunc("/api/user/register", user.RegisterUsersHandler)
-	http.HandleFunc("/api/user/login", user.LoginHandler)
+	apiv1Mux.HandleFunc("/user/register", CORS(user.RegisterUsersHandler))
+	apiv1Mux.HandleFunc("/user/login", CORS(user.LoginHandler))
+	apiv1Mux.HandleFunc("/user/renew", user.RenewHandler)
 
-	http.HandleFunc("/api/user/logout", user.CustomerAuth(user.LogoutHandler))
-	http.HandleFunc("/api/user/forgot", user.CustomerAuth(user.ForgotPasswordHandler))
-	http.HandleFunc("/api/user/recovery", user.RecoveryKeyHandler)
+	apiv1Mux.HandleFunc("/user/logout", user.CustomerAuth(user.LogoutHandler))
+	apiv1Mux.HandleFunc("/user/forgot", user.CustomerAuth(user.ForgotPasswordHandler))
+	apiv1Mux.HandleFunc("/user/recovery", user.RecoveryKeyHandler)
+	mainMux.SubRoute("/api", apiv1Mux)
 }

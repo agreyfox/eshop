@@ -50,3 +50,18 @@ func stripPrefix(prefix string, h http.Handler) http.Handler {
 		h.ServeHTTP(w, r2)
 	})
 }
+
+/*
+func DecodeJwt(token string) map[string]interface{} {
+	data := strings.Split(token, ".")
+	fmt.Printf("%v", data)
+	var target map[string]interface{}
+	if len(data) > 1 {
+		dt, _ := base64.StdEncoding.DecodeString(data[1])
+		fmt.Println(dt)
+		err := json.Unmarshal(dt, &target)
+		fmt.Println(err)
+	}
+	fmt.Println(target)
+	return target
+} */

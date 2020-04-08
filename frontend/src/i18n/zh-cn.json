@@ -1,4 +1,12 @@
 {
+  "menu": {
+    "PRODUCT": "产品管理",
+    "SALES": "优惠管理",
+    "ORDER": "订单管理",
+    "INFO": "信息管理",
+    "SYSTEM": "系统管理",
+    "SYS_NAME": "商店管理系统"
+  },
   "permanent": "永久",
   "buttons": {
     "shell": "激活 shell",
@@ -196,6 +204,7 @@
     "hugoNew": "Hugo New",
     "preview": "预览"
   },
+
   "search": {
     "images": "图像",
     "music": "音乐",

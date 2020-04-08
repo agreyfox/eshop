@@ -3,6 +3,7 @@ package user
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
@@ -11,7 +12,10 @@ import (
 	"github.com/agreyfox/eshop/system/admin/user"
 	"github.com/agreyfox/eshop/system/db"
 	"github.com/agreyfox/eshop/system/logs"
+
+	//jwt "github.com/dgrijalva/jwt-go"
 	emailer "github.com/nilslice/email"
+
 	"github.com/nilslice/jwt"
 	"go.uber.org/zap"
 )
@@ -78,6 +82,27 @@ func RegisterUsersHandler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func getJsonFromBody(req *http.Request) map[string]interface{} {
+	var body string
+	bodyBytes, err := ioutil.ReadAll(req.Body)
+	defer req.Body.Close()
+	if err != nil {
+		body = fmt.Sprintf("failed read Read response body: %v", err)
+		logger.Debug(body)
+		return map[string]interface{}{}
+	}
+	var t map[string]interface{}
+
+	//fmt.Println(body)
+
+	if err = json.Unmarshal(bodyBytes, &t); err != nil {
+
+		return map[string]interface{}{}
+	}
+	return t
+
+}
+
 func LoginHandler(res http.ResponseWriter, req *http.Request) {
 	//logger.Debugf("%v", req)
 	switch req.Method {
@@ -94,8 +119,9 @@ func LoginHandler(res http.ResponseWriter, req *http.Request) {
 				})
 			return
 		}
-
-		err := req.ParseForm()
+		requestJson := getJsonFromBody(req)
+		//fmt.Println(requestJson)
+		/* err := req.ParseForm()
 
 		if err != nil {
 			log.Println(err)
@@ -106,10 +132,12 @@ func LoginHandler(res http.ResponseWriter, req *http.Request) {
 			})
 			return
 		}
-
+		*/
 		// check email & password
-		logger.Debug("The Request email is :", req.FormValue("email"))
-		j, err := db.User(strings.ToLower(req.FormValue("email")))
+		email := requestJson["email"].(string)
+		password := requestJson["password"].(string)
+		logger.Debug("The Request email is :", email)
+		j, err := db.User(strings.ToLower(email))
 
 		if err != nil {
 			log.Println(err)
@@ -140,7 +168,7 @@ func LoginHandler(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		if !user.IsUser(usr, req.FormValue("password")) {
+		if !user.IsUser(usr, password) {
 			renderJSON(res, req, RetUser{
 				RetCode: -1,
 				Msg:     "Wrong email or password!",
@@ -156,6 +184,9 @@ func LoginHandler(res http.ResponseWriter, req *http.Request) {
 			"user": usr.Email,
 		}
 		token, err := jwt.New(claims)
+		//DecodeJwt(token)
+		logger.Debug(jwt.GetClaims(token))
+
 		if err != nil {
 			log.Println(err)
 			renderJSON(res, req, RetUser{
@@ -178,11 +209,63 @@ func LoginHandler(res http.ResponseWriter, req *http.Request) {
 		renderJSON(res, req, RetUser{
 			RetCode: 0,
 			Msg:     "Done",
-			Data:    "",
+			Data:    token,
 		})
 
 		return
 		//http.Redirect(res, req, strings.TrimSuffix(req.URL.String(), "/login"), http.StatusFound)
+	}
+}
+
+func RenewHandler(res http.ResponseWriter, req *http.Request) {
+	logger.Debugf("%v", req)
+	switch req.Method {
+
+	case http.MethodGet:
+		if user.IsValid(req) {
+			logger.Debug("is valid")
+			//http.Redirect(res, req, req.URL.Scheme+req.URL.Host+"/admin", http.StatusFound)
+			week := time.Now().Add(time.Hour * 2) // session time is 2 hours
+			// check if token exists in cookie
+			cookie, err := req.Cookie(user.Lqcmstoken)
+			if err == nil {
+
+				// validate it and allow or redirect request
+				token := cookie.Value
+				http.SetCookie(res, &http.Cookie{
+					Name:    user.Lqcmstoken,
+					Value:   token,
+					Expires: week,
+					Path:    "/",
+				})
+				logger.Debug("User renew !")
+				renderJSON(res, req, RetUser{
+					RetCode: 0,
+					Msg:     "Done",
+					Data:    "",
+				})
+			} else {
+				renderJSON(res, req, RetUser{
+					RetCode: -10,
+					Msg:     err.Error(),
+				})
+			}
+		} else {
+			renderJSON(res, req, RetUser{
+				RetCode: -9,
+				Msg:     "not valid user",
+			})
+		}
+		return
+	default:
+		//		logger.Debugf("User %s logged in !", usr)
+		renderJSON(res, req, RetUser{
+			RetCode: -10,
+			Msg:     "failed",
+			Data:    "",
+		})
+
+		return
 	}
 }
 
@@ -388,3 +471,27 @@ func CustomerAuth(next http.HandlerFunc) http.HandlerFunc {
 		}
 	})
 }
+
+/*
+func generateToken(usr string, week time.Time) (string, error) {
+	var claims map[string]interface{}{
+		"user":usr,
+		"exp":week,
+		"StandardClaims": jwt.StandardClaims{
+			IssuedAt:  time.Now().Unix(),
+			ExpiresAt: time.Now().Add(time.Hour * 2).Unix(),
+			Issuer:    "EShop",
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signed, err := token.SignedString(d.settings.Key)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	w.Header().Set("Content-Type", "cty")
+	w.Write([]byte(signed))
+	return 0, nil
+}
+*/

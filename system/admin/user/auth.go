@@ -6,12 +6,15 @@ import (
 	"bytes"
 	crand "crypto/rand"
 	"encoding/base64"
+	"fmt"
 	"log"
 	mrand "math/rand"
 	"net/http"
 	"time"
 
+	"github.com/agreyfox/eshop/system/logs"
 	"github.com/nilslice/jwt"
+	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -33,7 +36,9 @@ const (
 )
 
 var (
-	r = mrand.New(mrand.NewSource(time.Now().Unix()))
+	r      = mrand.New(mrand.NewSource(time.Now().Unix()))
+	err    error
+	logger *zap.SugaredLogger = logs.Log.Sugar()
 )
 
 // New creates a user
@@ -84,10 +89,11 @@ func NewCustomer(email, password string) (*User, error) {
 func Auth(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
 		redir := req.URL.Scheme + req.URL.Host + "/admin/login"
-
+		//logger.Debugf("Auth with request is %v", req)
 		if IsValid(req) {
 			next.ServeHTTP(res, req)
 		} else {
+			logger.Debugf("no Auth with request is %v", req.URL)
 			http.Redirect(res, req, redir, http.StatusFound)
 		}
 	})
@@ -108,8 +114,7 @@ func CustomerAuth(next http.HandlerFunc) http.HandlerFunc {
 
 // IsValid checks if the user request is authenticated
 func IsValid(req *http.Request) bool {
-	log.Println("User is trying to login ")
-	log.Printf("%v", req)
+
 	// check if token exists in cookie
 	cookie, err := req.Cookie(Lqcmstoken)
 	if err != nil {
@@ -117,11 +122,45 @@ func IsValid(req *http.Request) bool {
 	}
 	// validate it and allow or redirect request
 	token := cookie.Value
+	//fmt.Println(token)
 	return jwt.Passes(token)
+}
+
+// IsValid checks if the user request is authenticated
+func IsValidAdmin(req *http.Request) bool {
+	cookie, err := req.Cookie(Lqcmstoken)
+	if err != nil {
+		return false
+	}
+	// validate it and allow or redirect request
+	token := cookie.Value
+	if jwt.Passes(token) {
+		clienInfo := jwt.GetClaims(token)
+		fmt.Println(clienInfo)
+		return true
+	} else {
+		return false
+	}
 }
 
 // IsUser checks for consistency in email/pass combination
 func IsUser(usr *User, password string) bool {
+	salt, err := base64.StdEncoding.DecodeString(usr.Salt)
+	if err != nil {
+		return false
+	}
+
+	err = checkPassword([]byte(usr.Hash), []byte(password), salt)
+	if err != nil {
+		log.Println("Error checking password:", err)
+		return false
+	}
+
+	return true
+}
+
+// IsUser checks for consistency in email/pass combination
+func IsAdminUser(usr *User, password string) bool {
 	salt, err := base64.StdEncoding.DecodeString(usr.Salt)
 	if err != nil {
 		return false

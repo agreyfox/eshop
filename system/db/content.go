@@ -97,6 +97,7 @@ func update(ns, id string, data url.Values, existingContent *[]byte) (int, error
 			return 0, err
 		}
 	}
+	//logger.Debug(fmt.Sprintf("%+v", existingContent))
 
 	err = store.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(ns + specifier))
@@ -133,7 +134,7 @@ func update(ns, id string, data url.Values, existingContent *[]byte) (int, error
 			log.Println("[search] UpdateIndex Error:", err)
 		}
 	}()
-
+	//logger.Debug(fmt.Sprintf("%+v", cid))
 	return cid, nil
 }
 
@@ -157,6 +158,7 @@ func mergeData(ns string, data url.Values, existingContent []byte) ([]byte, erro
 	data.Del("uuid")
 	data.Del("slug")
 
+	logger.Debug(fmt.Sprintf("%+v", data))
 	dec := schema.NewDecoder()
 	dec.SetAliasTag("json")     // allows simpler struct tagging when creating a content type
 	dec.IgnoreUnknownKeys(true) // will skip over form values submitted, but not in struct
@@ -176,6 +178,7 @@ func mergeData(ns string, data url.Values, existingContent []byte) ([]byte, erro
 func insert(ns string, data url.Values) (int, error) {
 	var effectedID int
 	var specifier string // i.e. __pending, __sorted, etc.
+
 	if strings.Contains(ns, "__") {
 		spec := strings.Split(ns, "__")
 		ns = spec[0]
@@ -185,6 +188,7 @@ func insert(ns string, data url.Values) (int, error) {
 	var j []byte
 	var cid string
 	err := store.Update(func(tx *bolt.Tx) error {
+		//fmt.Println(ns + specifier)
 		b, err := tx.CreateBucketIfNotExists([]byte(ns + specifier))
 		if err != nil {
 			return err
@@ -196,6 +200,7 @@ func insert(ns string, data url.Values) (int, error) {
 		if err != nil {
 			return err
 		}
+		//fmt.Printf("%+v", id)
 		cid = strconv.FormatUint(id, 10)
 		effectedID, err = strconv.Atoi(cid)
 		if err != nil {
@@ -210,7 +215,7 @@ func insert(ns string, data url.Values) (int, error) {
 		}
 
 		data.Set("uuid", uid.String())
-
+		//fmt.Printf("%+v", uid)
 		// if type has a specifier, add it to data for downstream processing
 		if specifier != "" {
 			data.Set("__specifier", specifier)
@@ -276,6 +281,7 @@ func DeleteContent(target string) error {
 	ns, id := t[0], t[1]
 
 	b, err := Content(target)
+	//logger.Debug(fmt.Sprintf("%+v", b), target, err)
 	if err != nil {
 		return err
 	}

@@ -7,21 +7,21 @@
     <sidebar></sidebar>
     <main>
       <router-view></router-view>
-      <shell v-if="isLogged && user.perm.execute" />
+      <shell v-if="isLogged && user" />
     </main>
     <prompts></prompts>
   </div>
 </template>
 
 <script>
-import { mapState, mapGetters } from 'vuex'
-import Sidebar from '@/components/Sidebar'
-import Prompts from '@/components/prompts/Prompts'
-import SiteHeader from '@/components/Header'
-import Shell from '@/components/Shell'
+import { mapState, mapGetters } from "vuex";
+import Sidebar from "@/components/Sidebar";
+import Prompts from "@/components/prompts/Prompts";
+import SiteHeader from "@/components/Header";
+import Shell from "@/components/Shell";
 
 export default {
-  name: 'layout',
+  name: "layout",
   components: {
     Sidebar,
     SiteHeader,
@@ -29,15 +29,16 @@ export default {
     Shell
   },
   computed: {
-    ...mapGetters([ 'isLogged' ]),
-    ...mapState([ 'user' ])
+    ...mapGetters(["isLogged"]),
+    ...mapState(["user"])
   },
   watch: {
-    '$route': function () {
-      this.$store.commit('resetSelected')
-      this.$store.commit('multiple', false)
-      if (this.$store.state.show !== 'success') this.$store.commit('closeHovers')
+    $route: function() {
+      this.$store.commit("resetSelected");
+      this.$store.commit("multiple", false);
+      if (this.$store.state.show !== "success")
+        this.$store.commit("closeHovers");
     }
   }
-}
+};
 </script>

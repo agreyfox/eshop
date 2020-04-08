@@ -4,6 +4,8 @@
 package config
 
 import (
+	"crypto/rand"
+
 	"github.com/agreyfox/eshop/management/editor"
 	"github.com/agreyfox/eshop/system/item"
 )
@@ -18,6 +20,8 @@ type Config struct {
 	HTTPPort                string   `json:"http_port"`
 	HTTPSPort               string   `json:"https_port"`
 	AdminEmail              string   `json:"admin_email"`
+	EmailSecret             string   `json:"email_password"`
+	EmailHost               string   `json:"email_host"`
 	ClientSecret            string   `json:"client_secret"`
 	Etag                    string   `json:"etag"`
 	DisableCORS             bool     `json:"cors_disabled"`
@@ -40,6 +44,18 @@ const (
 
 // String partially implements item.Identifiable and overrides Item's String()
 func (c *Config) String() string { return c.Name }
+
+// GenerateKey generates a key of 256 bits.
+func GenerateKey() ([]byte, error) {
+	b := make([]byte, 64)
+	_, err := rand.Read(b)
+	// Note that err == nil only if we read len(b) bytes.
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
+}
 
 // MarshalEditor writes a buffer of html to edit a Post and partially implements editor.Editable
 func (c *Config) MarshalEditor() ([]byte, error) {

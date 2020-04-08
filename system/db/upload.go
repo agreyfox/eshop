@@ -21,7 +21,7 @@ import (
 // SetUpload stores information about files uploaded to the system
 func SetUpload(target string, data url.Values) (int, error) {
 	parts := strings.Split(target, ":")
-	if parts[0] != "DB__uploads" {
+	if parts[0] != DB__uploads {
 		return 0, fmt.Errorf("cannot call SetUpload with target type: %s", parts[0])
 	}
 	pid := parts[1]
@@ -110,7 +110,7 @@ func SetUpload(target string, data url.Values) (int, error) {
 		}
 
 		k := []byte(data.Get("slug"))
-		v := []byte(fmt.Sprintf("DB__uploads:%d", id))
+		v := []byte(fmt.Sprintf("%s:%d", DB__uploads, id))
 
 		err = b.Put(k, v)
 		if err != nil {

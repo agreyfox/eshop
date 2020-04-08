@@ -3,18 +3,17 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"strings"
-	"text/tabwriter"
+	"log"
 
-	"github.com/agreyfox/management/db"
-
+	"github.com/agreyfox/eshop/system/db"
 	"github.com/spf13/cobra"
 )
 
 func init() {
 	configCmd.AddCommand(initCmd)
 	configCmd.AddCommand(allCmd)
+	configCmd.AddCommand(setCmd)
+	configCmd.AddCommand(getCmd)
 	RegisterCmdlineCommand(configCmd)
 }
 
@@ -26,7 +25,7 @@ var configCmd = &cobra.Command{
 }
 
 var initCmd = &cobra.Command{
-	Use: "config <init>...",
+	Use: "init",
 	//Aliases: []string{"c"},
 	Short: "make default system configuration",
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -34,30 +33,97 @@ var initCmd = &cobra.Command{
 	},
 }
 var allCmd = &cobra.Command{
-	Use: "config <all>...",
+	Use: "all ",
 	//Aliases: []string{"c"},
 	Short: "List all the configuration",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		DistplayAllConfig()
-		return
+		return nil
+	},
+}
+var setCmd = &cobra.Command{
+	Use: "set <key> <value> ...",
+	//Aliases: []string{"c"},
+	Short: "save key-value pair to configuration db",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		SetConfig(args[0], args[1])
+		return nil
+	},
+}
+var getCmd = &cobra.Command{
+	Use: "get <key> ...",
+	//Aliases: []string{"c"},
+	Short: "get value from configuration db",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		GetConfig(args[0])
+		return nil
 	},
 }
 
 // manully initial db
 func InitilizedDb() error {
 
+	db.Init()
+	defer db.Close()
+	
+	fmt.Println("System DB initialized!")
 	return nil
 }
 
 // to Display all the system configuration
 func DistplayAllConfig() {
 	logger.Info("Trying to get the all configuration in system db")
+	db.Init()
+	defer db.Close()
+
 	config, err := db.ConfigAll()
-	ma := map[string]interface{}
-	err = json.Unmarshal(config,&ma)
-	logger.Info("%v", ma,err)
+	if err != nil {
+		logger.Fatal("DB open error,", err)
+	}
+	var ma map[string]interface{}
+	err = json.Unmarshal(config, &ma)
+	PrettyPrint(ma)
 }
-/* 
+
+func SetConfig(key string, value interface{}) {
+	fmt.Printf("Try to save the config %s--%v\n ", key, value)
+	db.Init()
+	defer db.Close()
+
+	err := db.PutConfig(key, value)
+	if err != nil {
+		fmt.Println("Error: ", err.Error())
+	}
+	fmt.Println("Config %s saved! ", key)
+}
+
+func GetConfig(key string) {
+	fmt.Printf("Try to get the config %s\n", key)
+	db.Init()
+	defer db.Close()
+
+	result, err := db.Config(key)
+	if err != nil {
+		fmt.Println("Error: ", err.Error())
+	}
+	value := string(result[:])
+	fmt.Println("===================================================================")
+	fmt.Printf("\t\tConfig [%s] value is [%v ]\n", key, value)
+	fmt.Println("===================================================================")
+}
+
+// print pretty map[string]internface output
+func PrettyPrint(obj map[string]interface{}) {
+	prettyJSON, err := json.MarshalIndent(obj, "", "    ")
+	if err != nil {
+		log.Fatal("Failed to generate json", err)
+	}
+	fmt.Println("===================================================================")
+	fmt.Printf("\t\t%s\n", string(prettyJSON))
+	fmt.Println("===================================================================")
+}
+
+/*
 func printSettings(ser *settings.Server, set *settings.Settings, auther auth.Auther) {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 
@@ -101,4 +167,4 @@ func printSettings(ser *settings.Server, set *settings.Settings, auther auth.Aut
 	checkErr(err)
 	fmt.Printf("\nAuther configuration (raw):\n\n%s\n\n", string(b))
 }
- */
+*/

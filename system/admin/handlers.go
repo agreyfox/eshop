@@ -80,6 +80,7 @@ func initHandler(res http.ResponseWriter, req *http.Request) {
 		// create and save admin user
 		email := strings.ToLower(req.FormValue("email"))
 		password := req.FormValue("password")
+		logger.Debugf("admin user register %s--%s", email, password)
 		usr, err := user.New(email, password)
 		if err != nil {
 			log.Println(err)
@@ -123,7 +124,7 @@ func initHandler(res http.ResponseWriter, req *http.Request) {
 		}
 
 		http.SetCookie(res, &http.Cookie{
-			Name:    "_token",
+			Name:    user.Lqcmstoken,
 			Value:   token,
 			Expires: week,
 			Path:    "/",
@@ -304,7 +305,7 @@ func configUsersHandler(res http.ResponseWriter, req *http.Request) {
 			res.Write(errView)
 			return
 		}
-
+		logger.Debugf(req.URL.String())
 		http.Redirect(res, req, req.URL.String(), http.StatusFound)
 
 	default:
@@ -428,7 +429,7 @@ func configUsersEditHandler(res http.ResponseWriter, req *http.Request) {
 
 		// add token to cookie +1 week expiration
 		cookie := &http.Cookie{
-			Name:    "_token",
+			Name:    user.Lqcmstoken,
 			Value:   token,
 			Expires: week,
 			Path:    "/",
@@ -516,6 +517,7 @@ func configUsersDeleteHandler(res http.ResponseWriter, req *http.Request) {
 			res.Write(errView)
 			return
 		}
+		logger.Debugf(req.URL.Path)
 
 		http.Redirect(res, req, strings.TrimSuffix(req.URL.String(), "/delete"), http.StatusFound)
 
@@ -525,6 +527,7 @@ func configUsersDeleteHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func loginHandler(res http.ResponseWriter, req *http.Request) {
+	logger.Debug(req.URL)
 	if !db.SystemInitComplete() {
 		redir := req.URL.Scheme + req.URL.Host + "/admin/init"
 		http.Redirect(res, req, redir, http.StatusFound)
@@ -549,12 +552,14 @@ func loginHandler(res http.ResponseWriter, req *http.Request) {
 		res.Write(view)
 
 	case http.MethodPost:
+		logger.Debugf("%v\n", req)
 		if user.IsValid(req) {
 			http.Redirect(res, req, req.URL.Scheme+req.URL.Host+"/admin", http.StatusFound)
 			return
 		}
 
 		err := req.ParseForm()
+		//logger.Debugf("%v", req)
 		if err != nil {
 			log.Println(err)
 			http.Redirect(res, req, req.URL.String(), http.StatusFound)
@@ -601,19 +606,20 @@ func loginHandler(res http.ResponseWriter, req *http.Request) {
 
 		// add it to cookie +1 week expiration
 		http.SetCookie(res, &http.Cookie{
-			Name:    "_token",
+			Name:    user.Lqcmstoken,
 			Value:   token,
 			Expires: week,
 			Path:    "/",
 		})
 
-		http.Redirect(res, req, strings.TrimSuffix(req.URL.String(), "/login"), http.StatusFound)
+		//http.Redirect(res, req, strings.TrimSuffix(req.URL.String(), "/login"), http.StatusFound)
+		http.Redirect(res, req, req.URL.Scheme+req.URL.Host+"/admin/", http.StatusFound)
 	}
 }
 
 func logoutHandler(res http.ResponseWriter, req *http.Request) {
 	http.SetCookie(res, &http.Cookie{
-		Name:    "_token",
+		Name:    user.Lqcmstoken,
 		Expires: time.Unix(0, 0),
 		Value:   "",
 		Path:    "/",
@@ -908,7 +914,7 @@ func uploadContentsHandler(res http.ResponseWriter, req *http.Request) {
 						<div class="row">
 							<div class="card-title col s7">Uploaded Items</div>
 							<div class="col s5 input-field inline">
-								<select class="browser-default __dms sort-order">
+								<select class="browser-default __ponzu sort-order">
 									<option value="DESC">New to Old</option>
 									<option value="ASC">Old to New</option>
 								</select>
@@ -939,12 +945,12 @@ func uploadContentsHandler(res http.ResponseWriter, req *http.Request) {
 							<label class="active">Search:</label>
 							<i class="right material-icons search-icon">search</i>
 							<input class="search" name="q" type="text" placeholder="Within all Upload fields" class="search"/>
-							<input type="hidden" name="type" value="__uploads" />
+							<input type="hidden" name="type" value="eshop__uploads" />
 						</div>
                     </form>	
 					</div>`
 
-	t := "__uploads"
+	t := db.DB__uploads // upload db
 	status := ""
 	total, posts = db.Query(t, opts)
 
@@ -2158,6 +2164,7 @@ func deleteUploadHandler(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
+	logger.Debugf("delete request is %v", req)
 
 	err := req.ParseMultipartForm(1024 * 1024 * 4) // maxMemory 4MB
 	if err != nil {
@@ -2173,7 +2180,7 @@ func deleteUploadHandler(res http.ResponseWriter, req *http.Request) {
 	}
 
 	id := req.FormValue("id")
-	t := "__uploads"
+	t := db.DB__uploads
 
 	if id == "" || t == "" {
 		res.WriteHeader(http.StatusBadRequest)
@@ -2233,7 +2240,7 @@ func editUploadHandler(res http.ResponseWriter, req *http.Request) {
 	case http.MethodGet:
 		q := req.URL.Query()
 		i := q.Get("id")
-		t := "__uploads"
+		t := db.DB__uploads
 
 		post := &item.FileUpload{}
 
@@ -2322,7 +2329,7 @@ func editUploadHandler(res http.ResponseWriter, req *http.Request) {
 		}
 
 		t := req.FormValue("type")
-		pt := "__uploads"
+		pt := db.DB__uploads
 		ts := req.FormValue("timestamp")
 		up := req.FormValue("updated")
 
@@ -2464,8 +2471,7 @@ func editUploadHandler(res http.ResponseWriter, req *http.Request) {
 
 	res.Header().Set("Content-Type", "application/json")
 	res.Write([]byte(`{"data": [{"url": "` + urlPaths["file"] + `"}]}`))
-}
-*/
+} */
 
 func searchHandler(res http.ResponseWriter, req *http.Request) {
 	q := req.URL.Query()
@@ -2610,7 +2616,7 @@ func searchHandler(res http.ResponseWriter, req *http.Request) {
 
 func uploadSearchHandler(res http.ResponseWriter, req *http.Request) {
 	q := req.URL.Query()
-	t := "__uploads"
+	t := db.DB__uploads
 	search := q.Get("q")
 	status := q.Get("status")
 

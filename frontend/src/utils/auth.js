@@ -1,9 +1,15 @@
 import store from '@/store'
 import router from '@/router'
 import { Base64 } from 'js-base64'
-import { baseURL } from '@/utils/constants'
+//import { baseURL } from '@/utils/constants'
+import { apiServer } from './constants'
 
-export function parseToken (token) {
+
+export function parseToken(token) {
+
+  if (!token) {
+    return
+  }
   const parts = token.split('.')
 
   if (parts.length !== 3) {
@@ -15,13 +21,14 @@ export function parseToken (token) {
   if (Math.round(new Date().getTime() / 1000) > data.exp) {
     throw new Error('token expired')
   }
+  console.log(data);
 
   localStorage.setItem('jwt', token)
   store.commit('setJWT', token)
   store.commit('setUser', data.user)
 }
 
-export async function validateLogin () {
+export async function validateLogin() {
   try {
     if (localStorage.getItem('jwt')) {
       await renew(localStorage.getItem('jwt'))
@@ -31,28 +38,32 @@ export async function validateLogin () {
   }
 }
 
-export async function login (username, password, recaptcha) {
-  const data = { username, password, recaptcha }
-
-  const res = await fetch(`${baseURL}/api/login`, {
+export async function login(email, password) {
+  if (!email) {
+    return
+  }
+  const res = await fetch(`${apiServer}/api/user/login`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify(data)
+    body: JSON.stringify({ "email": email, "password": password })
   })
 
-  const body = await res.text()
-
-  if (res.status === 200) {
-    parseToken(body)
+  const body = await res.json();
+  // console.log(body)
+  if (res.status === 200 && body.retCode >= 0) {
+    /* localStorage.setItem('jwt', body.data)
+    store.commit('setJWT', body.data)
+    store.commit('setUser', user) */
+    parseToken(body.data);
   } else {
     throw new Error(body)
   }
 }
 
-export async function renew (jwt) {
-  const res = await fetch(`${baseURL}/api/renew`, {
+export async function renew(jwt) {
+  const res = await fetch(`${apiServer}/api/renew`, {
     method: 'POST',
     headers: {
       'X-Auth': jwt,
@@ -68,10 +79,10 @@ export async function renew (jwt) {
   }
 }
 
-export async function signup (username, password) {
+export async function signup(username, password) {
   const data = { username, password }
 
-  const res = await fetch(`${baseURL}/api/signup`, {
+  const res = await fetch(`${apiServer}/api/signup`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -84,9 +95,9 @@ export async function signup (username, password) {
   }
 }
 
-export function logout () {
+export function logout() {
   store.commit('setJWT', '')
   store.commit('setUser', null)
   localStorage.setItem('jwt', null)
-  router.push({path: '/login'})
+  router.push({ path: '/login' })
 }

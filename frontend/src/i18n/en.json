@@ -1,4 +1,12 @@
 {
+  "menu": {
+    "PRODUCT": "Product",
+    "SALES": "Coupon",
+    "ORDER": "Order",
+    "INFO": "Information",
+    "SYSTEM": "System",
+    "SYS_NAME": "EShop Management System"
+  },
   "permanent": "Permanent",
   "buttons": {
     "shell": "Toggle shell",

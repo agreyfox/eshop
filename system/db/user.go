@@ -195,7 +195,7 @@ func CurrentUser(req *http.Request) ([]byte, error) {
 		return nil, fmt.Errorf("Error. Invalid User.")
 	}
 
-	token, err := req.Cookie("_token")
+	token, err := req.Cookie(user.Lqcmstoken)
 	if err != nil {
 		return nil, err
 	}

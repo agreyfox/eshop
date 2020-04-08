@@ -7,10 +7,11 @@ import (
 	"log"
 
 	"github.com/agreyfox/eshop/system/item"
+	"github.com/agreyfox/eshop/system/logs"
 	"github.com/agreyfox/eshop/system/search"
-
 	"github.com/boltdb/bolt"
 	"github.com/nilslice/jwt"
+	"go.uber.org/zap"
 )
 
 var (
@@ -28,6 +29,8 @@ var (
 	}
 
 	bucketsToAdd []string
+
+	logger *zap.SugaredLogger = logs.Log.Sugar()
 )
 
 // Store provides access to the underlying *bolt.DB store
