@@ -24,13 +24,13 @@ func init() {
 	// We store the compiled regex as the key
 	// and assign the replacement as the map's value.
 	rxList = map[*regexp.Regexp][]byte{
-		regexp.MustCompile("`[-]+`"):                                                                         []byte("-"),
-		regexp.MustCompile("[[:space:]]"):                                                                    []byte("-"),
-		regexp.MustCompile("[[:blank:]]"):                                                                    []byte(""),
-		regexp.MustCompile("`[^a-z0-9]`i"):                                                                   []byte("-"),
-		regexp.MustCompile("[!/:-@[-`{-~]"):                                                                  []byte(""),
-		regexp.MustCompile("/[^\x20-\x7F]/"):                                                                 []byte(""),
-		regexp.MustCompile("`&(amp;)?#?[a-z0-9]+;`i"):                                                        []byte("-"),
+		regexp.MustCompile("`[-]+`"):                  []byte("-"),
+		regexp.MustCompile("[[:space:]]"):             []byte("-"),
+		regexp.MustCompile("[[:blank:]]"):             []byte(""),
+		regexp.MustCompile("`[^a-z0-9]`i"):            []byte("-"),
+		regexp.MustCompile("[!/:-@[-`{-~]"):           []byte(""),
+		regexp.MustCompile("/[^\x20-\x7F]/"):          []byte(""),
+		regexp.MustCompile("`&(amp;)?#?[a-z0-9]+;`i"): []byte("-"),
 		regexp.MustCompile("`&([a-z])(acute|uml|circ|grave|ring|cedil|slash|tilde|caron|lig|quot|rsquo);`i"): []byte("\\1"),
 	}
 }
@@ -65,6 +65,9 @@ type Sortable interface {
 // to the different lifecycles/events a struct may encounter. Item implements
 // Hookable with no-ops so our user can override only whichever ones necessary.
 type Hookable interface {
+	EnableSubContent() ([]string, bool)
+	EnableOwnerCheck() bool
+
 	BeforeAPIResponse(http.ResponseWriter, *http.Request, []byte) ([]byte, error)
 	AfterAPIResponse(http.ResponseWriter, *http.Request, []byte) error
 
@@ -178,6 +181,17 @@ func (i Item) UniqueID() uuid.UUID {
 // partially implements the Identifiable interface
 func (i Item) String() string {
 	return fmt.Sprintf("Item ID: %s", i.UniqueID())
+}
+
+// EnableSubContent to ask system to handle sub content, with []string filed
+// both for create update and retrive
+func (i Item) EnableSubContent() ([]string, bool) {
+	return []string{}, false
+}
+
+// EnableOwnerCheck indicat 是否进行结果所有权的check
+func (i Item) EnableOwnerCheck() bool {
+	return false
 }
 
 // BeforeAPIResponse is a no-op to ensure structs which embed Item implement Hookable

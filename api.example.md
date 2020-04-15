@@ -128,3 +128,74 @@ curl -XPOST "http://127.0.0.1:8089/admin/v1/recover/key" -H "content-Type: appli
 ```
 三个参数必须，否则不成功
 email,key(从邮件获得),password(需要变成的口令)
+
+
+## backup system 
+```
+curl -XPOST http://127.0.0.1:8080/admin/v1/backup?source=search
+```
+备份系统
+source 有4种参数：system,analytics,uploads,search ,分别代表系统数据，分析数据，上传媒体库，以及搜索数据
+
+
+# Customer api 说明
+
+##  user register
+```
+curl -XPOST http://127.0.0.1:8080/api/v1/register -d '{"email":"e_raeb@yahoo.com","password":
+"abc"}'
+```
+使用post 来注册，除了email，password 
+还可以加上, phone 电话号码，social 社交帐号，以及metadata 其他信息,这些信息将被存入系统
+
+## user login 
+```
+ curl -XPOST http://127.0.0.1:8080/api/v1/login -d '{"email":"e_raeb@yahoo.com","password":
+"abc"}'
+
+```
+登陆后若成功，返回jwt token，在body和header 都有，需要手工将toke写入以后的api调用header 中，名字为lqcms_token
+
+{"retCode":0,"data":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImV4cCI6IjIwMjAtMDQtMTBUMTE6Mzg6NTkuNzM0MTEwOTkyKzA4OjAwIiwiaWF0IjpudWxsLCJpc3MiOm51bGwsImp0aSI6bnVsbCwibmJmIjpudWxsLCJzdWIiOm51bGwsInVzZXIiOiJlX3JhZWJAeWFob28uY29tIn0.Oqza0Pzh2Vji1xe-N6cadKyTELZZpjXvCCMVQ6KGXY4","meta":{},"Msg":"Done"}
+
+## recover 发出忘记密码请求
+``` 
+curl -XPOST http://127.0.0.1:8080/api/v1/forgot -d '{"email":"e_raeb@yahoo.com"}'
+```
+系统将发送recover 邮件到用户邮箱
+
+## recovery 恢复
+```
+curl -XPOST http://127.0.0.1:8080/api/v1/forgot -d '{"email":"e_raeb@yahoo.com","key":"xxxx","password":"yyyy"}'
+```
+用户发出恢复指令，key为恢复口令（来自邮件），password为新口令
+
+
+## contents 获取content列表
+```
+curl -XGET http://127.0.0.1:8080/api/v1/contents?type=Site 
+```
+参数有 type, offset,count,order 
+
+
+## 获取一个content 
+```
+curl -XGET "http://127.0.0.1:8080/api/v1/content?type=Site&id=1"
+```
+参数id,type 必须,
+还可以使用slug=site-a705f27f-aa86-4b81-b5e2-8f0e4e7fad59
+
+##  使用 slug 获取一uploads  中的文件
+```
+curl -XGET "http://127.0.0.1:8080/api/v1/uploads?slug=dms-banner.png-1" --cookie "lqcms_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImV4cCI6IjIwMjAtMDQtMTBUMjM6MjQ6MzkuNzY1OTg3ODMzKzA4OjAwIiwiaWF0IjpudWxsLCJpc3MiOm51bGwsImp0aSI6bnVsbCwibmJmIjpudWxsLCJzdWIiOm51bGwsInVzZXIiOiJlX3JhZWJAeWFob28uY29tIn0.P37cCSVZV5BwOQg5Q5DTifmULoqDiUhXLdrPo0PpDXo"
+```
+
+return
+{"data":[{"uuid":"48019f16-6a8c-4261-b650-85146a9c02e3","id":12,"slug":"dms-banner.png-1","timestamp":1586524806000,"updated":1586524806000,"name":"dms-banner.png","path":"/api/uploads/2020/04/dms-banner.png","content_length":133177,"content_type":"application/octet-stream"}]}
+
+##  get picture content , 用于图片显示
+```
+curl -XGET "http://127.0.0.1:8080/api/v1/pics?id=12" 
+```
+参数 w,h 表示返回图片的宽和高
+

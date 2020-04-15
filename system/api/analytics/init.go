@@ -5,13 +5,14 @@ package analytics
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"runtime"
 	"strings"
 	"time"
 
+	"github.com/agreyfox/eshop/system/logs"
 	"github.com/boltdb/bolt"
+	"go.uber.org/zap"
 )
 
 type apiRequest struct {
@@ -33,6 +34,7 @@ type apiMetric struct {
 var (
 	store       *bolt.DB
 	requestChan chan apiRequest
+	logger      *zap.SugaredLogger = logs.Log.Sugar()
 )
 
 // RANGE determines the number of days ponzu request analytics and metrics are
@@ -64,7 +66,7 @@ func Record(req *http.Request) {
 func Close() {
 	err := store.Close()
 	if err != nil {
-		log.Println(err)
+		logger.Error(err)
 	}
 }
 
@@ -74,7 +76,7 @@ func Init() {
 	var err error
 	store, err = bolt.Open("analytics.db", 0666, nil)
 	if err != nil {
-		log.Fatalln(err)
+		logger.Error(err)
 	}
 
 	err = store.Update(func(tx *bolt.Tx) error {
@@ -91,7 +93,7 @@ func Init() {
 		return nil
 	})
 	if err != nil {
-		log.Fatalln("Error idempotently creating requests bucket in analytics.db:", err)
+		logger.Error("Error idempotently creating requests bucket in analytics.db:", err)
 	}
 
 	requestChan = make(chan apiRequest, 1024*64*runtime.NumCPU())
@@ -99,7 +101,7 @@ func Init() {
 	go serve()
 
 	if err != nil {
-		log.Fatalln(err)
+		logger.Error(err)
 	}
 }
 
@@ -119,13 +121,13 @@ func serve() {
 		case <-apiRequestTimer.C:
 			err := batchInsert(requestChan)
 			if err != nil {
-				log.Println(err)
+				logger.Error(err)
 			}
 
 		case <-pruneDBTimer.C:
 			err := batchPrune(pruneThreshold)
 			if err != nil {
-				log.Println(err)
+				logger.Error(err)
 			}
 
 		case <-time.After(time.Second * 30):
@@ -173,7 +175,7 @@ func ChartData() (map[string]interface{}, error) {
 			var metric apiMetric
 			err := json.Unmarshal(v, &metric)
 			if err != nil {
-				log.Println("Error decoding api metric json from analytics db:", err)
+				logger.Error("Error decoding api metric json from analytics db:", err)
 				return nil
 			}
 
@@ -190,7 +192,7 @@ func ChartData() (map[string]interface{}, error) {
 			var r apiRequest
 			err := json.Unmarshal(v, &r)
 			if err != nil {
-				log.Println("Error decoding api request json from analytics db:", err)
+				logger.Error("Error decoding api request json from analytics db:", err)
 				return nil
 			}
 

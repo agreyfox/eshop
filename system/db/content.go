@@ -3,9 +3,10 @@ package db
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"log"
 	"net/url"
+	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -20,6 +21,8 @@ import (
 	"github.com/gofrs/uuid"
 	"github.com/gorilla/schema"
 )
+
+var ErrBucketInfoNotCompatible = errors.New("Bucket Info is not correct")
 
 // IsValidID checks that an ID from a DB target is valid.
 // ID should be an integer greater than 0.
@@ -49,6 +52,54 @@ func SetContent(target string, data url.Values) (int, error) {
 	}
 
 	return update(ns, id, data, nil)
+}
+
+// SetSubContent to set the sub bucket data
+func SetSubContent(target, field string, data []map[string]interface{}) (int, error) {
+
+	logger.Debug(fmt.Sprintf("Want to add to %s,%+v", field, data))
+	tx, err := store.Begin(true)
+	if err != nil {
+		return -1, err
+	}
+	defer tx.Rollback()
+	// Retrieve the root bucket for the account.
+	// Assume this has already been created when the account was set up.
+	bucketInfo := strings.Split(target, ":")
+	//fmt.Println(target)
+	if len(bucketInfo) != 2 {
+		return -1, ErrBucketInfoNotCompatible
+	}
+	root := tx.Bucket([]byte(bucketInfo[0]))
+
+	bkt, err := root.CreateBucketIfNotExists([]byte(field))
+	if err != nil {
+		return -1, err
+	}
+
+	// Generate an ID for the new user.
+	/* 	userID, err := bkt.NextSequence()
+	   	if err != nil {
+	   		return -1, err
+	   	} */
+	//u.ID = userID
+	for index := range data {
+		data[index][field] = bucketInfo[1]
+	}
+	// Marshal and save the encoded user.
+	if buf, err := json.Marshal(data); err != nil {
+		return -1, err
+	} else if err := bkt.Put([]byte(bucketInfo[1]), buf); err != nil {
+		return -1, err
+	}
+
+	// Commit the transaction.
+	if err := tx.Commit(); err != nil {
+		return -1, err
+	}
+
+	return 0, nil
+
 }
 
 // UpdateContent updates/merges values in the database.
@@ -131,7 +182,7 @@ func update(ns, id string, data url.Values, existingContent *[]byte) (int, error
 		target := fmt.Sprintf("%s:%s", ns, id)
 		err = search.UpdateIndex(target, j)
 		if err != nil {
-			log.Println("[search] UpdateIndex Error:", err)
+			logger.Error("[search] UpdateIndex Error:", err)
 		}
 	}()
 	//logger.Debug(fmt.Sprintf("%+v", cid))
@@ -149,7 +200,7 @@ func mergeData(ns string, data url.Values, existingContent []byte) ([]byte, erro
 	s := t()
 	err := json.Unmarshal(existingContent, &s)
 	if err != nil {
-		log.Println("Error decoding json while updating", ns, ":", err)
+		logger.Error("Error decoding json while updating", ns, ":", err)
 		return j, err
 	}
 
@@ -267,7 +318,7 @@ func insert(ns string, data url.Values) (int, error) {
 		target := fmt.Sprintf("%s:%s", ns, cid)
 		err = search.UpdateIndex(target, j)
 		if err != nil {
-			log.Println("[search] UpdateIndex Error:", err)
+			logger.Error("[search] UpdateIndex Error:", err)
 		}
 	}()
 
@@ -337,7 +388,7 @@ func DeleteContent(target string) error {
 			target = fmt.Sprintf("%s:%s", ns, id)
 			err = search.DeleteIndex(target)
 			if err != nil {
-				log.Println("[search] DeleteIndex Error:", err)
+				logger.Error("[search] DeleteIndex Error:", err)
 			}
 		}
 	}()
@@ -349,6 +400,33 @@ func DeleteContent(target string) error {
 	SortContent(ns)
 
 	return nil
+}
+
+// GetSubContent from target with sub bucket name filed
+func GetSubContent(target, field string) ([]byte, error) {
+	t := strings.Split(target, ":")
+	ns, id := t[0], t[1]
+
+	val := &bytes.Buffer{}
+	err := store.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(ns)).Bucket([]byte(field))
+		if b == nil {
+			return bolt.ErrBucketNotFound
+		}
+
+		_, err := val.Write(b.Get([]byte(id)))
+		if err != nil {
+			logger.Error(err)
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return val.Bytes(), nil
 }
 
 // Content retrives one item from the database. Non-existent values will return an empty []byte
@@ -366,7 +444,7 @@ func Content(target string) ([]byte, error) {
 
 		_, err := val.Write(b.Get([]byte(id)))
 		if err != nil {
-			log.Println(err)
+			logger.Error(err)
 			return err
 		}
 
@@ -438,6 +516,7 @@ func ContentBySlug(slug string) (string, []byte, error) {
 }
 
 // ContentAll retrives all items from the database within the provided namespace
+// skip the sub buckets
 func ContentAll(namespace string) [][]byte {
 	var posts [][]byte
 	store.View(func(tx *bolt.Tx) error {
@@ -450,6 +529,10 @@ func ContentAll(namespace string) [][]byte {
 		posts = make([][]byte, 0, numKeys)
 
 		b.ForEach(func(k, v []byte) error {
+			if v == nil {
+				fmt.Println("====>", string(k[:]), " is buckets")
+				return nil
+			}
 			posts = append(posts, v)
 
 			return nil
@@ -577,6 +660,124 @@ func Query(namespace string, opts QueryOptions) (int, [][]byte) {
 	return total, posts
 }
 
+// Query retrieves a set of content from the db based on options and email = owner
+// and returns the total number of content in the namespace and the content
+func QueryByFieldValue(namespace string, field, value string, opts QueryOptions) (int, [][]byte) {
+	var posts [][]byte
+	var total int
+	logger.Debugf("query with fields [%s] and value [%s]", field, value)
+	// correct bad input rather than return nil or error
+	// similar to default case for opts.Order switch below
+	if opts.Count < 0 {
+		opts.Count = -1
+	}
+
+	if opts.Offset < 0 {
+		opts.Offset = 0
+	}
+
+	store.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(namespace))
+		if b == nil {
+			return bolt.ErrBucketNotFound
+		}
+
+		c := b.Cursor()
+		n := b.Stats().KeyN
+		total = n
+
+		// return nil if no content
+		if n == 0 {
+			return nil
+		}
+
+		var start, end int
+		switch opts.Count {
+		case -1:
+			start = 0
+			end = n
+
+		default:
+			start = opts.Count * opts.Offset
+			end = start + opts.Count
+		}
+
+		// bounds check on posts given the start & end count
+		if start > n {
+			start = n - opts.Count
+		}
+		if end > n {
+			end = n
+		}
+
+		i := 0   // count of num posts added
+		cur := 0 // count of num cursor moves
+		switch opts.Order {
+		case "desc", "":
+			for k, v := c.Last(); k != nil; k, v = c.Prev() {
+				if !bytes.ContainsAny(v, value) {
+					continue
+				}
+				if cur < start {
+					cur++
+					continue
+				}
+
+				if cur >= end {
+					break
+				}
+
+				posts = append(posts, v)
+				i++
+				cur++
+			}
+
+		case "asc":
+			for k, v := c.First(); k != nil; k, v = c.Next() {
+				if !bytes.ContainsAny(v, value) {
+					continue
+				}
+				if cur < start {
+					cur++
+					continue
+				}
+
+				if cur >= end {
+					break
+				}
+
+				posts = append(posts, v)
+				i++
+				cur++
+			}
+
+		default:
+			// results for DESC order
+			for k, v := c.Last(); k != nil; k, v = c.Prev() {
+				if !bytes.ContainsAny(v, value) {
+					continue
+				}
+				if cur < start {
+					cur++
+					continue
+				}
+
+				if cur >= end {
+					break
+				}
+
+				posts = append(posts, v)
+				i++
+				cur++
+			}
+		}
+
+		return nil
+	})
+	logger.Debug(total, posts)
+	return total, posts
+}
+
 var sortContentCalls = make(map[string]time.Time)
 var waitDuration = time.Millisecond * 2000
 var sortMutex = &sync.Mutex{}
@@ -647,7 +848,8 @@ func SortContent(namespace string) {
 
 		err := json.Unmarshal(j, &post)
 		if err != nil {
-			log.Println("Error decoding json while sorting", namespace, ":", err)
+			logger.Warn("Error decoding json while sorting", namespace, ":", err)
+			debug.PrintStack()
 			return
 		}
 
@@ -663,7 +865,7 @@ func SortContent(namespace string) {
 		j, err := json.Marshal(posts[i])
 		if err != nil {
 			// log error and kill sort so __sorted is not in invalid state
-			log.Println("Error marshal post to json in SortContent:", err)
+			logger.Error("Error marshal post to json in SortContent:", err)
 			return
 		}
 
@@ -695,7 +897,7 @@ func SortContent(namespace string) {
 		return nil
 	})
 	if err != nil {
-		log.Println("Error while updating db with sorted", namespace, err)
+		logger.Error("Error while updating db with sorted", namespace, err)
 	}
 
 }
@@ -726,6 +928,7 @@ func postToJSON(ns string, data url.Values) ([]byte, error) {
 	// and correctly format for db storage. Essentially, we need
 	// fieldX.0: value1, fieldX.1: value2 => fieldX: []string{value1, value2}
 	fieldOrderValue := make(map[string]map[string][]string)
+	//	fmt.Printf(">>>>%v\n", data)
 	for k, v := range data {
 		if strings.Contains(k, ".") {
 			fo := strings.Split(k, ".")

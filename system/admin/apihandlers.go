@@ -145,7 +145,7 @@ func recoverRequest(w http.ResponseWriter, r *http.Request) {
 	logger.Debugf("User try to recover password form :%s", GetIP(r))
 	reqJSON := getJsonFromBody(r)
 	// check email for user, if no user return Error
-	email := strings.ToLower(reqJSON["email"].(string))
+	email := strings.ToLower(fmt.Sprintf("%s", reqJSON["email"]))
 	if email == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		logger.Debug("Failed account recovery. No email address submitted.")
@@ -233,8 +233,8 @@ func recoverPassword(w http.ResponseWriter, r *http.Request) {
 	logger.Debugf("User try to recover password form :%s", GetIP(r))
 	reqJSON := getJsonFromBody(r)
 	// check email for user, if no user return Error
-	email := strings.ToLower(reqJSON["email"].(string))
-	key := strings.ToLower(reqJSON["key"].(string))
+	email := strings.ToLower(fmt.Sprintf("%s", reqJSON["email"]))
+	key := strings.ToLower(fmt.Sprintf("%s", reqJSON["key"].(string)))
 	if email == "" || key == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		logger.Debug("Failed account recovery. No email address submitted.")
@@ -258,7 +258,7 @@ func recoverPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// set user with new password
-	password := reqJSON["password"].(string)
+	password := fmt.Sprintf("%s", reqJSON["password"])
 	usr := &user.User{}
 	u, err := db.User(email)
 	if err != nil {
@@ -307,13 +307,14 @@ func recoverPassword(w http.ResponseWriter, r *http.Request) {
 		"retCode": 0,
 		"msg":     "done,Please login with new password",
 	})
+	logger.Debugf("User %s recover password, Done", usr.Email)
 }
 
 //get all changeable config
 func getConfig(res http.ResponseWriter, req *http.Request) {
 	data, err := db.ConfigAll()
 	if err != nil {
-		log.Println(err)
+		logger.Error(err)
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -323,7 +324,7 @@ func getConfig(res http.ResponseWriter, req *http.Request) {
 	err = json.Unmarshal(data, c)
 
 	if err != nil {
-		log.Println(err)
+		logger.Error(err)
 		res.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -451,6 +452,49 @@ func configRestHandler(res http.ResponseWriter, req *http.Request) {
 		res.WriteHeader(http.StatusMethodNotAllowed)
 	}
 
+}
+
+func backup(res http.ResponseWriter, req *http.Request) {
+	logger.Debug("Admin try to backup system ,from :", GetIP(req))
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	switch req.URL.Query().Get("source") {
+	case "system":
+		err := db.Backup(ctx, res)
+		if err != nil {
+			logger.Error("Failed to run backup on system:", err)
+			res.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+	case "analytics":
+		err := analytics.Backup(ctx, res)
+		if err != nil {
+			logger.Error("Failed to run backup on analytics:", err)
+			res.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+	case "uploads":
+		err := upload.Backup(ctx, res)
+		if err != nil {
+			logger.Error("Failed to run backup on uploads:", err)
+			res.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+	case "search":
+		err := search.Backup(ctx, res)
+		if err != nil {
+			logger.Error("Failed to run backup on search:", err)
+			res.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+	default:
+		res.WriteHeader(http.StatusBadRequest)
+	}
 }
 
 func backupRestHandler(res http.ResponseWriter, req *http.Request) {
@@ -1750,6 +1794,32 @@ func getContents(w http.ResponseWriter, r *http.Request) {
 		}
 
 	}
+	hook, ok := pt.(item.Hookable)
+	if ok {
+		// hook before response
+		fields, hasSubContent := hook.EnableSubContent()
+		if hasSubContent {
+
+			logger.Debug("Now process sub-content ")
+			for kk := range retData {
+				for index := range fields {
+					fieldname := fields[index]
+					data, err := db.GetSubContent(t+specifier+":"+fmt.Sprint(retData[kk]["id"]), fieldname)
+					//fmt.Println(t + specifier + ":" + fmt.Sprint(retData[kk]["id"]))
+					if err == nil {
+						outdata := []map[string]interface{}{}
+						err := json.Unmarshal(data, &outdata)
+						if err == nil {
+							retData[kk][fieldname] = outdata
+						}
+					}
+
+				}
+			}
+
+		}
+
+	}
 
 	p := 0
 
@@ -1779,7 +1849,7 @@ func getContent(w http.ResponseWriter, r *http.Request) {
 	i := q.Get("id")
 	t := q.Get("type")
 	status := q.Get("status") //get content by status
-	logger.Debugf("Get content %t by id :%s , status %s", t, i, status)
+	logger.Debugf("Get content %s by id :%s , status %s", t, i, status)
 	contentType, ok := item.Types[t]
 	if !ok {
 		//fmt.Fprintf(res, item.ErrTypeNotRegistered.Error(), t)
@@ -1812,16 +1882,46 @@ func getContent(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = json.Unmarshal(data, post)
+		retdata := map[string]interface{}{}
+		//err = json.Unmarshal(data, post)
+		err = json.Unmarshal(data, &retdata)
 		if err != nil {
 			logger.Error(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		//fmt.Println(retdata)
+		hook, ok := post.(item.Hookable)
+
+		if ok {
+			// hook before response
+			fields, hasSubContent := hook.EnableSubContent()
+			if hasSubContent {
+
+				logger.Debug("Now process sub-content ")
+
+				for index := range fields {
+					fieldname := fields[index]
+					data, err := db.GetSubContent(t+":"+i, fieldname)
+					//fmt.Println(t + specifier + ":" + fmt.Sprint(retData[kk]["id"]))
+					if err == nil {
+						outdata := []map[string]interface{}{}
+						err := json.Unmarshal(data, &outdata)
+						if err == nil {
+							retdata[fieldname] = outdata
+						}
+					}
+
+				}
+
+			}
+
+		}
+
 		renderJSON(w, r, map[string]interface{}{
 			"retCode": 0,
 			"msg":     "ok",
-			"data":    post,
+			"data":    retdata,
 		})
 		return
 	}
@@ -2642,11 +2742,11 @@ func approveContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Store the content in the bucket t
+	//fmt.Printf("%v", newentry)
 	id, err := db.SetContent(t+":-1", newentry)
 	if err != nil {
 		logger.Warn("Error storing content in approveContentHandler for:", t, err)
 		w.WriteHeader(http.StatusInternalServerError)
-
 		return
 	}
 
@@ -2660,8 +2760,9 @@ func approveContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	pendingBucks := t + PENDINGSuffix
 	if pendingID != "" {
-		err = db.DeleteContent(t + ":" + pendingID)
+		err = db.DeleteContent(pendingBucks + ":" + pendingID)
 		if err != nil {
 			logger.Warn("Failed to remove content after approval:", err)
 		}
@@ -2717,7 +2818,7 @@ func rejectContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := db.Content(t + ":" + id)
+	_, err := db.Content(t + PENDINGSuffix + ":" + id) //target is pending bucket
 	if err != nil {
 		logger.Error("no reject content ", t+":"+id, err)
 		renderJSON(w, r, ReturnData{
@@ -2759,7 +2860,7 @@ func rejectContent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	logger.Debug("Now to delete the content ", t, ": ", id)
-	err = db.DeleteContent(t + ":" + id)
+	err = db.DeleteContent(t + PENDINGSuffix + ":" + id)
 	if err != nil {
 		logger.Error(err)
 		w.WriteHeader(http.StatusInternalServerError)

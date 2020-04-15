@@ -4,7 +4,7 @@
 package db
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/agreyfox/eshop/system/item"
 	"github.com/agreyfox/eshop/system/logs"
@@ -43,7 +43,7 @@ func Store() *bolt.DB {
 func Close() {
 	err := store.Close()
 	if err != nil {
-		log.Println(err)
+		logger.Error(err)
 	}
 }
 
@@ -56,7 +56,7 @@ func Init() {
 	var err error
 	store, err = bolt.Open("system.db", 0666, nil)
 	if err != nil {
-		log.Fatalln(err)
+		logger.Fatal(err)
 	}
 
 	err = store.Update(func(tx *bolt.Tx) error {
@@ -86,12 +86,12 @@ func Init() {
 	})
 
 	if err != nil {
-		log.Fatalln("Coudn't initialize db with buckets.", err)
+		logger.Fatal("Coudn't initialize db with buckets.", err)
 	}
 
 	err = LoadCacheConfig()
 	if err != nil {
-		log.Fatalln("Failed to load config cache.", err)
+		logger.Fatal("Failed to load config cache.", err)
 	}
 
 	clientSecret := ConfigCache("client_secret").(string)
@@ -103,7 +103,7 @@ func Init() {
 	// invalidate cache on system start
 	err = InvalidateCache()
 	if err != nil {
-		log.Fatalln("Failed to invalidate cache.", err)
+		logger.Fatal("Failed to invalidate cache.", err)
 	}
 }
 
@@ -119,9 +119,10 @@ func AddBucket(name string) {
 // Should be called from a goroutine after SetContent is successful (SortContent requirement)
 func InitSearchIndex() {
 	for t := range item.Types {
+		fmt.Println(t)
 		err := search.MapIndex(t)
 		if err != nil {
-			log.Fatalln(err)
+			logger.Fatal(err)
 			return
 		}
 		SortContent(t)
@@ -151,7 +152,7 @@ func SystemInitComplete() bool {
 	})
 	if err != nil {
 		complete = false
-		log.Fatalln(err)
+		logger.Fatal(err)
 	}
 
 	return complete

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"log"
 	"net/http"
 	"strings"
 
@@ -19,7 +18,7 @@ func push(res http.ResponseWriter, req *http.Request, pt interface{}, data []byt
 			// get fields to pull values from data
 			fields, err := p.Push(res, req)
 			if err != nil {
-				log.Println("[Pushable] error:", err)
+				logger.Error("[Pushable] error:", err)
 				return
 			}
 
@@ -49,7 +48,7 @@ func push(res http.ResponseWriter, req *http.Request, pt interface{}, data []byt
 						return true
 					}
 					if err != nil {
-						log.Println("Error during Push of value:", v.String(), err)
+						logger.Error("Error during Push of value:", v.String(), err)
 					}
 
 					return true

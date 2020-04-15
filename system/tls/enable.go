@@ -6,7 +6,6 @@ package tls
 import (
 	"crypto/tls"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -22,14 +21,14 @@ import (
 func newManager() autocert.Manager {
 	pwd, err := os.Getwd()
 	if err != nil {
-		log.Fatalln("Couldn't find working directory to locate or save certificates.")
+		logger.Fatal("Couldn't find working directory to locate or save certificates.")
 	}
 
 	cache := autocert.DirCache(filepath.Join(pwd, "system", "tls", "certs"))
 	if _, err := os.Stat(string(cache)); os.IsNotExist(err) {
 		err := os.MkdirAll(string(cache), os.ModePerm|os.ModeDir)
 		if err != nil {
-			log.Fatalln("Couldn't create cert directory at", cache)
+			logger.Fatal("Couldn't create cert directory at", cache)
 		}
 	}
 
@@ -38,22 +37,22 @@ func newManager() autocert.Manager {
 	// and sending incomplete requests is wasteful and guaranteed to fail its check
 	host, err := db.Config("domain")
 	if err != nil {
-		log.Fatalln("Error identifying host/domain during TLS set-up.", err)
+		logger.Fatal("Error identifying host/domain during TLS set-up.", err)
 	}
 
 	if host == nil {
-		log.Fatalln("No 'domain' field set in Configuration. Please add a domain before attempting to make certificates.")
+		logger.Fatal("No 'domain' field set in Configuration. Please add a domain before attempting to make certificates.")
 	}
 	fmt.Println("Using", string(host), "as host/domain for certificate...")
 	fmt.Println("NOTE: if the host/domain is not configured properly or is unreachable, HTTPS set-up will fail.")
 
 	email, err := db.Config("admin_email")
 	if err != nil {
-		log.Fatalln("Error identifying admin email during TLS set-up.", err)
+		logger.Fatal("Error identifying admin email during TLS set-up.", err)
 	}
 
 	if email == nil {
-		log.Fatalln("No 'admin_email' field set in Configuration. Please add an admin email before attempting to make certificates.")
+		logger.Fatal("No 'admin_email' field set in Configuration. Please add an admin email before attempting to make certificates.")
 	}
 	fmt.Println("Using", string(email), "as contact email for certificate...")
 
@@ -79,5 +78,5 @@ func Enable() {
 	// launch http listener for "http-01" ACME challenge
 	go http.ListenAndServe(":http", m.HTTPHandler(nil))
 
-	log.Fatalln(server.ListenAndServeTLS("", ""))
+	logger.Fatal(server.ListenAndServeTLS("", ""))
 }

@@ -108,6 +108,7 @@ func Run(mainMux *bone.Mux) {
 
 	v1Mux.Post("/recover", http.HandlerFunc(recoverRequest))
 	v1Mux.Post("/recover/key", http.HandlerFunc(recoverPassword))
+	v1Mux.Post("/backup", http.HandlerFunc(backup))
 
 	//v1Mux.HandleFunc("/recover", forgotPasswordRestHandler)
 	//v1Mux.HandleFunc("/recover/key", recoveryKeyRestHandler)
@@ -143,8 +144,8 @@ func Run(mainMux *bone.Mux) {
 	//v1Mux.HandleFunc("/edit/delete", user.Auth(deleteRestHandler))
 	v1Mux.Get("/content", http.HandlerFunc(getContent))
 	//v1Mux.HandleFunc("/content/delete", http.HandlerFunc(deleteContent))
-	v1Mux.Post("content/approve", http.HandlerFunc(approveContent))
-	v1Mux.Post("content/reject", http.HandlerFunc(rejectContent))
+	v1Mux.Post("/content/approve", http.HandlerFunc(approveContent))
+	v1Mux.Post("/content/reject", http.HandlerFunc(rejectContent))
 	v1Mux.Delete("/content", http.HandlerFunc(deleteContent))
 
 	//v1Mux.HandleFunc("/edit/approve", user.Auth(approveContentRestHandler))

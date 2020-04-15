@@ -11,17 +11,18 @@ require (
 	github.com/blevesearch/segment v0.0.0-20160915185041-762005e7a34f // indirect
 	github.com/blevesearch/snowballstem v0.0.0-20200325004757-48afb64082dd // indirect
 	github.com/boltdb/bolt v1.3.1
+	github.com/bosssauce/reference v0.0.0-20170814213545-3773c61bf702
 	github.com/couchbase/vellum v0.0.0-20190829182332-ef2e028c01fd // indirect
 	github.com/cznic/b v0.0.0-20181122101859-a26611c4d92d // indirect
 	github.com/cznic/mathutil v0.0.0-20181122101859-297441e03548 // indirect
 	github.com/cznic/strutil v0.0.0-20181122101858-275e90344537 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/elazarl/go-bindata-assetfs v1.0.0 // indirect
+	github.com/elazarl/go-bindata-assetfs v1.0.0
 	github.com/evnix/boltdbweb v0.0.0-20191029203843-5b16e6623bd9 // indirect
 	github.com/facebookgo/ensure v0.0.0-20200202191622-63f1cf65ac4c // indirect
 	github.com/facebookgo/stack v0.0.0-20160209184415-751773369052 // indirect
 	github.com/facebookgo/subset v0.0.0-20200203212716-c811ad88dec4 // indirect
-	github.com/gin-gonic/gin v1.6.2 // indirect
+	github.com/gin-gonic/gin v1.6.2
 	github.com/go-zoo/bone v1.3.0
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/gorilla/schema v1.1.0

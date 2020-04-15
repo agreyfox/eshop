@@ -3,7 +3,6 @@ package db
 import (
 	"encoding/base64"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -11,9 +10,9 @@ import (
 
 // CacheControl sets the default cache policy on static asset responses
 func CacheControl(next http.Handler) http.HandlerFunc {
-	
+
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		log.Printf("%v", req)
+		//log.Printf("%v", req)
 		cacheDisabled := ConfigCache("cache_disabled").(bool)
 
 		if cacheDisabled {

@@ -1,7 +1,6 @@
 package tls
 
 import (
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -17,7 +16,7 @@ func EnableDev() {
 
 	pwd, err := os.Getwd()
 	if err != nil {
-		log.Fatalln("Couldn't find working directory to activate dev certificates:", err)
+		logger.Fatal("Couldn't find working directory to activate dev certificates:", err)
 	}
 
 	vendorPath := filepath.Join(pwd, "key", "tls") //the key store and key/tls下面
@@ -25,5 +24,5 @@ func EnableDev() {
 	cert := filepath.Join(vendorPath, "devcerts", "cert.pem")
 	key := filepath.Join(vendorPath, "devcerts", "key.pem")
 
-	log.Fatalln(http.ListenAndServeTLS(":10443", cert, key, nil))
+	logger.Fatal(http.ListenAndServeTLS(":10443", cert, key, nil))
 }

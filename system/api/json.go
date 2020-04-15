@@ -3,9 +3,29 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
 )
+
+func fmtMAP(data ...map[string]interface{}) ([]byte, error) {
+	var msg = []map[string]interface{}{}
+	for _, d := range data {
+		msg = append(msg, d)
+	}
+
+	resp := map[string][]map[string]interface{}{
+		"data": msg,
+	}
+
+	var buf = &bytes.Buffer{}
+	enc := json.NewEncoder(buf)
+	err := enc.Encode(resp)
+	if err != nil {
+		logger.Error("Failed to encode data to JSON:", err)
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
 
 func fmtJSON(data ...json.RawMessage) ([]byte, error) {
 	var msg = []json.RawMessage{}
@@ -21,7 +41,7 @@ func fmtJSON(data ...json.RawMessage) ([]byte, error) {
 	enc := json.NewEncoder(buf)
 	err := enc.Encode(resp)
 	if err != nil {
-		log.Println("Failed to encode data to JSON:", err)
+		logger.Error("Failed to encode data to JSON:", err)
 		return nil, err
 	}
 
@@ -37,7 +57,7 @@ func toJSON(data []string) ([]byte, error) {
 
 	err := enc.Encode(resp)
 	if err != nil {
-		log.Println("Failed to encode data to JSON:", err)
+		logger.Error("Failed to encode data to JSON:", err)
 		return nil, err
 	}
 
@@ -52,6 +72,6 @@ func sendData(res http.ResponseWriter, req *http.Request, data []byte) {
 
 	_, err := res.Write(data)
 	if err != nil {
-		log.Println("Error writing to response in sendData")
+		logger.Error("Error writing to response in sendData")
 	}
 }

@@ -3,10 +3,10 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 
+	"github.com/agreyfox/eshop/boltdbweb"
 	_ "github.com/agreyfox/eshop/content"
 	"github.com/agreyfox/eshop/system/admin"
 	"github.com/agreyfox/eshop/system/api"
@@ -43,10 +43,13 @@ var serveCmd = &cobra.Command{
 		mainMux := bone.New()
 
 		for _, service := range services {
+			fmt.Println(service)
 			if service == "api" {
 				api.Run(mainMux)
 			} else if service == "admin" {
 				admin.Run(mainMux)
+			} else if service == "db" {
+				boltdbweb.Run(db.Store(), mainMux) //run bolt db instance
 			} else {
 				return ErrWrongOrMissingService
 			}
@@ -103,7 +106,7 @@ var serveCmd = &cobra.Command{
 		logger.Infof("Server listening at %s:%d for HTTP requests...\n", bind, port)
 		logger.Info("\nVisit '/admin' to get started.")
 
-		log.Fatalln(http.ListenAndServe(fmt.Sprintf("%s:%d", bind, port), mainMux))
+		logger.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%d", bind, port), mainMux))
 
 		return nil
 	},

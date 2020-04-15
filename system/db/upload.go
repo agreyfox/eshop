@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/url"
 	"strconv"
 	"strings"
@@ -199,7 +198,7 @@ func UploadAll() [][]byte {
 		})
 	})
 	if err != nil {
-		log.Println("Error in UploadAll:", err)
+		logger.Error("Error in UploadAll:", err)
 		return nil
 	}
 

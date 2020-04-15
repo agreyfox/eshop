@@ -65,12 +65,12 @@ func InitilizedDb() error {
 
 	db.Init()
 	defer db.Close()
-	
+
 	fmt.Println("System DB initialized!")
 	return nil
 }
 
-// to Display all the system configuration
+// DistplayAllConfig to Display all the system configuration
 func DistplayAllConfig() {
 	logger.Info("Trying to get the all configuration in system db")
 	db.Init()
@@ -85,6 +85,7 @@ func DistplayAllConfig() {
 	PrettyPrint(ma)
 }
 
+// SetConfig set config one pair
 func SetConfig(key string, value interface{}) {
 	fmt.Printf("Try to save the config %s--%v\n ", key, value)
 	db.Init()
@@ -97,6 +98,7 @@ func SetConfig(key string, value interface{}) {
 	fmt.Println("Config %s saved! ", key)
 }
 
+// GetConfig to get one key's value
 func GetConfig(key string) {
 	fmt.Printf("Try to get the config %s\n", key)
 	db.Init()
@@ -112,7 +114,7 @@ func GetConfig(key string) {
 	fmt.Println("===================================================================")
 }
 
-// print pretty map[string]internface output
+// PrettyPrint map[string]internface output
 func PrettyPrint(obj map[string]interface{}) {
 	prettyJSON, err := json.MarshalIndent(obj, "", "    ")
 	if err != nil {

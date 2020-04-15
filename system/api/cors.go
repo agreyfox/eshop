@@ -1,7 +1,6 @@
 package api
 
 import (
-	"log"
 	"net/http"
 	"net/url"
 
@@ -23,7 +22,7 @@ func responseWithCORS(res http.ResponseWriter, req *http.Request) (http.Response
 		origin := req.Header.Get("Origin")
 		u, err := url.Parse(origin)
 		if err != nil {
-			log.Println("Error parsing URL from request Origin header:", origin)
+			logger.Error("Error parsing URL from request Origin header:", origin)
 			return res, false
 		}
 

@@ -5,7 +5,6 @@ package upload
 import (
 	"fmt"
 	"io"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -121,6 +120,6 @@ func storeFileInfo(size int64, filename, urlPath string, fds []*multipart.FileHe
 
 	_, err := db.SetUpload(db.DB__uploads+":-1", data)
 	if err != nil {
-		log.Println("Error saving file upload record to database:", err)
+		fmt.Println("Error saving file upload record to database:", err)
 	}
 }

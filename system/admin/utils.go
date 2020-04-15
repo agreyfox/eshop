@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/smtp"
 	"net/url"
@@ -28,6 +27,11 @@ type ReturnData struct {
 	Meta    MetaData      `json:"meta,omitempty"`
 }
 
+var (
+	PENDINGSuffix = "__pending"
+	SORTSuffix    = "__sorted"
+)
+
 func fmtJSON(data ...json.RawMessage) ([]byte, error) {
 	var msg = []json.RawMessage{}
 	for _, d := range data {
@@ -42,7 +46,7 @@ func fmtJSON(data ...json.RawMessage) ([]byte, error) {
 	enc := json.NewEncoder(buf)
 	err := enc.Encode(resp)
 	if err != nil {
-		log.Println("Failed to encode data to JSON:", err)
+		logger.Error("Failed to encode data to JSON:", err)
 		return nil, err
 	}
 
@@ -111,7 +115,7 @@ func GetIP(r *http.Request) string {
 func PrettyPrint(obj map[string]interface{}) {
 	prettyJSON, err := json.MarshalIndent(obj, "", "    ")
 	if err != nil {
-		log.Fatal("Failed to generate json", err)
+		logger.Fatal("Failed to generate json", err)
 	}
 	fmt.Println("===================================================================")
 	fmt.Printf("\t\t%s\n", string(prettyJSON))

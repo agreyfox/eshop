@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"time"
 
@@ -25,7 +24,7 @@ func ContentAll(namespace string) []byte {
 
 	j, err := Get(URL)
 	if err != nil {
-		log.Println("Error in ContentAll for reference HTTP request:", URL)
+		fmt.Println("Error in ContentAll for reference HTTP request:", URL)
 		return nil
 	}
 
@@ -42,7 +41,7 @@ func Query(namespace string, opts QueryOptions) []byte {
 
 	j, err := Get(URL)
 	if err != nil {
-		log.Println("Error in Query for reference HTTP request:", URL)
+		fmt.Println("Error in Query for reference HTTP request:", URL)
 		return nil
 	}
 
@@ -56,7 +55,7 @@ func Get(endpoint string) ([]byte, error) {
 
 	req, err := http.NewRequest(http.MethodGet, endpoint, r)
 	if err != nil {
-		log.Println("Error creating reference HTTP request:", endpoint)
+		fmt.Println("Error creating reference HTTP request:", endpoint)
 		return nil, err
 	}
 
@@ -65,14 +64,14 @@ func Get(endpoint string) ([]byte, error) {
 	}
 	res, err := c.Do(req)
 	if err != nil {
-		log.Println("Error making reference HTTP request:", endpoint)
+		fmt.Println("Error making reference HTTP request:", endpoint)
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	j, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		log.Println("Error reading body for reference HTTP request:", endpoint)
+		fmt.Println("Error reading body for reference HTTP request:", endpoint)
 		return nil, err
 	}
 

@@ -7,7 +7,6 @@ import (
 	crand "crypto/rand"
 	"encoding/base64"
 	"fmt"
-	"log"
 	mrand "math/rand"
 	"net/http"
 	"time"
@@ -26,8 +25,9 @@ type User struct {
 	Salt   string      `json:"salt"`
 	Locale string      `json:"locale"`
 	Perm   Permissions `json:"perm"`
-	Phone  string      `json:phone`
-	meta   string      `json:metadata`
+	Phone  string      `json:phone,omitempty`
+	Social string      `json:"social,omitempty"`
+	Meta   string      `json:metadata,omitempty`
 }
 
 const (
@@ -152,7 +152,7 @@ func IsUser(usr *User, password string) bool {
 
 	err = checkPassword([]byte(usr.Hash), []byte(password), salt)
 	if err != nil {
-		log.Println("Error checking password:", err)
+		logger.Error("Error checking password:", err)
 		return false
 	}
 
@@ -168,7 +168,7 @@ func IsAdminUser(usr *User, password string) bool {
 
 	err = checkPassword([]byte(usr.Hash), []byte(password), salt)
 	if err != nil {
-		log.Println("Error checking password:", err)
+		logger.Error("Error checking password:", err)
 		return false
 	}
 

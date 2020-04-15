@@ -19,7 +19,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"log"
 	"math/big"
 	"net"
 	"os"
@@ -27,6 +26,12 @@ import (
 	"time"
 
 	"github.com/agreyfox/eshop/system/db"
+	"github.com/agreyfox/eshop/system/logs"
+	"go.uber.org/zap"
+)
+
+var (
+	logger *zap.SugaredLogger = logs.Log.Sugar()
 )
 
 func publicKey(priv interface{}) interface{} {
@@ -63,7 +68,7 @@ func setupDev() {
 	priv, err = rsa.GenerateKey(rand.Reader, 2048)
 
 	if err != nil {
-		log.Fatalf("failed to generate private key: %s", err)
+		logger.Fatalf("failed to generate private key: %s", err)
 	}
 
 	notBefore := time.Now()
@@ -72,7 +77,7 @@ func setupDev() {
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
 	if err != nil {
-		log.Fatalf("failed to generate serial number: %s", err)
+		logger.Fatalf("failed to generate serial number: %s", err)
 	}
 
 	template := x509.Certificate{
@@ -108,13 +113,13 @@ func setupDev() {
 
 	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, publicKey(priv), priv)
 	if err != nil {
-		log.Fatalln("Failed to create certificate:", err)
+		logger.Fatal("Failed to create certificate:", err)
 	}
 
 	// overwrite/create directory for devcerts
 	pwd, err := os.Getwd()
 	if err != nil {
-		log.Fatalln("Couldn't find working directory to locate or save dev certificates:", err)
+		logger.Fatal("Couldn't find working directory to locate or save dev certificates:", err)
 	}
 
 	vendorTLSPath := filepath.Join(pwd, "cmd", "dms", "vendor", "github.com", "agreyfox", "dms", "system", "tls")
@@ -123,24 +128,24 @@ func setupDev() {
 	// clear all old certs if found
 	err = os.RemoveAll(devcertsPath)
 	if err != nil {
-		log.Fatalln("Failed to remove old files from dev certificate directory:", err)
+		logger.Fatal("Failed to remove old files from dev certificate directory:", err)
 	}
 
 	err = os.Mkdir(devcertsPath, os.ModeDir|os.ModePerm)
 	if err != nil {
-		log.Fatalln("Failed to create directory to locate or save dev certificates:", err)
+		logger.Fatal("Failed to create directory to locate or save dev certificates:", err)
 	}
 
 	certOut, err := os.Create(filepath.Join(devcertsPath, "cert.pem"))
 	if err != nil {
-		log.Fatalln("Failed to open devcerts/cert.pem for writing:", err)
+		logger.Fatal("Failed to open devcerts/cert.pem for writing:", err)
 	}
 	pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
 	certOut.Close()
 
 	keyOut, err := os.OpenFile(filepath.Join(devcertsPath, "key.pem"), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
-		log.Fatalln("Failed to open devcerts/key.pem for writing:", err)
+		logger.Fatal("Failed to open devcerts/key.pem for writing:", err)
 		return
 	}
 	pem.Encode(keyOut, pemBlockForKey(priv))

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 	"net/url"
 
 	"github.com/boltdb/bolt"
@@ -107,7 +106,7 @@ func AddonAll() [][]byte {
 		return nil
 	})
 	if err != nil {
-		log.Println("Error finding addons in db with db.AddonAll:", err)
+		logger.Info("Error finding addons in db with db.AddonAll:", err)
 		return nil
 	}
 
@@ -157,7 +156,7 @@ func AddonExists(key string) bool {
 		return nil
 	})
 	if err != nil {
-		log.Println("Error checking existence of addon with key:", key, "-", err)
+		logger.Error("Error checking existence of addon with key:", key, "-", err)
 		return false
 	}
 
