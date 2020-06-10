@@ -62,6 +62,53 @@ func exportHandler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// to handle export csv
+func export(res http.ResponseWriter, req *http.Request) {
+	// /admin/contents/export?type=Blogpost&format=csv
+	logger.Debug("User try export the content,", GetIP(req))
+	q := req.URL.Query()
+	t := q.Get("type")
+	f := strings.ToLower(q.Get("format"))
+
+	if t == "" || f == "" {
+		v, err := Error400()
+		if err != nil {
+			res.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		res.WriteHeader(http.StatusBadRequest)
+		_, err = res.Write(v)
+		if err != nil {
+			res.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+	}
+
+	pt, ok := item.Types[t]
+	if !ok {
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	switch f {
+	case "csv":
+		csv, ok := pt().(format.CSVFormattable)
+		if !ok {
+			res.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		fields := csv.FormatCSV()
+		exportCSV(res, req, pt, fields)
+
+	default:
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+}
+
 func exportCSV(res http.ResponseWriter, req *http.Request, pt func() interface{}, fields []string) {
 	tmpFile, err := ioutil.TempFile(os.TempDir(), "exportcsv-")
 	if err != nil {

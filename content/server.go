@@ -10,12 +10,15 @@ import (
 type Server struct {
 	item.Item
 
-	Name     string   `json:"name"`
-	Game     string   `json:"game"`
-	Online   bool     `json:"online"`
-	Category []string `json:"category"`
-	Tags     []string `json:"tags"`
-	Product  []string `json:"product"`
+	Name     string `json:"name"`
+	LongName string `json:"longName"` //长名
+	Game     string `json:"game"`
+	Online   bool   `json:"online"`
+	Category string `json:"category"`
+	Tags     string `json:"tags"`
+	Coins    string `json:"coins"` //服务器上所有在卖的coin
+	Items    string `json:"items"` //服务器上的所有在卖的item
+	desc     string `json:"description`
 }
 
 // MarshalEditor writes a buffer of html to edit a Server within the CMS
@@ -84,4 +87,73 @@ func init() {
 // fields from the Server struct type
 func (s *Server) String() string {
 	return fmt.Sprintf("Server: %s", s.Name)
+}
+
+func (o *Server) ContentStruct() map[string]interface{} {
+	dd := map[string]item.FieldDescription{
+		"name": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Required:   true,
+			Order:      1,
+		},
+		"longName": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Required:   true,
+			Order:      2,
+		},
+		"game": {
+			Type:       "select",
+			DataType:   "content",
+			DataSource: []string{"/admin/v1/contents?type=Game"},
+			Required:   true,
+			Order:      3,
+		},
+		"category": {
+			Type:       "select",
+			DataType:   "content",
+			DataSource: []string{"/admin/v1/contents?type=Category", "array"},
+			Required:   true,
+			Order:      4,
+		},
+		"tags": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{"array"},
+			Order:      5,
+		},
+		"coins": {
+			Type:       "select",
+			DataType:   "content",
+			DataSource: []string{"/admin/v1/contents?type=Product", "array"},
+			Order:      6,
+		},
+		"items": {
+			Type:       "select",
+			DataType:   "content",
+			DataSource: []string{"/admin/v1/contents?type=Product", "array"},
+			Order:      7,
+		},
+		"online": {
+			Type:       "bool",
+			DataType:   "field",
+			DataSource: []string{""},
+			Required:   true,
+			Order:      8,
+		},
+		"description": {
+			Type:       "textarea",
+			DataType:   "field",
+			DataSource: []string{""},
+			Order:      9,
+		},
+	}
+	//retStr, _ := json.Marshal(dd)
+	return map[string]interface{}{
+		"data": dd,
+		"no":   30,
+	}
 }

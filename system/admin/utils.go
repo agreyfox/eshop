@@ -10,6 +10,8 @@ import (
 	"net/url"
 	"reflect"
 	"strings"
+
+	"github.com/agreyfox/eshop/system/item"
 )
 
 type MetaData struct {
@@ -189,4 +191,24 @@ func sendEmail(server, from, to, password, subject, body string) error {
 		[]byte(sub+content),
 	)
 	return err
+}
+
+//return system content and structure with order
+func getContentsStruct() (ret []byte) {
+	retdata := map[string]interface{}{}
+	for key, it := range item.Types {
+		//fmt.Println(key)
+		obj := it()
+		s, ok := obj.(item.ContentStructable)
+		if ok {
+			retdata[key] = s.ContentStruct()
+		}
+	}
+	data, err := json.Marshal(retdata)
+	if err != nil {
+		logger.Error(err)
+		return []byte{}
+	}
+	//fmt.Println(string(data[:]))
+	return data
 }

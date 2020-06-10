@@ -8,6 +8,10 @@
 		}
 	],
 	"settings": {
-		"git.ignoreLimitWarning": true
-	}
+		"git.ignoreLimitWarning": true,
+		"go.autocompleteUnimportedPackages": true,
+		"go.formatTool": "gofmt",
+		"editor.formatOnSave": true
+	},
+	
 }

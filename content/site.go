@@ -46,7 +46,7 @@ func (s *Site) MarshalEditor() ([]byte, error) {
 
 func init() {
 	item.Types["Site"] = func() interface{} { return new(Site) }
-	fmt.Println("Initial content site ")
+	//fmt.Println("Initial content site ")
 }
 
 // String defines how a Site is printed. Update it using more descriptive

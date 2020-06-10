@@ -15,26 +15,20 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/agreyfox/eshop/boltdbweb/web"
 	"github.com/agreyfox/eshop/system/logs"
 
 	"github.com/go-zoo/bone"
 	"go.uber.org/zap"
-
-	"github.com/boltdb/bolt"
 )
 
 const version = "v0.1.0"
 
 var (
-	logger     *zap.SugaredLogger = logs.Log.Sugar()
-	showHelp   bool
-	dbHandler  *bolt.DB
-	dbName    ="paypal"
-	dbFilename = "record.db"
+	logger   *zap.SugaredLogger = logs.Log.Sugar()
+	showHelp bool
+
 	port       string
 	staticPath string
-	
 )
 
 func usage(appName, version string) {
@@ -49,121 +43,40 @@ func usage(appName, version string) {
 }
 
 func init() {
-	logger.Info("init Paypal beckend  web interface")
+	//logger.Info("init Paypal beckend  web interface")
 }
 
-func Run(mainMux *bone.Mux) {
+func Start(mainMux *bone.Mux) {
 
 	logger.Info("starting PayPal beckend service...")
+	initpaypal() // repalce to not use default initial
+
+	boltMux := bone.New() //.Prefix("admin")
+	boltMux.Get("/ping", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("pong"))
+	}))
+
+	boltMux.HandleFunc("/", Index)
+
+	boltMux.PostFunc("/pay", createPayment)
+	boltMux.HandleFunc("/return", Succeed)
+	boltMux.PostFunc("/Failed", Failed)
+	boltMux.HandleFunc("/notify", Notify)
+	boltMux.HandleFunc("/cancel", Failed)
+	boltMux.HandleFunc("/test", Test)
 
 	pwd, erro := os.Getwd()
 	if erro != nil {
 		logger.Error("Couldn't find current directory for file server.")
 	}
 
-	logger.Info("Initial paypal payment record data file ")
-	if store != nil {
-		return
-	}
-
-	var err error
-	store, err = bolt.Open("system.db", 0666, nil)
-	if dbHandler != nil {
-		logger.Fatal(err)
-		
-	}
-
-	err = store.Update(func(tx *bolt.Tx) error {
-		// initialize db with all content type buckets & sorted bucket for type
-		_,err:=tx.CreateBucketIfNotExists([]byte(dbName))
-		if err!=nil{
-			Logger.Debugf("Error in check Record db")
-			return 
-		}
-		
-	})
-
-	if err != nil {
-		logger.Fatal("initialize db with buckets.Please check ", err)
-	}
-
-
-	boltMux := bone.New() //.Prefix("admin")
-	mainMux.Get("/paypalping", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("paypalpong"))
-	}))
-
-	boltMux.GetFunc("/", web.Index)
-
-	mainMux.PostFunc("/pay", createPayment)
-	mainMux.PostFunc("/Succeed", Succeed)
-	mainMux.PostFunc("/Failed", Failed)
-	mainMux.PostFunc("/return", Succeed)
-	mainMux.PostFunc("/cancle", Failed)
-
 	//boltMux.Handle("/web/", http.StripPrefix("/static/", db.CacheControl(http.FileServer(restrict(http.Dir(staticDir))))))
-	pageDir := filepath.Join(pwd, "payment/papyal", "web")
+	pageDir := filepath.Join(pwd, "payment/paypal", "web")
 
 	mainMux.Get("/paypal/*", http.StripPrefix("/paypal/", http.FileServer(http.Dir(pageDir))))
-
+	mainMux.Get("/thanks", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("Thanks! WelCome "))
+	}))
 	mainMux.SubRoute("/payment/paypal", boltMux)
 
 }
-
-/*
-func main() {
-	appName := path.Base(os.Args[0])
-	flag.Parse()
-	args := flag.Args()
-
-	if showHelp == true {
-		usage(appName, version)
-		os.Exit(0)
-	}
-
-	// If non-flag options are included assume bolt db is specified.
-	if len(args) > 0 {
-		dbName = args[0]
-	}
-
-	if dbName == "" {
-		usage(appName, version)
-		log.Printf("\nERROR: Missing boltdb name\n")
-		os.Exit(1)
-	}
-
-	fmt.Print(" ")
-	log.Info("starting boltdb-browser..")
-
-	var err error
-	db, err = bolt.Open(dbName, 0600, &bolt.Options{Timeout: 2 * time.Second})
-	boltbrowserweb.Db = db
-
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	// OK, we should be ready to define/run web server safely.
-	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
-
-	r.GET("/", boltbrowserweb.Index)
-
-	r.GET("/buckets", boltbrowserweb.Buckets)
-	r.POST("/createBucket", boltbrowserweb.CreateBucket)
-	r.POST("/put", boltbrowserweb.Put)
-	r.POST("/get", boltbrowserweb.Get)
-	r.POST("/deleteKey", boltbrowserweb.DeleteKey)
-	r.POST("/deleteBucket", boltbrowserweb.DeleteBucket)
-	r.POST("/prefixScan", boltbrowserweb.PrefixScan)
-
-	r.StaticFS("/web", assetFS())
-
-	r.Run(":" + port)
-}
-*/

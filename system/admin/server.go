@@ -134,6 +134,7 @@ func Run(mainMux *bone.Mux) {
 	//v1Mux.HandleFunc("/contents", user.Auth(contentsRestHandler))
 	v1Mux.Get("/contents", http.HandlerFunc(getContents))
 	v1Mux.Get("/contents/search", http.HandlerFunc(searchContent))
+	v1Mux.Get("/contents/export", http.HandlerFunc(export))
 
 	//v1Mux.HandleFunc("/contents/search", user.Auth(searchRestHandler))
 

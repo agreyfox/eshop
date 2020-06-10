@@ -33,11 +33,11 @@ func init() {
 	//cobra.OnInitialize(initConfig)
 
 	rootCmd.SetVersionTemplate("lqcms version {{printf \"%s\" .Version}}\n")
-	logger.Info("lqcms starting.......")
+	fmt.Println("\t\t========================================")
+	fmt.Printf("\t\t\tlqcms engine starting.......\n")
+	fmt.Println("\t\t========================================")
 	pflags := rootCmd.PersistentFlags()
 	pflags.StringVar(&gocmd, "gocmd", "go", "custom go command if using beta or new release of Go")
-	//fmt.Println(pflags)
-	//	addServerFlags(flags)
 
 }
 

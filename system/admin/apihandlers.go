@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -115,12 +116,13 @@ func login(res http.ResponseWriter, req *http.Request) {
 		Expires: week,
 		Path:    "/",
 	})
-
+	contentStructData := getContentsStruct()
 	logger.Debugf("Admin User %s logged in !", usr.Email)
 	retdata := map[string]interface{}{
-		"retCode": 0,
-		"msg":     "Done",
-		"data":    token,
+		"retCode":  0,
+		"msg":      "Done",
+		"data":     token,
+		"contents": string(contentStructData[:]),
 	}
 
 	renderJSON(res, req, retdata)
@@ -143,6 +145,7 @@ func logout(res http.ResponseWriter, req *http.Request) {
 
 func recoverRequest(w http.ResponseWriter, r *http.Request) {
 	logger.Debugf("User try to recover password form :%s", GetIP(r))
+
 	reqJSON := getJsonFromBody(r)
 	// check email for user, if no user return Error
 	email := strings.ToLower(fmt.Sprintf("%s", reqJSON["email"]))
@@ -1519,7 +1522,6 @@ func searchMediaContent(w http.ResponseWriter, r *http.Request) {
 		err := json.Unmarshal(posts[i], &item)
 		if err != nil {
 			logger.Debug("Error unmarshal search result json into", t, err, posts[i])
-
 			continue
 		}
 		retData = append(retData, item)
@@ -1709,8 +1711,10 @@ func getContents(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
-	opts := db.QueryOptions{ //查询条件个数，便宜，排序
+	if offset > 0 {
+		offset = offset - 1 //match human 1 for page 1,
+	}
+	opts := db.QueryOptions{ //查询条件个数，页号，排序
 		Count:  pageSize,
 		Offset: offset,
 		Order:  order,
@@ -1759,6 +1763,7 @@ func getContents(w http.ResponseWriter, r *http.Request) {
 
 		case "pending":
 			// get __pending posts of type t from the db
+			logger.Debugf("Querying pending contents ")
 			total, posts = db.Query(t+"__pending", opts)
 			//logger.Debugf("%+v", posts)
 
@@ -1776,9 +1781,8 @@ func getContents(w http.ResponseWriter, r *http.Request) {
 
 		}
 	} else {
-		logger.Debugf("no ext and ready to run")
+		logger.Debugf("no creatable item and query public data direclty", opts)
 		total, posts = db.Query(t+specifier, opts)
-		//logger.Debugf("%+v", posts)
 
 		for i := range posts {
 			item := make(map[string]interface{})
@@ -1800,7 +1804,7 @@ func getContents(w http.ResponseWriter, r *http.Request) {
 		fields, hasSubContent := hook.EnableSubContent()
 		if hasSubContent {
 
-			logger.Debug("Now process sub-content ")
+			logger.Debug("Now process sub-contents")
 			for kk := range retData {
 				for index := range fields {
 					fieldname := fields[index]
@@ -2170,9 +2174,10 @@ func searchContent(w http.ResponseWriter, r *http.Request) {
 	search := q.Get("q")
 	logger.Debugf("Search content %s with %s from %s", t, search, GetIP(r))
 	status := q.Get("status")
+	regexsearch := q.Get("r")
 	var specifier string
 
-	if t == "" || search == "" {
+	if t == "" || (search == "" && regexsearch == "") {
 		logger.Debugf("Search parameter missing")
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -2193,22 +2198,38 @@ func searchContent(w http.ResponseWriter, r *http.Request) {
 
 	//post := pt()
 	retData := make([]map[string]interface{}, 0)
+	match := strings.ToLower(search)
 
 	for i := range posts {
 		// skip posts that don't have any matching search criteria
-		match := strings.ToLower(search)
-		all := strings.ToLower(string(posts[i]))
-		if !strings.Contains(all, match) {
-			continue
-		}
-		item := make(map[string]interface{})
-		err := json.Unmarshal(posts[i], &item)
+		if search != "" { // contain str
+			all := strings.ToLower(string(posts[i]))
 
-		if err != nil {
-			logger.Debug("Error unmarshal search result json into", t, err, posts[i])
-			continue
+			if !strings.Contains(all, match) {
+				continue
+			}
+			item := make(map[string]interface{})
+			err := json.Unmarshal(posts[i], &item)
+
+			if err != nil {
+				logger.Debug("Error unmarshal search result json into", t, err, posts[i])
+				continue
+			}
+			retData = append(retData, item)
+		} else if regexsearch != "" { // use regex to search
+			re := regexp.MustCompile(regexsearch)
+			if re.Match(posts[i]) {
+				item := make(map[string]interface{})
+				err := json.Unmarshal(posts[i], &item)
+
+				if err != nil {
+					logger.Debug("Error unmarshal search result json into", t, err, posts[i])
+					continue
+				}
+				//fmt.Println(item)
+				retData = append(retData, item)
+			}
 		}
-		retData = append(retData, item)
 	}
 	total := len(posts)
 	meta := MetaData{
@@ -3021,7 +3042,7 @@ func uploadMediaContent(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	fmt.Println(urlPaths)
+	//fmt.Println(urlPaths)
 	renderJSON(w, r, map[string]interface{}{
 		"retCode": 0,
 		"msg":     "ok",

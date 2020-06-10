@@ -3,6 +3,7 @@
 package upload
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -11,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/agreyfox/eshop/system/db"
@@ -104,9 +106,13 @@ func StoreFiles(req *http.Request) (map[string]string, error) {
 		urlPaths[name] = urlPath
 
 		// add upload information to db
-		go storeFileInfo(size, filename, urlPath, fds)
+		//go storeFileInfo(size, filename, urlPath, fds)
+		storeFileInfo(size, filename, urlPath, fds)
 	}
+	for key, item := range urlPaths {
 
+		urlPaths[key] = getFileID(item) + "," + item
+	}
 	return urlPaths, nil
 }
 
@@ -122,4 +128,30 @@ func storeFileInfo(size int64, filename, urlPath string, fds []*multipart.FileHe
 	if err != nil {
 		fmt.Println("Error saving file upload record to database:", err)
 	}
+}
+
+//base on the filename(with path )to get id
+func getFileID(fileWithPath string) string {
+	posts := db.UploadAll()
+	//total := len(posts)
+	//retData := make([]map[string]interface{}, 0)
+
+	for i := range posts {
+		// skip posts that don't have any matching search criteria
+		match := strings.ToLower(fileWithPath)
+		all := strings.ToLower(string(posts[i]))
+		if !strings.Contains(all, match) {
+			continue
+		}
+		item := make(map[string]interface{})
+		err := json.Unmarshal(posts[i], &item)
+		if err != nil {
+			fmt.Print("Unmarshal record error", err)
+			continue
+		}
+		//fmt.Println(item)
+
+		return fmt.Sprintf("%d", uint64(item["id"].(float64)))
+	}
+	return ""
 }

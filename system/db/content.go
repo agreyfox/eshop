@@ -209,7 +209,7 @@ func mergeData(ns string, data url.Values, existingContent []byte) ([]byte, erro
 	data.Del("uuid")
 	data.Del("slug")
 
-	logger.Debug(fmt.Sprintf("%+v", data))
+	//logger.Debug(fmt.Sprintf("%+v", data))
 	dec := schema.NewDecoder()
 	dec.SetAliasTag("json")     // allows simpler struct tagging when creating a content type
 	dec.IgnoreUnknownKeys(true) // will skip over form values submitted, but not in struct
@@ -530,9 +530,10 @@ func ContentAll(namespace string) [][]byte {
 
 		b.ForEach(func(k, v []byte) error {
 			if v == nil {
-				fmt.Println("====>", string(k[:]), " is buckets")
+				//fmt.Println("====>", string(k[:]), " is buckets")
 				return nil
 			}
+			//fmt.Printf("===>%s ::%s\n", k, v)
 			posts = append(posts, v)
 
 			return nil
@@ -715,9 +716,11 @@ func QueryByFieldValue(namespace string, field, value string, opts QueryOptions)
 		switch opts.Order {
 		case "desc", "":
 			for k, v := c.Last(); k != nil; k, v = c.Prev() {
-				if !bytes.ContainsAny(v, value) {
+				//logger.Debug(string(v))
+				if !bytes.Contains(v, []byte(fmt.Sprintf(`"%s":"%s"`, field, value))) {
 					continue
 				}
+
 				if cur < start {
 					cur++
 					continue
@@ -734,7 +737,7 @@ func QueryByFieldValue(namespace string, field, value string, opts QueryOptions)
 
 		case "asc":
 			for k, v := c.First(); k != nil; k, v = c.Next() {
-				if !bytes.ContainsAny(v, value) {
+				if !bytes.ContainsAny(v, field+":"+value) {
 					continue
 				}
 				if cur < start {
@@ -754,7 +757,7 @@ func QueryByFieldValue(namespace string, field, value string, opts QueryOptions)
 		default:
 			// results for DESC order
 			for k, v := c.Last(); k != nil; k, v = c.Prev() {
-				if !bytes.ContainsAny(v, value) {
+				if !bytes.ContainsAny(v, field+":"+value) {
 					continue
 				}
 				if cur < start {
@@ -774,7 +777,7 @@ func QueryByFieldValue(namespace string, field, value string, opts QueryOptions)
 
 		return nil
 	})
-	logger.Debug(total, posts)
+	//logger.Debug(total, posts)
 	return total, posts
 }
 

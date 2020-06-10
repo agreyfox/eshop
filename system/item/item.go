@@ -65,8 +65,8 @@ type Sortable interface {
 // to the different lifecycles/events a struct may encounter. Item implements
 // Hookable with no-ops so our user can override only whichever ones necessary.
 type Hookable interface {
-	EnableSubContent() ([]string, bool)
-	EnableOwnerCheck() bool
+	EnableSubContent() ([]string, bool) //for enable sub content
+	EnableOwnerCheck() bool             // for enable owner content
 
 	BeforeAPIResponse(http.ResponseWriter, *http.Request, []byte) ([]byte, error)
 	AfterAPIResponse(http.ResponseWriter, *http.Request, []byte) error
@@ -128,6 +128,10 @@ type Pushable interface {
 // json tag names of the struct fields to which they correspond.
 type Omittable interface {
 	Omit(http.ResponseWriter, *http.Request) ([]string, error)
+}
+
+type ContentStructable interface {
+	ContentStruct() map[string]interface{}
 }
 
 // Item should only be embedded into content type structs.
@@ -383,4 +387,13 @@ func stringToSlug(s string) (string, error) {
 // path entities. Useful for taking user input and converting it for keys or URLs.
 func NormalizeString(s string) (string, error) {
 	return stringToSlug(s)
+}
+
+type FieldDescription struct {
+	Type       string   `json:"type"`
+	DataType   string   `json:"dataType"`
+	DataSource []string `json:"source"`
+	Order      int16    `json:"order"`
+	Others     string   `json:"other"`
+	Required   bool     `json:"required,omitempty"`
 }

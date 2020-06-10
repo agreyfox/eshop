@@ -3,11 +3,13 @@ package cmd
 import (
 	"errors"
 	"fmt"
+
 	"net/http"
 	"strings"
 
 	"github.com/agreyfox/eshop/boltdbweb"
 	_ "github.com/agreyfox/eshop/content"
+	"github.com/agreyfox/eshop/payment"
 	"github.com/agreyfox/eshop/system/admin"
 	"github.com/agreyfox/eshop/system/api"
 	"github.com/agreyfox/eshop/system/api/analytics"
@@ -41,15 +43,22 @@ var serveCmd = &cobra.Command{
 		logger.Info("Start Service : ", services)
 
 		mainMux := bone.New()
-
+		for _, s := range services {
+			if s == "paypal" || s == "payssion" || s == "skrill" {
+				payment.InitialPayment(db.Store(), mainMux)
+				break
+			}
+		}
 		for _, service := range services {
-			fmt.Println(service)
+			//fmt.Println(service)
 			if service == "api" {
 				api.Run(mainMux)
 			} else if service == "admin" {
 				admin.Run(mainMux)
 			} else if service == "db" {
 				boltdbweb.Run(db.Store(), mainMux) //run bolt db instance
+			} else if service == "paypal" || service == "payssion" || service == "skrill" {
+				payment.Run(service)
 			} else {
 				return ErrWrongOrMissingService
 			}
@@ -106,7 +115,7 @@ var serveCmd = &cobra.Command{
 		logger.Infof("Server listening at %s:%d for HTTP requests...\n", bind, port)
 		logger.Info("\nVisit '/admin' to get started.")
 
-		logger.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%d", bind, port), mainMux))
+		fmt.Println(http.ListenAndServe(fmt.Sprintf("%s:%d", bind, port), mainMux))
 
 		return nil
 	},

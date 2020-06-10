@@ -12,8 +12,12 @@ type Game struct {
 
 	Name   string `json:"name"`
 	Sname  string `json:"sname"`
-	Logo   string `json:"logo"`
+	Logo   string `json:"logo,omitempty"`
+	Image  string `json:"barImage,omitempty"`
 	Online bool   `json:"online"`
+	Desc   string `json:"description,omitempty"`
+	Coupon string `json:"coupon,omitempty"` //使用那个coupon
+	Hot    bool   `json:"hot"`              //是否在hotgame中显示
 }
 
 // MarshalEditor writes a buffer of html to edit a Game within the CMS
@@ -61,6 +65,59 @@ func (g *Game) MarshalEditor() ([]byte, error) {
 
 func init() {
 	item.Types["Game"] = func() interface{} { return new(Game) }
+}
+
+func (o *Game) ContentStruct() map[string]interface{} {
+	dd := map[string]item.FieldDescription{
+		"name": {
+			Type:       "input",
+			DataType:   "field",
+			Required:   true,
+			DataSource: []string{},
+			Order:      1},
+		"sname": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      2},
+		"hot": {
+			Type:       "bool",
+			DataType:   "field",
+			DataSource: []string{},
+			Required:   true,
+			Order:      3},
+		"logo": {
+			Type:       "file",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      6},
+		"barImage": {
+			Type:       "file",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      5},
+		"coupon": {
+			Type:       "select",
+			DataType:   "field",
+			DataSource: []string{"array"},
+			Order:      4},
+		"online": {
+			Type:       "bool",
+			DataType:   "field",
+			Required:   true,
+			DataSource: []string{},
+			Order:      4},
+		"description": {
+			Type:       "textarea",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      7},
+	}
+	//retStr, _ := json.Marshal(dd)
+	return map[string]interface{}{
+		"data": dd,
+		"no":   10,
+	}
 }
 
 // String defines how a Game is printed. Update it using more descriptive

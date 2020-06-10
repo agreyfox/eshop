@@ -27,10 +27,13 @@ require (
 	github.com/gofrs/uuid v3.2.0+incompatible
 	github.com/gorilla/schema v1.1.0
 	github.com/jmhodges/levigo v1.0.0 // indirect
+	github.com/motomux/skrill-go v1.0.2
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/nilslice/email v0.1.0
 	github.com/nilslice/jwt v1.0.0
+	github.com/plutov/paypal v2.0.5+incompatible
 	github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237 // indirect
+	github.com/robfig/cron v1.2.0
 	github.com/spf13/cobra v0.0.7
 	github.com/spf13/pflag v1.0.3
 	github.com/steveyen/gtreap v0.0.0-20150807155958-0abe01ef9be2 // indirect
@@ -41,4 +44,5 @@ require (
 	go.uber.org/zap v1.14.1
 	golang.org/x/crypto v0.0.0-20200323165209-0ec3e9974c59
 	golang.org/x/text v0.3.2
+	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )

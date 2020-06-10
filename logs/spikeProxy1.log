@@ -1,0 +1,18 @@
+{"level":"\u001b[34mINFO\u001b[0m","time":"2020-05-25T09:09:07.402+0800","linenum":"/home/lq/ifb/src/eshop/cmd/serve.go:43","msg":"Start Service : [admin payssion db]","serviceName":"serviceName"}
+{"level":"\u001b[34mINFO\u001b[0m","time":"2020-05-25T09:09:07.402+0800","linenum":"/home/lq/ifb/src/eshop/payment/payment.go:57","msg":"Prepare Payment service environnement...","serviceName":"serviceName"}
+{"level":"\u001b[34mINFO\u001b[0m","time":"2020-05-25T09:09:07.402+0800","linenum":"/home/lq/ifb/src/eshop/payment/payment.go:64","msg":"Initial paypal payment record data file ","serviceName":"serviceName"}
+{"level":"\u001b[34mINFO\u001b[0m","time":"2020-05-25T09:09:07.406+0800","linenum":"/home/lq/ifb/src/eshop/system/admin/server.go:98","msg":"Server static  root is /home/lq/ifb/src/eshop/static\n","serviceName":"serviceName"}
+{"level":"\u001b[34mINFO\u001b[0m","time":"2020-05-25T09:09:07.406+0800","linenum":"/home/lq/ifb/src/eshop/payment/payssion/payssion.go:55","msg":"starting payssion beckend service...","serviceName":"serviceName"}
+{"level":"\u001b[34mINFO\u001b[0m","time":"2020-05-25T09:09:07.406+0800","linenum":"/home/lq/ifb/src/eshop/payment/payssion/payssion.go:63","msg":"Initial paypal payment record data file ","serviceName":"serviceName"}
+{"level":"\u001b[34mINFO\u001b[0m","time":"2020-05-25T09:09:07.406+0800","linenum":"/home/lq/ifb/src/eshop/boltdbweb/boltdbweb.go:56","msg":"starting boltdb service...","serviceName":"serviceName"}
+{"level":"\u001b[34mINFO\u001b[0m","time":"2020-05-25T09:09:07.433+0800","linenum":"/home/lq/ifb/src/eshop/cmd/serve.go:115","msg":"Server listening at localhost:8080 for HTTP requests...\n","serviceName":"serviceName"}
+{"level":"\u001b[34mINFO\u001b[0m","time":"2020-05-25T09:09:07.433+0800","linenum":"/home/lq/ifb/src/eshop/cmd/serve.go:116","msg":"\nVisit '/admin' to get started.","serviceName":"serviceName"}
+{"level":"\u001b[34mINFO\u001b[0m","time":"2020-05-25T09:10:01.126+0800","linenum":"/home/lq/ifb/src/eshop/cmd/serve.go:43","msg":"Start Service : [admin payssion db]"}
+{"level":"\u001b[34mINFO\u001b[0m","time":"2020-05-25T09:10:01.127+0800","linenum":"/home/lq/ifb/src/eshop/payment/payment.go:57","msg":"Prepare Payment service environnement..."}
+{"level":"\u001b[34mINFO\u001b[0m","time":"2020-05-25T09:10:01.127+0800","linenum":"/home/lq/ifb/src/eshop/payment/payment.go:64","msg":"Initial paypal payment record data file "}
+{"level":"\u001b[34mINFO\u001b[0m","time":"2020-05-25T09:10:01.144+0800","linenum":"/home/lq/ifb/src/eshop/system/admin/server.go:98","msg":"Server static  root is /home/lq/ifb/src/eshop/static\n"}
+{"level":"\u001b[34mINFO\u001b[0m","time":"2020-05-25T09:10:01.144+0800","linenum":"/home/lq/ifb/src/eshop/payment/payssion/payssion.go:55","msg":"starting payssion beckend service..."}
+{"level":"\u001b[34mINFO\u001b[0m","time":"2020-05-25T09:10:01.144+0800","linenum":"/home/lq/ifb/src/eshop/payment/payssion/payssion.go:63","msg":"Initial paypal payment record data file "}
+{"level":"\u001b[34mINFO\u001b[0m","time":"2020-05-25T09:10:01.144+0800","linenum":"/home/lq/ifb/src/eshop/boltdbweb/boltdbweb.go:56","msg":"starting boltdb service..."}
+{"level":"\u001b[34mINFO\u001b[0m","time":"2020-05-25T09:10:01.200+0800","linenum":"/home/lq/ifb/src/eshop/cmd/serve.go:115","msg":"Server listening at localhost:8080 for HTTP requests...\n"}
+{"level":"\u001b[34mINFO\u001b[0m","time":"2020-05-25T09:10:01.200+0800","linenum":"/home/lq/ifb/src/eshop/cmd/serve.go:116","msg":"\nVisit '/admin' to get started."}

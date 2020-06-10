@@ -48,7 +48,7 @@ func Run(mainMux *bone.Mux) {
 	apiv1Mux.Post("/recovery", CORS(Recovery))
 
 	apiv1Mux.HandleFunc("/user/login", CORS(LoginHandler))
-	apiv1Mux.HandleFunc("/user/renew", RenewHandler)
+	apiv1Mux.HandleFunc("/user/renew", CORS(RenewHandler))
 	apiv1Mux.HandleFunc("/user/logout", CustomerAuth(LogoutHandler))
 	apiv1Mux.HandleFunc("/user/forgot", CustomerAuth(ForgotPasswordHandler))
 	apiv1Mux.HandleFunc("/user/recovery", RecoveryKeyHandler)

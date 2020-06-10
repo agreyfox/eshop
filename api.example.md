@@ -4,7 +4,10 @@ curl -XPOST http://127.0.0.1:8089/admin/v1/login -d '{"email":"jihua.gao@gmail.c
 ```
 get Result
 ```
-lqcms_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImV4cCI6IjIwMjAtMDQtMTNUMTA6Mzg6MDguNDQ0NjQ4ODUzKzA4OjAwIiwiaWF0IjpudWxsLCJpc3MiOm51bGwsImp0aSI6bnVsbCwibmJmIjpudWxsLCJzdWIiOm51bGwsInVzZXIiOiJqaWh1YS5nYW9AZ21haWwuY29tIn0.3Gm4EKl7TRov7IL7QdENNxDqdVWwaY9W6gjL1eE6Nr0
+{"contents":"{\"Category\":{\"Belongto\":\"select,3\",\"game\":\"input,2\",\"name\":\"input,1\",\"online\":\"bool,3\"},\"Game\":{\"logo\":\"file,3\",\"name\":\"input,1\",\"online\":\"bool,4\",\"sname\":\"input,2\"},\"Order\":{\"bad\":\"bool,3\",\"coupon\":\"input,6\",\"email\":\"input,1\",\"product\":\"list,2\",\"social\":\"input,5\",\"status\":\"input,4\",\"worker\":\"input,7\"},\"Product\":{\"desc\":\"textarea,6\",\"game\":\"select,3\",\"logo\":\"file,7\",\"name\":\"input,1\",\"online\":\"bool,5\",\"price\":\"input,4\",\"stock\":\"input,2\"},\"Server\":{\"category\":\"select,3\",\"game\":\"select,2\",\"name\":\"input,1\",\"online\":\"bool,6\",\"product\":\"select,5\",\"tags\":\"input,4\"}}","data":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImV4cCI6IjIwMjAtMDQtMjNUMTU6NDE6MzkuMjExNjg4ODU3KzA4OjAwIiwiaWF0IjpudWxsLCJpc3MiOm51bGwsImp0aSI6bnVsbCwibmJmIjpudWxsLCJzdWIiOm51bGwsInVzZXIiOiJqaWh1YS5nYW9AZ21haWwuY29tIn0.kWTayD-_z9ndRfgxR0mJTA_4qBAXNgFDdZ4y1_JirZE","msg":"Done","retCode":0}
+
+其中contents json 字符串，表示系统目前使用到的内容定义，界面内容由此生。
+data为 toke，需要保存在每个请求中。
 ```
 ## get config 
 
@@ -199,3 +202,52 @@ curl -XGET "http://127.0.0.1:8080/api/v1/pics?id=12"
 ```
 参数 w,h 表示返回图片的宽和高
 
+
+
+
+type Game struct {
+	item.Item
+
+	Name   string `json:"name"`
+	Sname  string `json:"sname"`
+	Logo   string `json:"logo"`
+	Online bool   `json:"online"`
+}
+
+type Server struct {
+	item.Item
+
+	Name     string   `json:"name"`
+	Game     string   `json:"game"`
+	Online   bool     `json:"online"`
+	Category []string `json:"category"`
+	Tags     []string `json:"tags"`
+	Product  []string `json:"product"`
+}
+
+type Category struct {
+	item.Item
+
+	Name     string `json:"name"`
+	Game     string `json:"game"`
+	Online   bool   `json:"online"`
+	Belongto string `json:"belongto"`
+}
+
+type Order struct {
+	item.Item
+
+	Email     string                   `json:"email"`
+	Product   []map[string]interface{} `json:"product"`
+	Bad       bool                     `json:"bad"`
+	Status    uint                     `json:"status"`
+	Total     float32                  `json:"total"`
+	Due       uint64                   `json:"due"`
+	Ispay     bool                     `json:"ispay"`
+	Paytime   uint64                   `json:"paytime"`
+	Payerinfo string                   `json:"payerinfo"`
+	Worker    string                   `json:"worker"`
+	Delivery  uint64                   `json:"delivery"`
+	Social    string                   `json:"social"`
+	Coupon    string                   `json:"coupon"`
+}

@@ -4,8 +4,6 @@
 package db
 
 import (
-	"fmt"
-
 	"github.com/agreyfox/eshop/system/item"
 	"github.com/agreyfox/eshop/system/logs"
 	"github.com/agreyfox/eshop/system/search"
@@ -119,7 +117,7 @@ func AddBucket(name string) {
 // Should be called from a goroutine after SetContent is successful (SortContent requirement)
 func InitSearchIndex() {
 	for t := range item.Types {
-		fmt.Println(t)
+		//fmt.Println(t)
 		err := search.MapIndex(t)
 		if err != nil {
 			logger.Fatal(err)

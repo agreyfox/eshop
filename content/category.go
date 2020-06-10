@@ -14,6 +14,9 @@ type Category struct {
 	Game     string `json:"game"`
 	Online   bool   `json:"online"`
 	Belongto string `json:"belongto"`
+	Desc     string `json:"description"`
+	Icon     string `json:"icon"`
+	Hint     string `json:"hint"`
 }
 
 // MarshalEditor writes a buffer of html to edit a Category within the CMS
@@ -67,4 +70,55 @@ func init() {
 // fields from the Category struct type
 func (c *Category) String() string {
 	return fmt.Sprintf("Category: %s", c.UUID)
+}
+
+func (o *Category) ContentStruct() map[string]interface{} {
+	dd := map[string]item.FieldDescription{
+		"name": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Required:   true,
+			Order:      1,
+		},
+		"game": {
+			Type:       "select",
+			DataType:   "content",
+			DataSource: []string{"/admin/v1/contents?type=Game"},
+			Required:   true,
+			Order:      2},
+		"online": {
+			Type:       "bool",
+			DataType:   "field",
+			DataSource: []string{},
+			Required:   true,
+			Order:      3},
+		"belongto": {
+			Type:       "tree",
+			DataType:   "content",
+			DataSource: []string{"tree"},
+
+			Order: 4,
+		},
+		"hint": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      5},
+		"description": {
+			Type:       "textarea",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      6},
+		"icon": {
+			Type:       "file",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      7},
+	}
+	return map[string]interface{}{
+		"data": dd,
+		"no":   20,
+	}
+
 }

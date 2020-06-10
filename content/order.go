@@ -11,19 +11,36 @@ import (
 type Order struct {
 	item.Item
 
-	Email     string                   `json:"email"`
-	Product   []map[string]interface{} `json:"product"`
-	Bad       bool                     `json:"bad"`
-	Status    uint                     `json:"status"`
-	Total     float32                  `json:"total"`
-	Due       uint64                   `json:"due"`
-	Ispay     bool                     `json:"ispay"`
-	Paytime   uint64                   `json:"paytime"`
-	Payerinfo string                   `json:"payerinfo"`
-	Worker    string                   `json:"worker"`
-	Delivery  uint64                   `json:"delivery"`
-	Social    string                   `json:"social"`
-	Coupon    string                   `json:"coupon"`
+	//Product     []map[string]interface{} `json:"product"`
+	OrderDetail    string `json:"order_detail,omitempty"`
+	Bad            bool   `json:"bad"`
+	Status         string `json:"status"`
+	Total          string `json:"total"`
+	Currency       string `json:"currency"`
+	OrderID        string `json:"order_id"`
+	PaymentID      string `json:"payment_id,omitempty"`
+	PaymentVendor  string `json:"vendor"`
+	PaymentMethod  string `json:"method"`
+	PaymentNote    string `json:"payment_note,omitempty"`
+	Payer          string `json:"payer"`
+	PayerLink      string `json:"payer_link"`
+	PayerIP        string `json:"ip,omitempty"`
+	Paid           string `json:"paid,omitempty"`
+	Net            string `json:"net,omitempty"`
+	Description    string `json:"description,omitempty"`
+	NotifyInfo     string `json:"notify_info"`
+	Paytime        string `json:"pay_time,omitempty"`
+	DeliveryTime   string `json:"delivery_time,omitempty"`
+	DeliveryUserID string `json:"worker,omitempty"`
+	Comments       string `json:"comments,omitempty"`
+	AdminNote      string `json:"note,omitempty"`
+	IsRefund       bool   `json:"is_refund,omitempty"`
+	IsChargeBack   bool   `json:"is_chargeback,omitempty"`
+	RequestTime    string `json:"request_time,omitempty"`
+	RefundTime     string `json:"refund_time,omitempty"`
+	UpdateTime     string `json:"last_update,omitempty"`
+	Delivery       string `json:"delivery,omitempty"`
+	Coupon         string `json:"coupon,omitempty"`
 }
 
 // MarshalEditor writes a buffer of html to edit a Order within the CMS
@@ -134,8 +151,63 @@ func init() {
 // String defines how a Order is printed. Update it using more descriptive
 // fields from the Order struct type
 func (o *Order) String() string {
-	return fmt.Sprintf("Order: %s", o.Email+"|"+o.Social)
+	return fmt.Sprintf("Order: %s", o.OrderID)
 }
+
+//return csv format
+func (o *Order) FormatCSV() []string {
+	return []string{
+		"email",
+		"status",
+		"social",
+		"coupon",
+		"worker",
+	}
+}
+
+/*
+func (o *Order) ContentStruct() map[string]interface{} {
+	return map[string]interface{}{}
+	dd := map[string]item.FieldDescription{
+		"email": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      1},
+
+		"bad": {
+			Type:       "bool",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      2},
+		"status": {
+			Type:       "option",
+			DataType:   "field",
+			DataSource: []string{"等待付款", "已付款", "已交付"},
+			Order:      4},
+		"social": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      5,
+		},
+		"coupon": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      6},
+
+		"worker": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      7,
+		},
+	}
+	//retStr, _ := json.Marshal(dd)
+	return dd
+}
+*/
 
 func (o *Order) EnableSubContent() ([]string, bool) {
 	return []string{"product"}, true
