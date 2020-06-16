@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/agreyfox/eshop/payment/data"
 )
 
 const (
@@ -207,10 +209,12 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 					// notification verify string: api_key|pm_id|amount|currency|order_id|state|sercret_key
 					logger.Debug("Signature is %s", verify)
 
-					oid, ok := CreateNewOrderInDB(orderState)
+					oid, oo, ok := CreateNewOrderInDB(orderState)
 					if ok {
-						logger.Infof("Order %s created! with id %d and orderid %s ", oid, orderState.OrderID)
-
+						logger.Infof("Order %d created! and orderid %s ", oid, orderState.OrderID)
+						if len(oo.Payer) > 0 {
+							go data.SendConfirmEmail(oo.OrderID, oo.Payer)
+						}
 					} else {
 						logger.Warn("Create %s order error,Need check!", orderState.OrderID)
 					}

@@ -6,16 +6,18 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+
 	"github.com/agreyfox/eshop/payment/data"
 	"github.com/agreyfox/eshop/system/admin"
 
-	"github.com/gofrs/uuid"
 	"io/ioutil"
 	"net/http"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gofrs/uuid"
 )
 
 func GetIP(r *http.Request) string {
@@ -92,7 +94,7 @@ func saveOrderRequest(order Order, request map[string]interface{}, ip string) er
 	record.Total = fmt.Sprintf("%.2f", tt)
 	record.Currency = currency
 
-	email, ok := json.Marshal(request["payee"])
+	email, ok := json.Marshal(request["email"]) // should support email
 	if ok == nil {
 		record.BuyerEmail = string(email[:])
 	}
@@ -234,10 +236,10 @@ func getOrderIDFromUrl(link []Link) string {
 	return ""
 }
 
-func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap CaptureResource) (int, bool) {
+func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap CaptureResource) (int, data.Order, bool) {
 	if cap.Status != PaypalCompleted {
 		logger.Warn("Paypal Notified message is not completed.")
-		return 0, false
+		return 0, data.Order{}, false
 	}
 
 	ID := cap.InvoiceID
@@ -245,17 +247,17 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap CaptureResource) (
 	//val := &bytes.Buffer{}
 	//states, err := data.GetLog(ID)
 	//logger.Info(states)
-	oid := getOrderIDFromUrl(cap.Links)
+	paymentid := getOrderIDFromUrl(cap.Links)
 	detail := PrettyPrint(cap)
-	logger.Debugf("Invoice id is %s, order id is %s,paymentID is %s ", ID, oid, cap.ID)
+	logger.Debugf("Invoice id is %s, order id is %s,paymentID is %s ", ID, ID, paymentid)
 	databin, _ := json.Marshal(notifyData)
 	order := data.Order{
 
 		Status: data.OrderPaid,
 		//OrderRequest:  record.Request,
 		OrderDetail:   detail,
-		OrderID:       oid,
-		PaymentID:     cap.ID,
+		OrderID:       ID,
+		PaymentID:     paymentid,
 		PaymentVendor: "paypal",
 		PaymentMethod: notifyData.ResourceType,
 		PaymentNote:   brand_name,
@@ -273,7 +275,7 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap CaptureResource) (
 		IsChargeBack:  false,
 	}
 	//logger.Debug(time.Now())
-	originReq, err := data.GetRequestByState(oid, PaypalCreated)
+	originReq, err := data.GetRequestByState(ID, PaypalCreated)
 	//logger.Debug(time.Now())
 	if err == nil {
 		order.Payer = originReq.BuyerEmail
@@ -285,9 +287,9 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap CaptureResource) (
 	retcode, ok := admin.CreateContent("Order", mm)
 	logger.Debugf("Find orderid by payment id is %s", admin.FindContentID("Order", cap.ID, "payment_id"))
 	if ok {
-		return retcode, true
+		return retcode, order, true
 	} else {
-		return 0, false
+		return 0, data.Order{}, false
 	}
 
 }

@@ -2,6 +2,7 @@ package admin
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -14,20 +15,43 @@ import (
 	"github.com/agreyfox/eshop/system/item"
 )
 
-type MetaData struct {
-	Total     uint   `json:"total,omitempty"`
-	PageSize  int    `json:"pageSize,omitempty"`
-	PageCount int    `json:"pageCount,omitempty"`
-	Page      int    `json:"page,omitempty"`
-	Order     string `json:"order,omitempty"`
-}
+type (
+	/* 	SMTP2GOReq struct {
+	   		APIKEY       string         `json:"api_key"`
+	   		To           []string       `json:"to"`
+	   		Sender       string         `json:"sender"`
+	   		Subject      string         `json:"subject,omitempty"`
+	   		TextBody     string         `json:"text_body,omitempty"`
+	   		HTMLBody     string         `json:"html_body,omitempty"`
+	   		CustomHeader []CustomHeader `json:"custom_header,omitempty"`
+	   		Attachments  []Attachment   `json:"attachment,omitempty"`
+	   	}
 
-type ReturnData struct {
-	RetCode int           `json:"retCode"`
-	Msg     string        `json:"message"`
-	Data    []interface{} `json:"data,omitempty"`
-	Meta    MetaData      `json:"meta,omitempty"`
-}
+	   	CustomHeader struct {
+	   		Header string `json:"header,omitempty"`
+	   		Value  string `json:"value,omitempty"`
+	   	}
+
+	   	Attachment struct {
+	   		FileName string `json:"filename,omitempty"`
+	   		FileBlob string `json:"fileblob,omitempty"`
+	   		MimeType string `json:"mimetype,omitempty"`
+	   	} */
+	MetaData struct {
+		Total     uint   `json:"total,omitempty"`
+		PageSize  int    `json:"pageSize,omitempty"`
+		PageCount int    `json:"pageCount,omitempty"`
+		Page      int    `json:"page,omitempty"`
+		Order     string `json:"order,omitempty"`
+	}
+
+	ReturnData struct {
+		RetCode int           `json:"retCode"`
+		Msg     string        `json:"message"`
+		Data    []interface{} `json:"data,omitempty"`
+		Meta    MetaData      `json:"meta,omitempty"`
+	}
+)
 
 var (
 	PENDINGSuffix = "__pending"
@@ -167,7 +191,7 @@ func formatData(data map[string]interface{}) url.Values {
 	return retdata
 }
 
-func sendEmail(server, from, to, password, subject, body string) error {
+func SendEmail(server, from, to, password, subject, body string) error {
 	hp := strings.Split(server, ":")
 	sub := subject
 	content := body
@@ -211,4 +235,64 @@ func getContentsStruct() (ret []byte) {
 	}
 	//fmt.Println(string(data[:]))
 	return data
+}
+
+type Mail struct {
+	user   string
+	passwd string
+}
+
+//初始化用户名和密码
+func NewMailClient(u string, p string) Mail {
+	temp := Mail{user: u, passwd: p}
+	return temp
+}
+
+func check(err error) {
+	if err != nil {
+		logger.Error(err)
+	}
+}
+
+//标题 文本 目标邮箱
+func (m Mail) Send(title string, text string, toId string) {
+	auth := smtp.PlainAuth("", m.user, m.passwd, MailServer)
+
+	tlsconfig := &tls.Config{
+		InsecureSkipVerify: true,
+		ServerName:         MailServer,
+	}
+
+	conn, err := tls.Dial("tcp", MailServer+":587", tlsconfig)
+
+	client, err := smtp.NewClient(conn, MailServer)
+	check(err)
+
+	if err = client.Auth(auth); err != nil {
+		logger.Error(err)
+		return
+	}
+
+	if err = client.Mail(m.user); err != nil {
+		logger.Error(err)
+		return
+	}
+
+	if err = client.Rcpt(toId); err != nil {
+		logger.Error(err)
+		return
+	}
+
+	w, err := client.Data()
+	check(err)
+
+	msg := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s", m.user, toId, title, text)
+
+	_, err = w.Write([]byte(msg))
+	check(err)
+
+	err = w.Close()
+	check(err)
+
+	client.Quit()
 }

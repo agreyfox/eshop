@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/agreyfox/eshop/system/admin"
 	"github.com/boltdb/bolt"
-	"time"
 )
 
 /*
@@ -233,4 +234,26 @@ func IsValidStatus(state string) bool {
 	}
 	logger.Error("Status is not valide !")
 	return false
+}
+
+func SendConfirmEmail(orderid, email string) {
+	tomail := []string{"18901882538@189.cn"}
+
+	fmt.Printf("Try to send email to %v\n", email)
+	msg := admin.Email{
+		//From: admin.MailUser,
+		To:       tomail,
+		Subject:  "EGPal EShop Order notification letter",
+		TextBody: fmt.Sprintf("You have make purchase order(%s),We will check and delivery soon", orderid),
+		HtmlBody: fmt.Sprintf("<h1>EGPal Purchase Confirmation</h1> <p>You have make order(%s) Successfully. We will check and delivery soon</p>", orderid),
+	}
+	res, err := admin.Send(&msg)
+	if err != nil {
+		fmt.Printf("An Error Occurred: %s\n", err)
+	}
+	if res.Data.Succeeded == 1 {
+		logger.Debugf("Order Sent Successfully: %s\n", orderid)
+	} else {
+		logger.Errorf("Order Sent with error: %v\n", res)
+	}
 }

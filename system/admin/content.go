@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+
 	"github.com/agreyfox/eshop/system/db"
 	"github.com/agreyfox/eshop/system/item"
 	"github.com/gorilla/schema"
@@ -74,7 +75,7 @@ func UpdateContent(t string, cid, key string, content []byte) (int, error) {
 	//updatecontent["updated"] = ts
 	value := map[string]interface{}{}
 	value[key] = string(content[:])
-	value["update"] = ts
+	value["updated"] = ts
 	post := p()
 
 	upp := formatData(value)

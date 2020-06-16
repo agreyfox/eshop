@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+
+	"github.com/agreyfox/eshop/payment/data"
 )
 
 var (
@@ -104,7 +106,7 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 	} else {
 		renderJSON(w, r, map[string]interface{}{
 			"retCode": -10,
-			"msg":     "Something error ",
+			"msg":     "Something error",
 			"data":    fmt.Sprint(err),
 		})
 	}
@@ -127,8 +129,8 @@ func Succeed(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func SaveNotify(data []byte) error {
-	values, err := url.ParseQuery(string(data))
+func SaveNotify(Notifydata []byte) error {
+	values, err := url.ParseQuery(string(Notifydata))
 	logger.Debug(values)
 	if err == nil {
 		amm, err := strconv.ParseFloat(values.Get("amount"), 64)
@@ -172,7 +174,13 @@ func SaveNotify(data []byte) error {
 		}
 
 		if retData.Status == SkrillProcessed { // create ok
-			CreateNewOrderInDB(&retData)
+			oid, oo, ok := CreateNewOrderInDB(&retData)
+			if ok {
+				if len(oo.Payer) > 0 {
+					go data.SendConfirmEmail(oo.OrderID, oo.Payer)
+				}
+			}
+			logger.Debugf("Skrill Order created with id:%d, OrderID is %s", oid, oo.OrderID)
 			return nil
 		} else {
 			logger.Debugf("Notify data with status %s", Status(statusvalue))

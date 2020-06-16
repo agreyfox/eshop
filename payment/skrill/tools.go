@@ -6,14 +6,16 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+
 	"github.com/agreyfox/eshop/payment/data"
 
-	"github.com/agreyfox/eshop/system/admin"
-	"github.com/gofrs/uuid"
 	"io/ioutil"
 	"net/http"
 	"reflect"
 	"time"
+
+	"github.com/agreyfox/eshop/system/admin"
+	"github.com/gofrs/uuid"
 )
 
 func GetIP(r *http.Request) string {
@@ -208,7 +210,7 @@ func saveRequest(t *PrepareParam, request map[string]interface{}) bool {
  system db structure is
 	orderid:order structure
 */
-func CreateNewOrderInDB(notifyData *StatusResponse) (int, bool) {
+func CreateNewOrderInDB(notifyData *StatusResponse) (int, data.Order, bool) {
 
 	oid := notifyData.OrderID
 	ID := oid
@@ -253,10 +255,10 @@ func CreateNewOrderInDB(notifyData *StatusResponse) (int, bool) {
 
 	//admin.UpdateContent("Order", fmt.Sprintf("%d", retCode), "status", []byte(data.OrderInValidate))
 	if ok {
-		return retCode, true
+		return retCode, order, true
 	} else {
 		logger.Error("error in creat order with code :", retCode)
-		return 0, false
+		return 0, order, false
 	}
 
 }

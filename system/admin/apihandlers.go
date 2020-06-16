@@ -217,7 +217,7 @@ at %s
 
 	go func() {
 		//err = msg.Send()
-		err = sendEmail(string(emailhost[:]), string(adminemail[:]), email, string(emailsecret[:]), fmt.Sprintf("Account Recovery [%s]", "恩卓信息"), body)
+		err = SendEmail(string(emailhost[:]), string(adminemail[:]), email, string(emailsecret[:]), fmt.Sprintf("Account Recovery [%s]", "恩卓信息"), body)
 		if err != nil {
 			logger.Debugf("Failed to send message to:", email, "Error:", err)
 		} else {
@@ -2175,9 +2175,37 @@ func searchContent(w http.ResponseWriter, r *http.Request) {
 	logger.Debugf("Search content %s with %s from %s", t, search, GetIP(r))
 	status := q.Get("status")
 	regexsearch := q.Get("r")
+	starttime := q.Get("start") // this is base on time query
+	endtime := q.Get("end")     // this is base on time query
+	var checkTime bool
+	checkTime = false
+	var stime, etime uint64
+	var err error
+	if len(starttime) > 0 || len(endtime) > 0 {
+		checkTime = true
+		stime, err = strconv.ParseUint(starttime, 10, 64)
+		if err != nil {
+			stime = 0
+			logger.Warn("Search no start time")
+		} else {
+			logger.Debug("Search start time is ", stime)
+		}
+		etime, err = strconv.ParseUint(endtime, 10, 64)
+		if err != nil {
+			etime = 0
+			logger.Warn("Search no end time")
+		} else {
+			logger.Debug("Search end time is ", etime)
+		}
+	} else {
+		logger.Debug("No Time range search present ")
+		stime = 0
+		etime = 0
+	}
+
 	var specifier string
 
-	if t == "" || (search == "" && regexsearch == "") {
+	if t == "" || (search == "" && regexsearch == "" && !checkTime) {
 		logger.Debugf("Search parameter missing")
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -2186,8 +2214,15 @@ func searchContent(w http.ResponseWriter, r *http.Request) {
 	if status == "pending" {
 		specifier = "__" + status
 	}
+	var posts [][]byte
+	if !checkTime {
+		logger.Debug("Get all content:")
+		posts = db.ContentAll(t + specifier)
+	} else {
+		logger.Debug("Get content based on time frame:", stime, etime)
+		posts = db.ContentByUpdatedTime(t+specifier, stime, etime)
+	}
 
-	posts := db.ContentAll(t + specifier)
 	//b := &bytes.Buffer{}
 	//pt, ok := item.Types[t]
 	/* 	if !ok {
@@ -2229,6 +2264,15 @@ func searchContent(w http.ResponseWriter, r *http.Request) {
 				//fmt.Println(item)
 				retData = append(retData, item)
 			}
+		} else {
+			item := make(map[string]interface{})
+			err := json.Unmarshal(posts[i], &item)
+
+			if err != nil {
+				logger.Debug("Error unmarshal search result json into", t, err, posts[i])
+				continue
+			}
+			retData = append(retData, item)
 		}
 	}
 	total := len(posts)

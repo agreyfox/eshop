@@ -3,11 +3,13 @@ package paypal
 import (
 	"encoding/json"
 	"fmt"
+
 	"github.com/agreyfox/eshop/payment/data"
 
-	"github.com/robfig/cron"
 	"net/http"
 	"time"
+
+	"github.com/robfig/cron"
 )
 
 const (
@@ -456,8 +458,12 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			oid, ok := CreateNewOrderInDB(&notification, resource)
+			oid, oo, ok := CreateNewOrderInDB(&notification, resource)
+
 			if ok {
+				if len(oo.Payer) > 0 {
+					go data.SendConfirmEmail(resource.InvoiceID, oo.Payer)
+				}
 				logger.Info("New order Created!")
 				//go data.UpdateOrderByID(fmt.Sprint("%d", oid), data.OrderInValidate)
 				UpdateOrderStatusByOrderID(fmt.Sprint("%d", oid), data.OrderInValidate)

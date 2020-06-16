@@ -7,6 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/agreyfox/eshop/system/admin"
+	"github.com/agreyfox/eshop/system/api/analytics"
+	"github.com/agreyfox/eshop/system/db"
 	"github.com/spf13/cobra"
 )
 
@@ -58,7 +61,49 @@ func version(isCLI bool) (map[string]interface{}, error) {
 	return kv, nil
 }
 
+var emailCmd = &cobra.Command{
+	Use:     "email",
+	Aliases: []string{"email"},
+	Short:   "Try to connect admin email to send a test email .",
+	Long:    `Testing email send via admin email configuration.`,
+	Example: `$ eshop email`,
+	Run: func(cmd *cobra.Command, args []string) {
+		db.Init()
+		defer db.Close()
+		//db.PutConfig("Key", config.GenerateKey())
+
+		analytics.Init()
+		defer analytics.Close()
+
+		tomail := []string{"18901882538@189.cn"}
+		if len(args) == 1 {
+			tomail = append(tomail, args[0])
+		}
+		fmt.Printf("Try to send email to %v\n", tomail)
+		email := admin.Email{
+			//From: admin.MailUser,
+			To:       tomail,
+			Subject:  "Trying out EShop email service",
+			TextBody: "Eshop Test Message",
+			HtmlBody: "<h1>Eshop Test Message</h1>",
+		}
+		res, err := admin.Send(&email)
+		if err != nil {
+			fmt.Printf("An Error Occurred: %s\n", err)
+		}
+		if res.Data.Succeeded == 1 {
+			fmt.Printf("Sent Successfully: %v\n", res)
+		} else {
+			fmt.Printf("Sent with error: %v\n", res)
+		}
+
+		fmt.Fprintf(os.Stdout, "Email testing is done, please check email\n")
+	},
+}
+
 func init() {
 	versionCmd.Flags().BoolVar(&cli, "cli", false, "specify that information should be returned about the CLI, not project")
+	emailCmd.Flags().BoolVar(&email, "email", false, "start to test email connection")
 	RegisterCmdlineCommand(versionCmd)
+	RegisterCmdlineCommand(emailCmd)
 }

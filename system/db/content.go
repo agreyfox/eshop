@@ -545,6 +545,52 @@ func ContentAll(namespace string) [][]byte {
 	return posts
 }
 
+// ContentByUpdatedTime get all record in date range  and return
+// based on updated field
+func ContentByUpdatedTime(namespace string, start, end uint64) [][]byte {
+	var posts [][]byte
+	store.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(namespace))
+		if b == nil {
+			return bolt.ErrBucketNotFound
+		}
+
+		numKeys := b.Stats().KeyN
+		posts = make([][]byte, 0, numKeys)
+		type updateInfo struct {
+			Update uint64 `json:"updated"`
+		}
+		b.ForEach(func(k, v []byte) error {
+			if v == nil {
+				return nil
+			}
+			var upp = &updateInfo{}
+			err := json.Unmarshal(v, upp)
+			if err == nil {
+				if start > 0 && end > 0 {
+					if start < upp.Update && upp.Update < end {
+						posts = append(posts, v)
+					}
+				} else if start > 0 {
+					if start < upp.Update {
+						posts = append(posts, v)
+					}
+				} else if end > 0 {
+					if end > upp.Update {
+						posts = append(posts, v)
+					}
+				}
+			}
+
+			return nil
+		})
+
+		return nil
+	})
+	logger.Debugf("Search content based on updated range: total:%d", len(posts))
+	return posts
+}
+
 // QueryOptions holds options for a query
 type QueryOptions struct {
 	Count  int
@@ -737,7 +783,7 @@ func QueryByFieldValue(namespace string, field, value string, opts QueryOptions)
 
 		case "asc":
 			for k, v := c.First(); k != nil; k, v = c.Next() {
-				if !bytes.ContainsAny(v, field+":"+value) {
+				if !bytes.Contains(v, []byte(fmt.Sprintf(`"%s":"%s"`, field, value))) {
 					continue
 				}
 				if cur < start {
@@ -757,7 +803,7 @@ func QueryByFieldValue(namespace string, field, value string, opts QueryOptions)
 		default:
 			// results for DESC order
 			for k, v := c.Last(); k != nil; k, v = c.Prev() {
-				if !bytes.ContainsAny(v, field+":"+value) {
+				if !bytes.Contains(v, []byte(fmt.Sprintf(`"%s":"%s"`, field, value))) {
 					continue
 				}
 				if cur < start {

@@ -19,6 +19,7 @@ var (
 	devhttps  bool
 	docs      bool
 	cli       bool
+	email     bool
 
 	gocmd string
 	fork  string

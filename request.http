@@ -168,7 +168,7 @@ Content-Type: application/json
 
 {
   "payer":"paypal",
-  "email":"jihua.gao@mgmail.com",
+  "email":"jihua.gao@gmail.com",
   "item_list": [
         {
           "amount":{
@@ -313,7 +313,8 @@ Content-Type: applications/json
 "pm_id":"dotpay_pl",
 "amount":"221",
 "currency":"USD",
-"description":"神奇宝贝"
+"description":"神奇宝贝",
+"payer_email":"18901882538@189.cn"
 }
 
 
@@ -452,3 +453,21 @@ Content-Type: application/x-www-form-urlencoded
 														</a>
 
 												
+
+### 
+
+Post https://api.smtp2go.com/v3/allowed_senders/add
+Content-Type: application/json
+
+{
+  "api_key": "api-E408790EAED711EA8BC0F23C91C88F4E",
+  "allowed_senders": ["support@bk.cloudns.cc"]
+}
+
+### 
+
+Post https://api.smtp2go.com/v3/allowed_senders/view
+
+
+"api_key"="api-E408790EAED711EA8BC0F23C91C88F4E",
+
