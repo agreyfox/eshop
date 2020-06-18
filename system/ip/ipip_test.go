@@ -1,10 +1,15 @@
 package ip
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/agreyfox/eshop/system/db"
+)
 
 func TestLookupStandard(T *testing.T) {
-
-	client := NewClient("", false)
+	db.Init()
+	Init()
+	client := NewClient("", true)
 	c, err := client.LookupStandard("193.22.152.235")
 	if err == nil {
 		T.Log(c)

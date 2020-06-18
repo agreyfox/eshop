@@ -10,6 +10,7 @@ import (
 	"github.com/agreyfox/eshop/system/admin"
 	"github.com/agreyfox/eshop/system/api/analytics"
 	"github.com/agreyfox/eshop/system/db"
+	"github.com/agreyfox/eshop/system/ip"
 	"github.com/spf13/cobra"
 )
 
@@ -101,9 +102,45 @@ var emailCmd = &cobra.Command{
 	},
 }
 
+var ipCmd = &cobra.Command{
+	Use:     "ip",
+	Aliases: []string{"ip"},
+	Short:   "Try to search ip for country .",
+	Long:    `Found the right country for specified IP .`,
+	Example: `$ eshop ip 193.168.3.3`,
+	Run: func(cmd *cobra.Command, args []string) {
+		db.Init()
+		defer db.Close()
+		//db.PutConfig("Key", config.GenerateKey())
+
+		analytics.Init()
+		defer analytics.Close()
+		ip.Init()
+
+		searchip := ""
+		if len(args) == 1 {
+			searchip = args[0]
+		}
+		fmt.Printf("Try to search ip :%s\n", searchip)
+		email := ip.NewClient("", true)
+
+		res, err := email.LookupStandard(searchip)
+		if err != nil {
+			fmt.Printf("An Error Occurred: %s\n", err)
+		} else {
+			fmt.Printf("The ip belone to  %s \n", res)
+		}
+		mm, err := email.QueryIPByDB(searchip)
+		fmt.Printf("Query local db , return %s\n", mm)
+
+	},
+}
+
 func init() {
 	versionCmd.Flags().BoolVar(&cli, "cli", false, "specify that information should be returned about the CLI, not project")
 	emailCmd.Flags().BoolVar(&email, "email", false, "start to test email connection")
+	ipCmd.Flags().StringVar(&ipip, "ip", "127.0.0.1", "start to test ip lookup service connection")
 	RegisterCmdlineCommand(versionCmd)
 	RegisterCmdlineCommand(emailCmd)
+	RegisterCmdlineCommand(ipCmd)
 }

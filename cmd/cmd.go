@@ -20,6 +20,7 @@ var (
 	docs      bool
 	cli       bool
 	email     bool
+	ipip      string
 
 	gocmd string
 	fork  string

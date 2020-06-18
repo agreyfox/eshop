@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/smtp"
 	"net/url"
 	"reflect"
 	"strings"
 
 	"github.com/agreyfox/eshop/system/admin/user"
+	"github.com/agreyfox/eshop/system/db"
 	"github.com/nilslice/jwt"
 )
 
@@ -22,10 +22,13 @@ type MetaOfRecorder struct {
 }
 
 type RetUser struct {
-	RetCode int8           `json:"retCode"`
-	Data    interface{}    `json:"data,omitempty"`
-	Meta    MetaOfRecorder `json:"meta,omitempty" `
-	Msg     string         `json:msg`
+	RetCode        int8           `json:"retCode"`
+	Data           interface{}    `json:"data,omitempty"`
+	Meta           MetaOfRecorder `json:"meta,omitempty" `
+	Msg            string         `json:msg`
+	DefaultCountry string         `json:default_country,omitempty`
+	Country        []string       `json:"country,omitempty"`
+	Currency       []string       `json:"currency,omitempty"`
 }
 
 type MetaData struct {
@@ -212,6 +215,17 @@ func CustomerAuth(next http.HandlerFunc) http.HandlerFunc {
 	})
 }
 
+// get all currency list in systrem
+func getContentList(name string) []string {
+	ret := []string{}
+	contentBuff := db.ContentAll(name)
+	for i := range contentBuff {
+		ret = append(ret, string(contentBuff[i]))
+	}
+	return ret
+}
+
+/*
 func SendEmail(server, from, to, password, subject, body string) error {
 	hp := strings.Split(server, ":")
 	sub := subject
@@ -236,7 +250,7 @@ func SendEmail(server, from, to, password, subject, body string) error {
 		[]byte(sub+content),
 	)
 	return err
-}
+} */
 
 func getEmailFromCookie(req *http.Request) (string, error) {
 	userEmail := ""

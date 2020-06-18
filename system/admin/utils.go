@@ -2,16 +2,14 @@ package admin
 
 import (
 	"bytes"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/smtp"
 	"net/url"
 	"reflect"
-	"strings"
 
+	"github.com/agreyfox/eshop/system/db"
 	"github.com/agreyfox/eshop/system/item"
 )
 
@@ -191,6 +189,7 @@ func formatData(data map[string]interface{}) url.Values {
 	return retdata
 }
 
+/*
 func SendEmail(server, from, to, password, subject, body string) error {
 	hp := strings.Split(server, ":")
 	sub := subject
@@ -215,7 +214,7 @@ func SendEmail(server, from, to, password, subject, body string) error {
 		[]byte(sub+content),
 	)
 	return err
-}
+} */
 
 //return system content and structure with order
 func getContentsStruct() (ret []byte) {
@@ -237,6 +236,17 @@ func getContentsStruct() (ret []byte) {
 	return data
 }
 
+// get all currency list in systrem
+func getContentList(name string) []string {
+	ret := []string{}
+	contentBuff := db.ContentAll(name)
+	for i := range contentBuff {
+		ret = append(ret, string(contentBuff[i]))
+	}
+	return ret
+}
+
+/*
 type Mail struct {
 	user   string
 	passwd string
@@ -296,3 +306,4 @@ func (m Mail) Send(title string, text string, toId string) {
 
 	client.Quit()
 }
+*/

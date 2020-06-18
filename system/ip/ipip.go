@@ -9,10 +9,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/agreyfox/eshop/system/admin/logs"
+	"github.com/agreyfox/eshop/system/logs"
 	"github.com/boltdb/bolt"
 
 	"go.uber.org/zap"
+)
+
+const (
+	DefaultCountry = "US"
 )
 
 var (
@@ -143,13 +147,17 @@ func Init() {
 
 	if err != nil {
 		logger.Fatal("Coudn't initialize IP db with buckets.", err)
+	} else {
+		logger.Debug("IPs DB Opened!")
 	}
 
 }
 
 // NewClient returns a new client
 func NewClient(accessKey string, isFreePlan bool) *Client {
-	Init()
+	if store == nil {
+		Init()
+	}
 	aKey := apiKEY
 	if len(accessKey) > 0 {
 		aKey = accessKey
@@ -175,26 +183,27 @@ func NewClient(accessKey string, isFreePlan bool) *Client {
 // LookupStandard requests standard lookup
 //
 // https://ipstack.com/documentation#standard
-func (c *Client) LookupStandard(ip string) (string, err error) {
+func (c *Client) LookupStandard(ip string) (string, error) {
 	var url string
 	if c.free {
 		url = fmt.Sprintf("%s/%s", apiBaseURLFree, ip)
 	} else {
 		url = fmt.Sprintf("%s/%s", apiBaseURL, ip)
 	}
-
+	var err error
+	response := Response{}
 	var bytes []byte
 	if bytes, err = c.get(url, map[string]string{}, map[string]interface{}{}); err == nil {
 		if err = json.Unmarshal(bytes, &response); err == nil {
 			if response.Error.Code > 0 {
 				err = fmt.Errorf("error %d: %s (%s)", response.Error.Code, response.Error.Type, response.Error.Info)
 			} else {
-				go SaveResult(ip, response)
+				c.SaveResult(ip, response)
 				return response.CountryCode, nil
 			}
 		}
 	}
-	return "", err
+	return DefaultCountry, err // if error ,return defaultcountry
 }
 
 // LookupBulk requests bulk lookup
@@ -278,6 +287,10 @@ func (c *Client) get(apiURL string, headers map[string]string, params map[string
 
 		var resp *http.Response
 		resp, err = c.httpClient.Do(req)
+		if err != nil {
+			logger.Debug("Error:", err)
+			return []byte{}, err
+		}
 
 		if resp != nil {
 			defer resp.Body.Close()
@@ -294,9 +307,9 @@ func (c *Client) get(apiURL string, headers map[string]string, params map[string
 	return []byte{}, err
 }
 
-func SaveResult(key string, result Response) error {
+func (c *Client) SaveResult(key string, result Response) error {
 	return store.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte(index(IPDBName)))
+		b, err := tx.CreateBucketIfNotExists([]byte(IPDBName))
 		if err != nil {
 			return err
 		}
@@ -308,4 +321,30 @@ func SaveResult(key string, result Response) error {
 
 		return b.Put([]byte(key), val)
 	})
+}
+
+func (c *Client) QueryIPByDB(ip string) (string, error) {
+	val := DefaultCountry
+	err := store.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(IPDBName))
+		if b == nil {
+			return nil
+		}
+
+		v := b.Get([]byte(ip))
+		res := Response{}
+		err := json.Unmarshal(v, &res)
+		if err == nil {
+			val = res.CountryCode
+			return nil
+		}
+		return err
+	})
+	if err != nil {
+		t, err := c.LookupStandard(ip)
+		if err == nil {
+			val = t
+		}
+	}
+	return val, nil
 }

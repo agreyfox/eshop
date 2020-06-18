@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/agreyfox/eshop/system/admin/user"
+	"github.com/agreyfox/eshop/system/ip"
 
 	"github.com/agreyfox/eshop/system/db"
 
@@ -132,7 +133,8 @@ func RegisterUser(res http.ResponseWriter, req *http.Request) {
 
 // customer login function , check login credential and return data
 func Login(res http.ResponseWriter, req *http.Request) {
-	logger.Debugf("User login, from:", GetIP(req))
+	ipAddr := GetIP(req)
+	logger.Debugf("User login, from:", ipAddr)
 	if user.IsValid(req) {
 		logger.Debug("is valid")
 		//http.Redirect(res, req, req.URL.Scheme+req.URL.Host+"/admin", http.StatusFound)
@@ -205,9 +207,14 @@ func Login(res http.ResponseWriter, req *http.Request) {
 	// create new token
 	week := time.Now().Add(time.Hour * 2) // session time is 2 hours
 
+	ipSearchHandler := ip.NewClient("", true)
+
+	countryInfor, _ := ipSearchHandler.QueryIPByDB(ipAddr)
+
 	claims := map[string]interface{}{
-		"exp":  week,
-		"user": usr.Email,
+		"exp":     week,
+		"user":    usr.Email,
+		"country": countryInfor,
 	}
 	token, err := jwt.New(claims)
 	//DecodeJwt(token)
@@ -232,10 +239,15 @@ func Login(res http.ResponseWriter, req *http.Request) {
 	})
 
 	logger.Debugf("User %s logged in !", usr)
+	currency := getContentList("Currency")
+	country := getContentList("Country")
 	RenderJSON(res, req, RetUser{
-		RetCode: 0,
-		Msg:     "Done",
-		Data:    token,
+		RetCode:        0,
+		Msg:            "Done",
+		Data:           token,
+		DefaultCountry: countryInfor,
+		Country:        country,
+		Currency:       currency,
 	})
 
 	return

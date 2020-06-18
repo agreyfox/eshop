@@ -2134,3 +2134,50 @@ Visit '/admin' to get started.
 2020-06-15T11:29:04.206+0800	[31mERROR[0m	/home/lq/ifb/src/eshop/system/admin/utils.go:249	535 5.7.8 Username and Password not accepted. Learn more at
 5.7.8  https://support.google.com/mail/?p=BadCredentials j12sm12692144pfd.21 - gsmtp
 2020-06-15T15:00:27.586+0800	[31mERROR[0m	/home/lq/ifb/src/eshop/system/admin/utils.go:252	535 Incorrect authentication data
+2020-06-16T17:41:10.607+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/ip/ipip.go:147	IPs DB Opened!
+2020-06-16T17:50:58.469+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/ip/ipip.go:151	IPs DB Opened!
+2020-06-16T17:58:38.693+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/ip/ipip.go:151	IPs DB Opened!
+2020-06-16T17:59:49.765+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/ip/ipip.go:151	IPs DB Opened!
+2020-06-16T18:00:54.971+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/ip/ipip.go:151	IPs DB Opened!
+2020-06-16T18:01:42.321+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/ip/ipip.go:151	IPs DB Opened!
+2020-06-17T09:18:20.814+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/ip/ipip.go:151	IPs DB Opened!
+2020-06-17T09:29:02.114+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/ip/ipip.go:151	IPs DB Opened!
+2020-06-17T09:29:15.316+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/ip/ipip.go:151	IPs DB Opened!
+2020-06-17T09:29:38.721+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/ip/ipip.go:151	IPs DB Opened!
+2020-06-17T09:32:44.605+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/ip/ipip.go:151	IPs DB Opened!
+2020-06-17T09:36:13.514+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/ip/ipip.go:151	IPs DB Opened!
+2020-06-17T09:36:23.515+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/ip/ipip.go:291	Error:Get "http://api.ipstack.com/104.26.11.194?access_key=16fb28ea154934b40d30858c34a28ca4&access_key=16fb28ea154934b40d30858c34a28ca4&hostname=1&output=json": dial tcp 104.26.11.194:80: i/o timeout
+2020-06-17T09:36:33.516+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/ip/ipip.go:291	Error:Get "http://api.ipstack.com/104.26.11.194?access_key=16fb28ea154934b40d30858c34a28ca4&access_key=16fb28ea154934b40d30858c34a28ca4&hostname=1&output=json": dial tcp 172.67.73.233:80: i/o timeout
+2020-06-17T09:38:20.671+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/ip/ipip.go:151	IPs DB Opened!
+2020-06-17T09:38:30.672+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/ip/ipip.go:291	Error:Get "http://api.ipstack.com/104.26.11.194?access_key=16fb28ea154934b40d30858c34a28ca4&hostname=1&output=json": dial tcp 172.67.73.233:80: i/o timeout
+2020-06-17T09:42:04.137+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:43	Start Service : [admin db]
+2020-06-17T09:42:04.137+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-06-17T09:42:04.138+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-06-17T09:42:04.138+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:156	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-06-17T09:42:04.138+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:170	Start admin rest interface
+2020-06-17T09:42:04.138+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/boltdbweb/boltdbweb.go:56	starting boltdb service...
+2020-06-17T09:42:04.168+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:115	Server listening at localhost:8080 for HTTP requests...
+
+2020-06-17T09:42:04.168+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:116	
+Visit '/admin' to get started.
+2020-06-17T09:42:41.301+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:42	login in request from:127.0.0.1:51326
+2020-06-17T09:42:41.396+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/ip/ipip.go:151	IPs DB Opened!
+2020-06-17T09:42:51.396+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/ip/ipip.go:291	Error:Get "http://api.ipstack.com/127.0.0.1:51326?access_key=16fb28ea154934b40d30858c34a28ca4&hostname=1&output=json": dial tcp 172.67.73.233:80: i/o timeout
+2020-06-17T09:42:51.397+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:127	Admin User jihua.gao@gmail.com logged in !
+2020-06-17T10:02:55.684+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:43	Start Service : [admin db]
+2020-06-17T10:02:55.685+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-06-17T10:02:55.685+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-06-17T10:02:55.685+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:156	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-06-17T10:02:55.685+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:170	Start admin rest interface
+2020-06-17T10:02:55.685+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/boltdbweb/boltdbweb.go:56	starting boltdb service...
+2020-06-17T10:02:55.715+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:115	Server listening at localhost:8080 for HTTP requests...
+
+2020-06-17T10:02:55.715+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:116	
+Visit '/admin' to get started.
+2020-06-17T10:03:03.049+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:42	login in request from:127.0.0.1:52902
+2020-06-17T10:03:03.148+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/ip/ipip.go:151	IPs DB Opened!
+2020-06-17T10:03:05.172+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:129	Admin User jihua.gao@gmail.com logged in !

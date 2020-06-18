@@ -27,6 +27,7 @@ import (
 	"github.com/agreyfox/eshop/system/api"
 	"github.com/agreyfox/eshop/system/api/analytics"
 	"github.com/agreyfox/eshop/system/db"
+	"github.com/agreyfox/eshop/system/ip"
 	"github.com/agreyfox/eshop/system/item"
 	"github.com/agreyfox/eshop/system/search"
 	"github.com/nfnt/resize"
@@ -37,7 +38,8 @@ import (
 )
 
 func login(res http.ResponseWriter, req *http.Request) {
-	logger.Debug("login in request from:", GetIP(req))
+	ipaddr := GetIP(req)
+	logger.Debug("login in request from:", ipaddr)
 	if user.IsValid(req) {
 		renderJSON(res, req, ReturnData{
 			RetCode: 2,
@@ -95,9 +97,14 @@ func login(res http.ResponseWriter, req *http.Request) {
 	}
 	// create new token
 	week := time.Now().Add(time.Hour * 24 * 7)
+
+	ipSearchHandler := ip.NewClient("", true)
+
+	countryInfor, _ := ipSearchHandler.QueryIPByDB(ipaddr)
 	claims := map[string]interface{}{
-		"exp":  week,
-		"user": usr.Email,
+		"exp":     week,
+		"user":    usr.Email,
+		"country": countryInfor,
 	}
 	token, err := jwt.New(claims)
 	if err != nil {
@@ -116,13 +123,18 @@ func login(res http.ResponseWriter, req *http.Request) {
 		Expires: week,
 		Path:    "/",
 	})
-	contentStructData := getContentsStruct()
+	contentStructData := getContentsStruct() // 获得系统open的内容列表
+	currency := getContentList("Currency")
+	country := getContentList("Country")
 	logger.Debugf("Admin User %s logged in !", usr.Email)
 	retdata := map[string]interface{}{
-		"retCode":  0,
-		"msg":      "Done",
-		"data":     token,
-		"contents": string(contentStructData[:]),
+		"retCode":        0,
+		"msg":            "Done",
+		"data":           token,
+		"DefaultCountry": countryInfor,
+		"Country":        country,
+		"Currency":       currency,
+		"contents":       string(contentStructData[:]),
 	}
 
 	renderJSON(res, req, retdata)
@@ -177,13 +189,13 @@ func recoverRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	domain, err := db.Config("domain")
-	emailhost, err := db.Config("email_host")
+	/* emailhost, err := db.Config("email_host")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		logger.Debugf("Failed to get domain from configuration.", err)
 		return
 	}
-	emailsecret, err := db.Config("email_password")
+	emailsecret, err := db.Config("email_password") */
 	adminemail, err := db.Config("admin_email")
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -217,12 +229,32 @@ at %s
 
 	go func() {
 		//err = msg.Send()
-		err = SendEmail(string(emailhost[:]), string(adminemail[:]), email, string(emailsecret[:]), fmt.Sprintf("Account Recovery [%s]", "恩卓信息"), body)
-		if err != nil {
-			logger.Debugf("Failed to send message to:", email, "Error:", err)
-		} else {
-			logger.Debug("Recover email sent out without error  to ", email)
+		tomail := []string{string(adminemail[:])}
+
+		fmt.Printf("Try to send admin notification email to %v\n", tomail)
+		email := Email{
+			//From: admin.MailUser,
+			To:       tomail,
+			Subject:  fmt.Sprintf("Account Recovery [%s]", "EGPal"),
+			TextBody: body,
+			HtmlBody: body,
 		}
+		res, err := Send(&email)
+		if err != nil {
+			fmt.Printf("Send Alert email with n Error Occurred: %s\n", err)
+		}
+		if res.Data.Succeeded == 1 {
+			fmt.Printf("Email allter sent Successfully: %v\n", res)
+		} else {
+			fmt.Printf("Email allter Sent with error: %v\n", res)
+		}
+		/*
+			err = SendEmail(string(emailhost[:]), string(adminemail[:]), email, string(emailsecret[:]), fmt.Sprintf("Account Recovery [%s]", "恩卓信息"), body)
+			if err != nil {
+				logger.Debugf("Failed to send message to:", email, "Error:", err)
+			} else {
+				logger.Debug("Recover email sent out without error  to ", email)
+			} */
 	}()
 
 	renderJSON(w, r, map[string]interface{}{
@@ -1581,7 +1613,7 @@ func getMedia(w http.ResponseWriter, r *http.Request) {
 
 	//content_type := mime.TypeByExtension(file_ext)
 
-	logger.Info("content type is %s", ctype)
+	logger.Debugf("Content type is %s", ctype)
 
 	if len(ctype) > 0 {
 		r.Header.Set("Content-Type", ctype)

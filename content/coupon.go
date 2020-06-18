@@ -14,6 +14,7 @@ type Coupon struct {
 	Game          string  `json:"game"`
 	Price         float64 `json:"price"`
 	Type          string  `json:"type"`
+	Currency      string  `json:"currency"`
 	InitialAmount float64 `json:"initial_amount"`
 	Starttime     string  `json:"starttime"`
 	Endtime       string  `json:"endtime"`
@@ -168,7 +169,7 @@ func (o *Coupon) ContentStruct() map[string]item.FieldDescription {
 			DataSource: []string{},
 			Order:      9},
 		"meta": {
-			Type:       "input",
+			Type:       "textarea",
 			DataType:   "field",
 			DataSource: []string{},
 			Order:      10},
