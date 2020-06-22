@@ -138,6 +138,13 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			Required:   true,
 			Order:      4,
 		},
+		"type": {
+			Type:       "select",
+			DataType:   "field",
+			DataSource: []string{"coin", "item"},
+			Required:   true,
+			Order:      4,
+		},
 		"price": {
 			Type:       "input",
 			DataType:   "field",

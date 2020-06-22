@@ -59,6 +59,8 @@ var serveCmd = &cobra.Command{
 				boltdbweb.Run(db.Store(), mainMux) //run bolt db instance
 			} else if service == "paypal" || service == "payssion" || service == "skrill" {
 				payment.Run(service)
+			} else if service == "monitor" {
+				prometheus.run(":9001")
 			} else {
 				return ErrWrongOrMissingService
 			}

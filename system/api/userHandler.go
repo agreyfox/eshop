@@ -8,14 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/agreyfox/eshop/system/email"
 	"github.com/agreyfox/eshop/system/admin/user"
+	smtp2go "github.com/agreyfox/eshop/system/email"
 	"github.com/agreyfox/eshop/system/ip"
 
 	"github.com/agreyfox/eshop/system/db"
-
-	//jwt "github.com/dgrijalva/jwt-go"
-	///emailer "github.com/nilslice/email"
 
 	"github.com/nilslice/jwt"
 )
@@ -372,19 +369,19 @@ func Forgot(res http.ResponseWriter, req *http.Request) {
 	}
 
 	domain, err := db.Config("domain")
-	emailhost, err := db.Config("email_host")
+	/* emailhost, err := db.Config("email_host")
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
 		logger.Error("Failed to get domain from configuration.", err)
 		return
 	}
-	emailsecret, err := db.Config("email_password")
-	adminemail, err := db.Config("admin_email")
+	emailsecret, err := db.Config("email_password") */
+	/* adminemail, err := db.Config("admin_email")
 	if err != nil {
 		res.WriteHeader(http.StatusInternalServerError)
 		logger.Debugf("Please set admin email box to send recover letter.", err)
 		return
-	}
+	} */
 	body := fmt.Sprintf(`
 There has been an account recovery request made for the user with email:
 %s
@@ -412,17 +409,17 @@ Thank you,
 
 	go func() {
 		//err = msg.Send()
-		tomail := []string{string(adminemail[:])}
+		tomail := []string{email}
 
 		fmt.Printf("Try to send  notification email to %v\n", tomail)
-		email := email.Email{
+		smtpemail := smtp2go.Email{
 			//From: admin.MailUser,
 			To:       tomail,
 			Subject:  fmt.Sprintf("Account Recovery [%s]", "EGPal"),
 			TextBody: body,
 			HtmlBody: body,
 		}
-		res, err := email.Send(&email)
+		res, err := smtp2go.Send(&smtpemail)
 		if err != nil {
 			fmt.Printf("Send Alert email with n Error Occurred: %s\n", err)
 		}
@@ -770,19 +767,40 @@ Thank you,
 %s
 
 `, email, domain, key, domain)
-
-		msg := emailer.Message{
-			To:      email,
-			From:    fmt.Sprintf("admin@%s", domain),
-			Subject: fmt.Sprintf("Account Recovery [%s]", domain),
-			Body:    body,
-		}
+		/*
+			msg := emailer.Message{
+				To:      email,
+				From:    fmt.Sprintf("admin@%s", domain),
+				Subject: fmt.Sprintf("Account Recovery [%s]", domain),
+				Body:    body,
+			} */
 
 		go func() {
-			err = msg.Send()
-			if err != nil {
-				log.Println("Failed to send message to:", msg.To, "about", msg.Subject, "Error:", err)
+			tomail := []string{email}
+
+			fmt.Printf("Try to send admin notification email to %v\n", tomail)
+
+			emailTarget := smtp2go.Email{
+				//From: admin.MailUser,
+				To:       tomail,
+				Subject:  fmt.Sprintf("Account Recovery [%s]", "EGPal"),
+				TextBody: body,
+				HtmlBody: body,
 			}
+			res, err := smtp2go.Send(&emailTarget)
+			if err != nil {
+				fmt.Printf("Send Alert email with n Error Occurred: %s\n", err)
+			}
+			if res.Data.Succeeded == 1 {
+				fmt.Printf("Email allter sent Successfully: %v\n", res)
+			} else {
+				fmt.Printf("Email allter Sent with error: %v\n", res)
+			}
+			/*
+				err = msg.Send()
+				if err != nil {
+					log.Println("Failed to send message to:", msg.To, "about", msg.Subject, "Error:", err)
+				} */
 		}()
 
 		// redirect to /admin/recover/key and send email with key and URL

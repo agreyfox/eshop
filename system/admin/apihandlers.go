@@ -36,6 +36,7 @@ import (
 	"github.com/gorilla/schema"
 
 	//emailer "github.com/nilslice/email"
+	emailer "github.com/nilslice/email"
 	"github.com/nilslice/jwt"
 )
 
@@ -162,14 +163,14 @@ func recoverRequest(w http.ResponseWriter, r *http.Request) {
 
 	reqJSON := getJsonFromBody(r)
 	// check email for user, if no user return Error
-	email := strings.ToLower(fmt.Sprintf("%s", reqJSON["email"]))
-	if email == "" {
+	emailaddr := strings.ToLower(fmt.Sprintf("%s", reqJSON["email"]))
+	if emailaddr == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		logger.Debug("Failed account recovery. No email address submitted.")
 		return
 	}
 
-	_, err = db.User(email)
+	_, err = db.User(emailaddr)
 	if err == db.ErrNoUserExists {
 		w.WriteHeader(http.StatusBadRequest)
 		logger.Warn("No user exists.", err)
@@ -183,7 +184,7 @@ func recoverRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// create temporary key to verify user
-	key, err := db.SetRecoveryKey(email)
+	key, err := db.SetRecoveryKey(emailaddr)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		logger.Debugf("Failed to set account recovery key.", err)
@@ -198,12 +199,12 @@ func recoverRequest(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	emailsecret, err := db.Config("email_password") */
-	adminemail, err := db.Config("admin_email")
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		logger.Debugf("Please set admin email box to send recover letter.", err)
-		return
-	}
+	/* 	adminemail, err := db.Config("admin_email")
+	   	if err != nil {
+	   		w.WriteHeader(http.StatusInternalServerError)
+	   		logger.Debugf("Please set admin email box to send recover letter.", err)
+	   		return
+	   	} */
 	body := fmt.Sprintf(`
 There has been an account recovery request made for the user with email:
 %s
@@ -220,7 +221,7 @@ will remain as-is.
 Thank you,
 at %s
 
-`, email, domain, key, domain)
+`, emailaddr, domain, key, domain)
 	/*
 		msg := emailer.Message{
 			To:      email,
@@ -231,17 +232,17 @@ at %s
 
 	go func() {
 		//err = msg.Send()
-		tomail := []string{string(adminemail[:])}
+		tomail := []string{string(emailaddr)}
 
 		fmt.Printf("Try to send admin notification email to %v\n", tomail)
-		email := email.Email{
+		emailtarget := email.Email{
 			//From: admin.MailUser,
 			To:       tomail,
 			Subject:  fmt.Sprintf("Account Recovery [%s]", "EGPal"),
 			TextBody: body,
 			HtmlBody: body,
 		}
-		res, err := email.Send(&email)
+		res, err := email.Send(&emailtarget)
 		if err != nil {
 			fmt.Printf("Send Alert email with n Error Occurred: %s\n", err)
 		}
@@ -1815,7 +1816,7 @@ func getContents(w http.ResponseWriter, r *http.Request) {
 
 		}
 	} else {
-		logger.Debugf("no creatable item and query public data direclty", opts)
+		logger.Debugf("No creatable item and query public data direclty with option:%v", opts)
 		total, posts = db.Query(t+specifier, opts)
 
 		for i := range posts {

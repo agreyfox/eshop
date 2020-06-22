@@ -7,9 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/agreyfox/eshop/system/admin"
 	"github.com/agreyfox/eshop/system/api/analytics"
 	"github.com/agreyfox/eshop/system/db"
+	smtp2go "github.com/agreyfox/eshop/system/email"
 	"github.com/agreyfox/eshop/system/ip"
 	"github.com/spf13/cobra"
 )
@@ -73,22 +73,22 @@ var emailCmd = &cobra.Command{
 		defer db.Close()
 		//db.PutConfig("Key", config.GenerateKey())
 
-		analytics.Init()
-		defer analytics.Close()
+		//analytics.Init()
+		//defer analytics.Close()
 
 		tomail := []string{"18901882538@189.cn"}
 		if len(args) == 1 {
 			tomail = append(tomail, args[0])
 		}
 		fmt.Printf("Try to send email to %v\n", tomail)
-		email := admin.Email{
+		emailcontent := smtp2go.Email{
 			//From: admin.MailUser,
 			To:       tomail,
 			Subject:  "Trying out EShop email service",
 			TextBody: "Eshop Test Message",
 			HtmlBody: "<h1>Eshop Test Message</h1>",
 		}
-		res, err := admin.Send(&email)
+		res, err := smtp2go.Send(&emailcontent)
 		if err != nil {
 			fmt.Printf("An Error Occurred: %s\n", err)
 		}

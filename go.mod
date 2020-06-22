@@ -32,6 +32,7 @@ require (
 	github.com/nilslice/email v0.1.0
 	github.com/nilslice/jwt v1.0.0
 	github.com/plutov/paypal v2.0.5+incompatible
+	github.com/prometheus/client_golang v0.9.3
 	github.com/remyoudompheng/bigfft v0.0.0-20190728182440-6a916e37a237 // indirect
 	github.com/robfig/cron v1.2.0
 	github.com/spf13/cobra v0.0.7

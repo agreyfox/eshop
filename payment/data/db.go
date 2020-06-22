@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/agreyfox/eshop/system/admin"
+	"github.com/agreyfox/eshop/system/email"
 	"github.com/boltdb/bolt"
 )
 
@@ -236,18 +237,18 @@ func IsValidStatus(state string) bool {
 	return false
 }
 
-func SendConfirmEmail(orderid, email string) {
+func SendConfirmEmail(orderid, emailaddr string) {
 	tomail := []string{"18901882538@189.cn"}
-
-	fmt.Printf("Try to send email to %v\n", email)
-	msg := admin.Email{
+	tomail = append(tomail, emailaddr)
+	fmt.Printf("Try to send email to %v\n", emailaddr)
+	msg := email.Email{
 		//From: admin.MailUser,
 		To:       tomail,
 		Subject:  "EGPal EShop Order notification letter",
 		TextBody: fmt.Sprintf("You have make purchase order(%s),We will check and delivery soon", orderid),
 		HtmlBody: fmt.Sprintf("<h1>EGPal Purchase Confirmation</h1> <p>You have make order(%s) Successfully. We will check and delivery soon</p>", orderid),
 	}
-	res, err := admin.Send(&msg)
+	res, err := email.Send(&msg)
 	if err != nil {
 		fmt.Printf("An Error Occurred: %s\n", err)
 	}
