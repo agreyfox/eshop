@@ -74,6 +74,7 @@ func (o *Game) ContentStruct() map[string]interface{} {
 			DataType:   "field",
 			Required:   true,
 			DataSource: []string{},
+			Help:       "显示在用户界面中的名称",
 			Order:      1},
 		"sname": {
 			Type:       "input",
@@ -85,16 +86,19 @@ func (o *Game) ContentStruct() map[string]interface{} {
 			DataType:   "field",
 			DataSource: []string{},
 			Required:   true,
+			Help:       "选择是否出现在hot game列表中",
 			Order:      3},
 		"logo": {
 			Type:       "file",
 			DataType:   "field",
 			DataSource: []string{},
+			Help:       "用于游戏列中Icon的显示，大小：",
 			Order:      6},
 		"barImage": {
 			Type:       "file",
 			DataType:   "field",
 			DataSource: []string{},
+			Help:       "用于游戏页中的横幅显示，大小：",
 			Order:      5},
 		"coupon": {
 			Type:       "select",

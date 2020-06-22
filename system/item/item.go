@@ -389,6 +389,7 @@ func NormalizeString(s string) (string, error) {
 	return stringToSlug(s)
 }
 
+// FieldDescription describe the ui system information
 type FieldDescription struct {
 	Type       string   `json:"type"`
 	DataType   string   `json:"dataType"`
@@ -396,4 +397,5 @@ type FieldDescription struct {
 	Order      int16    `json:"order"`
 	Others     string   `json:"other"`
 	Required   bool     `json:"required,omitempty"`
+	Help       string   `json:"helpText,omitempty"`
 }

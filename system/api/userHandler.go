@@ -8,13 +8,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/agreyfox/eshop/system/email"
 	"github.com/agreyfox/eshop/system/admin/user"
 	"github.com/agreyfox/eshop/system/ip"
 
 	"github.com/agreyfox/eshop/system/db"
 
 	//jwt "github.com/dgrijalva/jwt-go"
-	emailer "github.com/nilslice/email"
+	///emailer "github.com/nilslice/email"
 
 	"github.com/nilslice/jwt"
 )
@@ -411,13 +412,32 @@ Thank you,
 
 	go func() {
 		//err = msg.Send()
-		err = SendEmail(string(emailhost[:]), string(adminemail[:]), email, string(emailsecret[:]), fmt.Sprintf("Account Recovery [%s]", "恩卓信息"), body)
+		tomail := []string{string(adminemail[:])}
+
+		fmt.Printf("Try to send  notification email to %v\n", tomail)
+		email := email.Email{
+			//From: admin.MailUser,
+			To:       tomail,
+			Subject:  fmt.Sprintf("Account Recovery [%s]", "EGPal"),
+			TextBody: body,
+			HtmlBody: body,
+		}
+		res, err := email.Send(&email)
+		if err != nil {
+			fmt.Printf("Send Alert email with n Error Occurred: %s\n", err)
+		}
+		if res.Data.Succeeded == 1 {
+			fmt.Printf("Email allter sent Successfully: %v\n", res)
+		} else {
+			fmt.Printf("Email allter Sent with error: %v\n", res)
+		}
+		/* err = SendEmail(string(emailhost[:]), string(adminemail[:]), email, string(emailsecret[:]), fmt.Sprintf("Account Recovery [%s]", "恩卓信息"), body)
 
 		if err != nil {
 			logger.Debugf("Failed to send message to:", email, "Error:", err)
 		} else {
 			logger.Debug("Recover email sent out without error  to ", email)
-		}
+		} */
 	}()
 
 	// redirect to /admin/recover/key and send email with key and URL

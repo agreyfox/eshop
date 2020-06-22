@@ -27,13 +27,15 @@ import (
 	"github.com/agreyfox/eshop/system/api"
 	"github.com/agreyfox/eshop/system/api/analytics"
 	"github.com/agreyfox/eshop/system/db"
+	"github.com/agreyfox/eshop/system/email"
 	"github.com/agreyfox/eshop/system/ip"
 	"github.com/agreyfox/eshop/system/item"
 	"github.com/agreyfox/eshop/system/search"
 	"github.com/nfnt/resize"
 
 	"github.com/gorilla/schema"
-	emailer "github.com/nilslice/email"
+
+	//emailer "github.com/nilslice/email"
 	"github.com/nilslice/jwt"
 )
 
@@ -232,14 +234,14 @@ at %s
 		tomail := []string{string(adminemail[:])}
 
 		fmt.Printf("Try to send admin notification email to %v\n", tomail)
-		email := Email{
+		email := email.Email{
 			//From: admin.MailUser,
 			To:       tomail,
 			Subject:  fmt.Sprintf("Account Recovery [%s]", "EGPal"),
 			TextBody: body,
 			HtmlBody: body,
 		}
-		res, err := Send(&email)
+		res, err := email.Send(&email)
 		if err != nil {
 			fmt.Printf("Send Alert email with n Error Occurred: %s\n", err)
 		}
