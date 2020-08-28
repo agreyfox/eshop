@@ -6,12 +6,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/agreyfox/eshop/system"
 	"github.com/agreyfox/eshop/system/admin/user"
 	"github.com/agreyfox/eshop/system/api"
 	"github.com/agreyfox/eshop/system/db"
 	"github.com/agreyfox/eshop/system/logs"
 	"github.com/go-zoo/bone"
+	"github.com/rs/cors"
 	"go.uber.org/zap"
 )
 
@@ -25,7 +25,7 @@ func Run(mainMux *bone.Mux) {
 	//mainMux := bone.New()
 	logger.Debug("Start admin interface")
 	adminMux := bone.New() //.Prefix("admin")
-	adminMux.HandleFunc("/", adminHandler)
+	/* adminMux.HandleFunc("/", adminHandler)
 	adminMux.HandleFunc("/init", initHandler)
 
 	adminMux.HandleFunc("/login", loginHandler)
@@ -55,7 +55,7 @@ func Run(mainMux *bone.Mux) {
 	adminMux.HandleFunc("/edit/upload", user.Auth(editUploadHandler))
 	adminMux.HandleFunc("/edit/upload/delete", user.Auth(deleteUploadHandler))
 	// Database & uploads backup via HTTP route registered with Basic Auth middleware.
-	adminMux.HandleFunc("/backup", system.BasicAuth(backupHandler))
+	adminMux.HandleFunc("/backup", system.BasicAuth(backupHandler)) */
 
 	/* http.HandleFunc("/admin", user.Auth(adminHandler))
 
@@ -102,13 +102,20 @@ func Run(mainMux *bone.Mux) {
 
 	v1Mux := bone.New()
 	//v1Mux.HandleFunc("/login", loginRestHandler)
-	v1Mux.Post("/login", http.HandlerFunc(login))
+	v1Mux.Post("/login", api.CORS(http.HandlerFunc(login)))
+	v1Mux.Post("/user/login", api.CORS(http.HandlerFunc(login)))
+	v1Mux.Post("/user/register", http.HandlerFunc(newAdmin))
+	v1Mux.Post("/user/update", http.HandlerFunc(updateAdmin))
+	v1Mux.Delete("/user/remove", http.HandlerFunc(deleteAdmin))
+	v1Mux.Post("/user/search", user.Auth(searchUser))
+	v1Mux.Get("/user/search", user.Auth(searchUser))
 	//v1Mux.HandleFunc("/logout", http.HandlerFunc(logout))
+	v1Mux.Post("/user/logout", http.HandlerFunc(logout))
 	v1Mux.Post("/logout", http.HandlerFunc(logout))
 
-	v1Mux.Post("/recover", http.HandlerFunc(recoverRequest))
+	v1Mux.Post("/user/recover", http.HandlerFunc(recoverRequest))
 	v1Mux.Post("/recover/key", http.HandlerFunc(recoverPassword))
-	v1Mux.Post("/backup", http.HandlerFunc(backup))
+	v1Mux.Get("/backup", http.HandlerFunc(backup))
 
 	//v1Mux.HandleFunc("/recover", forgotPasswordRestHandler)
 	//v1Mux.HandleFunc("/recover/key", recoveryKeyRestHandler)
@@ -165,7 +172,8 @@ func Run(mainMux *bone.Mux) {
 	mainMux.Handle("/api/uploads/", api.Record(api.CORS(db.CacheControl(http.StripPrefix("/api/uploads", http.FileServer(restrict(http.Dir(uploadsDir))))))))
 
 	adminMux.SubRoute("/v1", v1Mux)
-	mainMux.SubRoute("/admin", adminMux)
+
+	mainMux.SubRoute("/admin", cors.Default().Handler(adminMux))
 
 	logger.Debug("Start admin rest interface")
 

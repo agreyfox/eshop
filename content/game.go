@@ -10,14 +10,15 @@ import (
 type Game struct {
 	item.Item
 
-	Name   string `json:"name"`
-	Sname  string `json:"sname"`
-	Logo   string `json:"logo,omitempty"`
-	Image  string `json:"barImage,omitempty"`
-	Online bool   `json:"online"`
-	Desc   string `json:"description,omitempty"`
-	Coupon string `json:"coupon,omitempty"` //使用那个coupon
-	Hot    bool   `json:"hot"`              //是否在hotgame中显示
+	Name    string `json:"name"`
+	Sname   string `json:"sname,omitempty"`
+	Logo    string `json:"logo,omitempty"`
+	Image   string `json:"barImage,omitempty"`
+	Online  bool   `json:"online"`
+	Hotitem bool   `json:"hotitem"`
+	Desc    string `json:"description,omitempty"`
+	Coupon  string `json:"coupon,omitempty"` //使用那个coupon
+	Hot     bool   `json:"hot,omitempty"`    //是否在hotgame中显示
 }
 
 // MarshalEditor writes a buffer of html to edit a Game within the CMS
@@ -86,14 +87,14 @@ func (o *Game) ContentStruct() map[string]interface{} {
 			DataType:   "field",
 			DataSource: []string{},
 			Required:   true,
-			Help:       "选择是否出现在hot game列表中",
+			Help:       "选择本游戏是否出现在hot game列表中",
 			Order:      3},
 		"logo": {
 			Type:       "file",
 			DataType:   "field",
 			DataSource: []string{},
 			Help:       "用于游戏列中Icon的显示，大小：",
-			Order:      6},
+			Order:      4},
 		"barImage": {
 			Type:       "file",
 			DataType:   "field",
@@ -102,20 +103,29 @@ func (o *Game) ContentStruct() map[string]interface{} {
 			Order:      5},
 		"coupon": {
 			Type:       "select",
-			DataType:   "field",
-			DataSource: []string{"array"},
-			Order:      4},
+			DataType:   "content",
+			DataSource: []string{"/admin/v1/contents?type=Coupon"},
+			Help:       "选择当前激活的coupon",
+			Order:      6},
 		"online": {
 			Type:       "bool",
 			DataType:   "field",
 			Required:   true,
+			Help:       "true为激活游戏",
 			DataSource: []string{},
-			Order:      4},
+			Order:      7},
+		"hotitem": {
+			Type:       "bool",
+			DataType:   "field",
+			DataSource: []string{},
+			Help:       "选择本游戏是否出现在hotitem列表中",
+			Order:      8,
+		},
 		"description": {
 			Type:       "textarea",
 			DataType:   "field",
 			DataSource: []string{},
-			Order:      7},
+			Order:      9},
 	}
 	//retStr, _ := json.Marshal(dd)
 	return map[string]interface{}{

@@ -16,6 +16,8 @@ func sendPreflight(res http.ResponseWriter) {
 }
 
 func responseWithCORS(res http.ResponseWriter, req *http.Request) (http.ResponseWriter, bool) {
+	//fmt.Printf("CORS config is %b \n", db.ConfigCache("cors_disabled"))
+	//fmt.Println(req.Header.Get("Origin"))
 	if db.ConfigCache("cors_disabled").(bool) == true {
 		// check origin matches config domain
 		domain := db.ConfigCache("domain").(string)
@@ -51,7 +53,7 @@ func responseWithCORS(res http.ResponseWriter, req *http.Request) (http.Response
 	// apply full CORS headers and return
 	res.Header().Set("Access-Control-Allow-Headers", "Accept, Authorization, Content-Type")
 	res.Header().Set("Access-Control-Allow-Origin", "*")
-
+	//json.NewEncoder(res).Encode("OKOK")
 	return res, true
 }
 

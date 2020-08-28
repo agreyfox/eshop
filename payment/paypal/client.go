@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"go.uber.org/zap"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 // NewClient returns new Client struct
@@ -116,8 +117,10 @@ func (c *Client) Send(req *http.Request, v interface{}) error {
 		io.Copy(w, resp.Body)
 		return nil
 	}
-
+	//da, err := ioutil.ReadAll(resp.Body)
+	//logger.Debug(string(da[:]))
 	return json.NewDecoder(resp.Body).Decode(v)
+	//return nil
 }
 
 // SendWithAuth makes a request to the API and apply OAuth2 header automatically.

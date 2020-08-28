@@ -12,9 +12,9 @@ import (
 )
 
 var (
-	NotifyURL      = "http://view.bk.cloudns.cc:8080/payment/skrill/notify"
-	ReturnURL      = "http://view.bk.cloudns.cc:8080/payment/skrill/return"
-	CancelURL      = "http://view.bk.cloudns.cc:8080/payment/skrill/cancel"
+	NotifyURL      = "https://support.bk.cloudns.cc:8081/payment/skrill/notify"
+	ReturnURL      = "https://support.bk.cloudns.cc:8081/payment/skrill/return"
+	CancelURL      = "https://support.bk.cloudns.cc:8081/payment/skrill/cancel"
 	TransactionID  = ""
 	MerchanAccount = ""
 	payClient      *Client
@@ -119,14 +119,29 @@ func excutePayment(w http.ResponseWriter, r *http.Request) {
 
 func Succeed(w http.ResponseWriter, r *http.Request) {
 	logger.Debug("Skrill return  data from payment")
-	//q := r.URL.Query()
-	///logger.Debugf("%v\n%s", r.URL, q)
+	q := r.URL.Query()
+	logger.Debugf("return data transaction_id is %s , msid is %s\n", q.Get("transaction_id"), q.Get("msid"))
 	//data := getJSONFromBody(r)
-	bodybytes := getBinaryDataFromBody(r)
-	logger.Debugf("User finished payment with data %v,", string(bodybytes[:]))
+	//bodybytes := getBinaryDataFromBody(r)
+	logger.Debugf("Notify from skril with request:%v\n%v", r, r.URL)
+	//logger.Debugf("User finished payment with data %s,", string(bodybytes[:]))
+	url := data.OnlineURL
+	//target := map[string]interface{}{}
 
-	w.Write([]byte("订单号 ：已付款,Thanks！"))
+	//err := json.Unmarshal(bodybytes, &target)
+	tid := q.Get("transaction_id")
+	if len(tid) == 0 {
+		logger.Error("skrill system return strange data, please check skrill account for transaction ")
+		url += fmt.Sprint("?status=0&msg=skrill system return strange data, please check skrill account for transaction")
+	} else {
+		//w.Write([]byte("订单号 ：已付款,Thanks！"))
+		//order_id := fmt.Sprint(target["order_id"])
 
+		url += fmt.Sprintf("?status=1&orderno=%s", tid)
+
+	}
+
+	http.Redirect(w, r, url, http.StatusFound)
 }
 
 func SaveNotify(Notifydata []byte) error {
@@ -177,7 +192,7 @@ func SaveNotify(Notifydata []byte) error {
 			oid, oo, ok := CreateNewOrderInDB(&retData)
 			if ok {
 				if len(oo.Payer) > 0 {
-					go data.SendConfirmEmail(oo.OrderID, oo.Payer)
+					go data.SendConfirmEmail(oo.OrderID, "Game item", values.Get("amount"), values.Get("currency"), oo.Payer)
 				}
 			}
 			logger.Debugf("Skrill Order created with id:%d, OrderID is %s", oid, oo.OrderID)

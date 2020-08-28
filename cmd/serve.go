@@ -10,12 +10,14 @@ import (
 	"github.com/agreyfox/eshop/boltdbweb"
 	_ "github.com/agreyfox/eshop/content"
 	"github.com/agreyfox/eshop/payment"
+	"github.com/agreyfox/eshop/prometheus"
 	"github.com/agreyfox/eshop/system/admin"
 	"github.com/agreyfox/eshop/system/api"
 	"github.com/agreyfox/eshop/system/api/analytics"
 	"github.com/agreyfox/eshop/system/db"
 	"github.com/agreyfox/eshop/system/tls"
 	"github.com/go-zoo/bone"
+	"github.com/rs/cors"
 	"github.com/spf13/cobra"
 )
 
@@ -60,12 +62,22 @@ var serveCmd = &cobra.Command{
 			} else if service == "paypal" || service == "payssion" || service == "skrill" {
 				payment.Run(service)
 			} else if service == "monitor" {
-				prometheus.run(":9001")
+				go prometheus.Run(":9001", mainMux)
 			} else {
 				return ErrWrongOrMissingService
 			}
 		}
 
+		/* c := cors.New(cors.Options{
+			AllowedOrigins:   []string{"https://support.bk.cloudns.cc", "http://127.0.0.1:8080"},
+			AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "CONNECT", "HEAD"},
+			AllowCredentials: true,
+			AllowedHeaders:   []string{"Accept", "Content-Type", "Lqcms_token", "Content-Length", "Accept-Encoding", "Authorization", "X-CSRF-Token"},
+			// Enable Debugging for testing, consider disabling in production
+			Debug: true,
+		}) */
+		cmainMux := cors.AllowAll().Handler(mainMux)
+		//cmainMux := c.Handler(mainMux)
 		// run docs server if --docs is true
 		if docs {
 			admin.Docs(docsport)
@@ -84,7 +96,7 @@ var serveCmd = &cobra.Command{
 		if devhttps {
 			logger.Info("Enabling self-signed HTTPS... [DEV]")
 
-			go tls.EnableDev()
+			go tls.EnableDev(cmainMux)
 			logger.Info("Server listening on https://localhost:10443 for requests... [DEV]")
 
 			logger.Info("If your browser rejects HTTPS requests, try allowing insecure connections on localhost.")
@@ -93,7 +105,7 @@ var serveCmd = &cobra.Command{
 		} else if https {
 			logger.Info("Enabling HTTPS...")
 
-			go tls.Enable()
+			go tls.Enable(cmainMux)
 			logger.Warnf("Server listening on :%s for HTTPS requests...\n", db.ConfigCache("https_port").(string))
 		}
 
@@ -117,7 +129,7 @@ var serveCmd = &cobra.Command{
 		logger.Infof("Server listening at %s:%d for HTTP requests...\n", bind, port)
 		logger.Info("\nVisit '/admin' to get started.")
 
-		fmt.Println(http.ListenAndServe(fmt.Sprintf("%s:%d", bind, port), mainMux))
+		fmt.Println(http.ListenAndServe(fmt.Sprintf("%s:%d", bind, port), cmainMux))
 
 		return nil
 	},

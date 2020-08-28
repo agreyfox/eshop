@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/agreyfox/eshop/payment/data"
+	"github.com/go-zoo/bone"
 
 	"net/http"
 	"time"
@@ -13,21 +14,25 @@ import (
 )
 
 const (
-	brand_name string = "Abc 公司"
+	brand_name string = "EGpal Game Center"
 	prefer     string = "return=representation"
 )
 
 var (
 	// paypal ClientID
 	ClientID = "AbOMcM4iaf0PYKGgOFCktDD-Rqzpn7R_r2yPfwbopgCLYkBLXkD45c1qejwVX2BrBSxVQgz3_QlU7iFn"
+	//ClientID = "AQETpIU9UXmAro-k0aN6EZHHG-iGvbVdXQH4ywhrOmd8UiVWZF6YBvUkzR2MVJuoxFr2T6Q7kXTUVpEQ"
+	//access_token$sandbox$7kgb9j9nsb5bfmbx$5fe304f1bbd2c4fad7c74438737f8cec
 	// Paypal client secrte
-	Secret      = "EKxToL0apcJ7HOAryLeFkyP9JRWuw-p8pMj9M5N3Y1Ee8tsUDFgRv1wA_3hIjRMiHqrmbQu12KW_Noys"
+	Secret = "EKxToL0apcJ7HOAryLeFkyP9JRWuw-p8pMj9M5N3Y1Ee8tsUDFgRv1wA_3hIjRMiHqrmbQu12KW_Noys"
+	//Secret      = "EHrup4KHaN2QCa59_oIdaH4cl2u5fYMW5b-g5h99T9YOsyq4mRldit8cztRJ-N1xzMcQ_oBoCdTOSp33"
 	accessToken *TokenResponse
-	returnURL   = "http://view.bk.cloudns.cc:8080/payment/paypal/return"
-	cancelURL   = "http://view.bk.cloudns.cc:8080/payment/paypal/cancle"
-	thanksURL   = "http://view.bk.cloudns.cc:8080/thanks"
+	returnURL   = "https://support.bk.cloudns.cc:8081/payment/paypal/return"
+	cancelURL   = "https://support.bk.cloudns.cc:8081/payment/paypal/cancle"
+	thanksURL   = "https://support.bk.cloudns.cc:8081/thanks"
 	webHookID   = "3S402195M8327334K"
-	hookURL     = "https://view.bk.cloudns.cc/payment/paypal/notify"
+	//webHookHD   = "30G82858PK903472T"
+	hookURL     = "https://support.bk.cloudns.cc:8081/payment/paypal/notify"
 	payClient   *Client
 	ProgramMode = "DEBUG"
 )
@@ -118,9 +123,10 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 	logger.Debug("User create the paypal payment")
 	//try to get user post information about the payment
 	IP := GetIP(r)
+	//reqJSON := getJSONFromBody(r)
+	rawData := getBinaryDataFromBody(r)
 	reqJSON := getJSONFromBody(r)
-
-	payer := fmt.Sprint(reqJSON["payer"])
+	/* payer := fmt.Sprint(reqJSON["payer"])
 	if len(payer) == 0 || payer != "paypal" {
 		renderJSON(w, r, map[string]interface{}{
 			"retCode": -1,
@@ -130,6 +136,7 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	items, ok := reqJSON["item_list"].([]interface{})
+	//fmt.Println(items)
 	if !ok {
 		renderJSON(w, r, map[string]interface{}{
 			"retCode": -1,
@@ -137,7 +144,7 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	email := fmt.Sprint(reqJSON["email"])
+	email, _ := reqJSON["email"].(string)
 	if len(email) == 0 {
 		renderJSON(w, r, map[string]interface{}{
 			"retCode": -1,
@@ -157,7 +164,7 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		invoiceID := getOrderID()
-		customerID := fmt.Sprintf("%s", citem["customer_id"])
+		customerID, _ := citem["customer_id"].(string)
 
 		description, ok := citem["description"].(string)
 		if !ok {
@@ -293,28 +300,52 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 			onePurchaseReq.Items = itemArray
 		}
 		purchaseReqArray = append(purchaseReqArray, onePurchaseReq)
+	} */
+	orderReq := OrderRequest{}
+	invoiceID := getOrderID()
+
+	err := json.Unmarshal(rawData, &orderReq)
+	if err != nil {
+		logger.Error(err)
+		renderJSON(w, r, map[string]interface{}{
+			"retCode": -1,
+			"msg":     "参数错误:" + err.Error(),
+		})
+		return
+	}
+	for i := range orderReq.ItemList {
+		orderReq.ItemList[i].InvoiceID = invoiceID
+		orderReq.ItemList[i].Description = orderReq.Comments
 	}
 
 	orderPayer := &CreateOrderPayer{
-		EmailAddress: email,
+		EmailAddress: orderReq.Email,
 	}
 
 	//paymentList
 	intent := OrderIntentCapture
-
-	context := &ApplicationContext{
-		ReturnURL: returnURL,
-		CancelURL: cancelURL,
-		BrandName: brand_name,
+	lo := orderReq.Locale
+	if len(lo) == 0 {
+		lo = "en-US"
 	}
-
+	context := &ApplicationContext{
+		ReturnURL:   returnURL,
+		CancelURL:   cancelURL,
+		BrandName:   brand_name,
+		UserAction:  "PAY_NOW",
+		LandingPage: LandingPageTypeLogin,
+		Locale:      lo,
+	}
+	if orderReq.Method == LandingPageTypeBilling {
+		context.LandingPage = LandingPageTypeBilling // support credut card payment.
+	}
 	logger.Debug("Ready to create a order,Data Save to tempdb!")
 
 	//	client.Lock()
-	order, err := payClient.CreateOrder(intent, purchaseReqArray, orderPayer, context)
+	order, err := payClient.CreateOrder(intent, orderReq.ItemList, orderPayer, context)
 	//	client.Unlock()
 	if err != nil {
-		logger.Debug("create paypal order error", err)
+		logger.Debug("create paypal order error:", err)
 		renderJSON(w, r, map[string]interface{}{
 			"retCode": -2,
 			"msg":     "创建订单失败",
@@ -324,10 +355,11 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 	//logger.Debug(order)
 
 	if order.Status == PaypalCreated {
+		logger.Info("Payment Step 1 done")
 		go saveOrderRequest(*order, reqJSON, IP)
 		lk := order.Links
 		rd := ""
-		for _, item := range lk {
+		for _, item := range lk { //get the approve link for customer approve
 			if item.Rel == "approve" {
 				rd = item.Href
 				break
@@ -346,11 +378,10 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 		logger.Error(order)
 		renderJSON(w, r, map[string]interface{}{
 			"retCode": -10,
-			"msg":     "Something error ",
+			"msg":     "Something error,Please retry later  ",
 			"data":    order.Status,
 		})
 	}
-
 }
 
 func excutePayment(w http.ResponseWriter, r *http.Request) {
@@ -367,30 +398,43 @@ to capture result is like
 */
 
 func Succeed(w http.ResponseWriter, r *http.Request) {
-	logger.Debug("Paypal return from payment")
+	logger.Info("Paypal return from order creation,Step 2 done!")
 	q := r.URL.Query()
 	payID := q.Get("PayerID")
 	token := q.Get("token")
-	logger.Debugf("User %s finished payment is down token is %s,", payID, token)
+	logger.Debugf("User %s finished payment , the token is %s,", payID, token)
 	tok := PaymentSourceToken{
 		ID:   token,
 		Type: "BILLING_AGREEMENT",
 	}
-
 	captureRes, err := payClient.CaptureOrder(token, CaptureOrderRequest{PaymentSource: &PaymentSource{
 		Token: &tok,
 	}})
 	if err != nil {
-		fmt.Println(err)
+		logger.Error("Capture Order has some error ", err)
+		url := data.OnlineURL
+		url += fmt.Sprintf("status=0&msg=%s", err.Error())
+		http.Redirect(w, r, url, http.StatusFound)
 	}
 	if captureRes.Status == PaypalCompleted {
-		logger.Debug(captureRes)
-		go saveCapture(*captureRes)
+		logger.Info("Step 3 to send capture payment is done!", captureRes.ID)
+		logger.Debug("The Capture Result:", captureRes)
+		go saveCapture(*captureRes) //to save capture
 		// now to forward to succssful url
-		w.Write([]byte(fmt.Sprintf("订单号 ：%s,Thanks！", captureRes.ID)))
+		//w.Write([]byte(fmt.Sprintf("订单号 ：%s,Thanks！", captureRes.ID)))
+		url := data.OnlineURL
+		if len(captureRes.ID) > 0 {
+			url += fmt.Sprintf("?status=1&orderno=%s", captureRes.ID)
+		} else {
+			url += fmt.Sprintf("status=0&msg=%s", "Payment finished with error")
+		}
+		http.Redirect(w, r, url, http.StatusFound)
 	} else {
-		logger.Debug("Something error")
-		w.Write([]byte(fmt.Sprintf("可能有点问题，回到购物车！")))
+		logger.Debug("Step 3 send capture  return with error:", captureRes.Status)
+		//w.Write([]byte(fmt.Sprintf("可能有点问题，回到购物车！")))
+		url := data.OnlineURL
+		url += fmt.Sprintf("status=0&msg=%s", captureRes.Status)
+		http.Redirect(w, r, url, http.StatusFound)
 	}
 
 }
@@ -415,9 +459,9 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 // Notify accept all the notification from paypal
 func Notify(w http.ResponseWriter, r *http.Request) {
-	logger.Debug("Notify from Paypal")
+
 	bodybytes := getBinaryDataFromBody(r)
-	logger.Debug(len(bodybytes))
+	logger.Debug("Notification from Paypal:", string(bodybytes[:]))
 	/* verifyResp, _ := payClient.VerifyWebhookSignature(r, webHookID)
 
 	if verifyResp.VerificationStatus != PaypalVerified || ProgramMode != "DEBUG" {
@@ -426,11 +470,14 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	logger.Debugf("Verification pass") */
+
 	ree := getJSONFromBody(r)
 
 	byarry, _ := json.Marshal(ree)
-	//logger.Debug("body:", string(bodybytes))
+
+	//logger.Debug("Notification body:", string(bodybytes))
 	//logger.Debug("map string ", string(byarry))
+
 	var notification WebHookNotifiedEvent
 	err := json.Unmarshal(byarry, &notification)
 	if err != nil {
@@ -444,7 +491,7 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 	logger.Debugf("paypal notification %s arrival with resource %v", notification.ID, notification.EventType)
 	switch {
 	case notification.EventType == EventPaymentCaptureCompleted:
-
+		logger.Infof("Step 4 Capture after customer approve,The resource is :%s", fmt.Sprint(notification.Resource))
 		//verifyResp, _ := payClient.VerifyWebhookSignatureWithData(r, webHookID, bodybytes)
 		//logger.Debug(PrettyPrint(verifyResp))
 		//if verifyResp.VerificationStatus == PaypalVerified || ProgramMode == "DEBUG" {
@@ -457,23 +504,31 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
-
+			//logger.Debug("capture resource is ", resource)
 			oid, oo, ok := CreateNewOrderInDB(&notification, resource)
-
 			if ok {
 				if len(oo.Payer) > 0 {
-					go data.SendConfirmEmail(resource.InvoiceID, oo.Payer)
+					//logger.Debug(oo)
+					go data.SendConfirmEmail(resource.InvoiceID, GetPurchaseContent(resource.InvoiceID), resource.Amount.Value, resource.Amount.Currency, oo.Payer)
 				}
-				logger.Info("New order Created!")
+				logger.Infof("New order %d Created!", oid)
 				//go data.UpdateOrderByID(fmt.Sprint("%d", oid), data.OrderInValidate)
-				UpdateOrderStatusByOrderID(fmt.Sprint("%d", oid), data.OrderInValidate)
+				//UpdateOrderStatusByOrderID(fmt.Sprint("%d", oid), data.OrderInValidate)
 			} else {
 				logger.Info("New order Created Error!")
 			}
+			//go SaveTransationDetail(resource.ID)
 		} else {
 			logger.Warn("The verification failed!")
 		}
 		w.WriteHeader(http.StatusOK)
+
+	case notification.EventType == EventCheckOrderApproved:
+		logger.Debug("The new payment order approved", notification.ID)
+
+	case notification.EventType == EventPaymentOrderCreated:
+		logger.Debug("The new payment order created", notification.ID)
+
 	case notification.EventType == EventPaymentCaptureDenied:
 		logger.Debug("Payment is denied: ", notification.ID)
 
@@ -513,4 +568,25 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}
 
+}
+
+/// TranscationInfo reterive transactions infomation to admin user
+func TransactionInfo(w http.ResponseWriter, r *http.Request) {
+	tid := bone.GetValue(r, "id")
+	logger.Infof("Search transactions id :%s", tid)
+	result, ok := GetTransationDetail(tid)
+	if ok {
+		renderJSON(w, r, map[string]interface{}{
+			"retCode": 0,
+			"msg":     "ok",
+			"data":    result,
+		})
+	} else {
+		logger.Error("Search error,Request from :", GetIP(r))
+		renderJSON(w, r, map[string]interface{}{
+			"retCode": -10,
+			"msg":     "Internal error ",
+			"data":    "",
+		})
+	}
 }

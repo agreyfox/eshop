@@ -21,7 +21,7 @@ import (
 	"go.uber.org/zap"
 )
 
-const version = "v0.1.0"
+const version = "v0.2.0"
 
 var (
 	logger   *zap.SugaredLogger = logs.Log.Sugar()
@@ -64,6 +64,7 @@ func Start(mainMux *bone.Mux) {
 	boltMux.HandleFunc("/notify", Notify)
 	boltMux.HandleFunc("/cancel", Failed)
 	boltMux.HandleFunc("/test", Test)
+	boltMux.Get("/info/:id", http.HandlerFunc(TransactionInfo))
 
 	pwd, erro := os.Getwd()
 	if erro != nil {

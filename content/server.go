@@ -11,14 +11,14 @@ type Server struct {
 	item.Item
 
 	Name     string `json:"name"`
-	LongName string `json:"longName"` //长名
+	LongName string `json:"longName,omitempty"` //长名
 	Game     string `json:"game"`
 	Online   bool   `json:"online"`
-	Category string `json:"category"`
-	Tags     string `json:"tags"`
-	Coins    string `json:"coins"` //服务器上所有在卖的coin
-	Items    string `json:"items"` //服务器上的所有在卖的item
-	desc     string `json:"description`
+	Category string `json:"category,omitempty"`
+	Tags     string `json:"tags,omitempty"`
+	Coins    string `json:"coins,omitempty"` //服务器上所有在卖的coin
+	Items    string `json:"items,omitempty"` //服务器上的所有在卖的item
+	desc     string `json:"description,omitempty`
 }
 
 // MarshalEditor writes a buffer of html to edit a Server within the CMS
@@ -116,25 +116,28 @@ func (o *Server) ContentStruct() map[string]interface{} {
 			Type:       "select",
 			DataType:   "content",
 			DataSource: []string{"/admin/v1/contents?type=Category", "array"},
-			Required:   true,
+			Required:   false,
 			Order:      4,
 		},
 		"tags": {
 			Type:       "input",
 			DataType:   "field",
 			DataSource: []string{"array"},
+			Help:       "游戏的标签，可以输入多个，用空格分开",
 			Order:      5,
 		},
 		"coins": {
-			Type:       "select",
+			Type:       "multiselect",
 			DataType:   "content",
 			DataSource: []string{"/admin/v1/contents?type=Product", "array"},
+			Help:       "本服务器只销售的金币类产品，为多选",
 			Order:      6,
 		},
 		"items": {
-			Type:       "select",
+			Type:       "multiselect",
 			DataType:   "content",
 			DataSource: []string{"/admin/v1/contents?type=Product", "array"},
+			Help:       "本服务器在销售的道具，多选",
 			Order:      7,
 		},
 		"online": {

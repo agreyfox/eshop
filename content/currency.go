@@ -10,11 +10,14 @@ import (
 type Currency struct {
 	item.Item
 
-	Name   string  `json:"name"`
-	Symbol string  `json:"symbol"`
-	Rate   float64 `json:"rate"`
-	Icon   string  `json:"icon"`
-	Desc   string  `json:"desc"`
+	Name     string  `json:"name"`
+	Symbol   string  `json:"symbol"`
+	Rate     float64 `json:"rate"`
+	Icon     string  `json:"icon,omitempty"`
+	Paypal   string  `json:"paypal,omitempty"`
+	SkrilL   string  `json:"skrill,omitempty"`
+	Payssion string  `json:"payssion,omitempty"`
+	Desc     string  `json:"desc,omitempty"`
 }
 
 // MarshalEditor writes a buffer of html to edit a Currency within the CMS
@@ -104,12 +107,26 @@ func (o *Currency) ContentStruct() map[string]interface{} {
 			DataType:   "field",
 			DataSource: []string{},
 			Order:      4},
-
+		"paypal": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      7},
+		"payssion": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      8},
+		"skrill": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      9},
 		"description": {
 			Type:       "textarea",
 			DataType:   "field",
 			DataSource: []string{},
-			Order:      5},
+			Order:      10},
 	}
 	//retStr, _ := json.Marshal(dd)
 	return map[string]interface{}{

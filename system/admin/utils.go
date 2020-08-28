@@ -8,7 +8,9 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"regexp"
 
+	"github.com/agreyfox/eshop/system/admin/user"
 	"github.com/agreyfox/eshop/system/db"
 	"github.com/agreyfox/eshop/system/item"
 )
@@ -54,7 +56,15 @@ type (
 var (
 	PENDINGSuffix = "__pending"
 	SORTSuffix    = "__sorted"
+	emailRegexp   = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 )
+
+func isValidateEmail(email string) bool {
+	if !emailRegexp.MatchString(email) {
+		return false
+	}
+	return true
+}
 
 func fmtJSON(data ...json.RawMessage) ([]byte, error) {
 	var msg = []json.RawMessage{}
@@ -244,6 +254,34 @@ func getContentList(name string) []string {
 		ret = append(ret, string(contentBuff[i]))
 	}
 	return ret
+}
+
+//查找用户返回用户结构
+func GetUsers(stxt string) ([]user.User, error) {
+	rawdata, err := db.FindUser(stxt)
+	if err != nil {
+		return []user.User{}, err
+	}
+	retValue := make([]user.User, 0)
+	for i := range rawdata {
+		auserData := rawdata[i]
+		aUser := user.User{}
+		err := json.Unmarshal(auserData, &aUser)
+		if err != nil {
+			logger.Error(err)
+			continue
+		}
+		aUser.Hash = "" //keep secret
+		if aUser.Perm.Admin {
+			aUser.IsAdmin = true
+		} else {
+			aUser.IsAdmin = false
+		}
+		aUser.Perm = user.Permissions{}
+		aUser.Salt = ""
+		retValue = append(retValue, aUser)
+	}
+	return retValue, nil
 }
 
 /*

@@ -6,9 +6,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
+	"github.com/agreyfox/eshop/system/admin/user"
 	"github.com/agreyfox/eshop/system/api/analytics"
 	"github.com/agreyfox/eshop/system/db"
+
 	smtp2go "github.com/agreyfox/eshop/system/email"
 	"github.com/agreyfox/eshop/system/ip"
 	"github.com/spf13/cobra"
@@ -136,11 +139,53 @@ var ipCmd = &cobra.Command{
 	},
 }
 
+var createUserCmd = &cobra.Command{
+	Use:     "user",
+	Aliases: []string{"u"},
+	Short:   "Create system admin from cli.",
+	Long:    `Assign new addmin to system .`,
+	Example: `$ eshop user  add jihua.gao@gmail.com axxdsdawe`,
+	Run: func(cmd *cobra.Command, args []string) {
+		db.Init()
+		defer db.Close()
+		//db.PutConfig("Key", config.GenerateKey())
+
+		if len(args) < 3 {
+			fmt.Println("use user add/rm email@address.com xxx")
+			return
+		}
+		cmddd := args[0]
+		fmt.Println(args)
+		switch strings.ToLower(cmddd) {
+		case "add":
+			ur, err := user.New(args[1], args[2])
+			if err != nil {
+				fmt.Println("User operation error")
+				return
+			}
+			_, err = db.SetUser(ur)
+			if err == nil {
+				fmt.Println("user created !")
+			} else {
+				fmt.Println("User created error !", err)
+			}
+		case "rm":
+		case "chpassed":
+		default:
+			fmt.Println("no cmd present")
+
+		}
+
+	},
+}
+
 func init() {
 	versionCmd.Flags().BoolVar(&cli, "cli", false, "specify that information should be returned about the CLI, not project")
 	emailCmd.Flags().BoolVar(&email, "email", false, "start to test email connection")
 	ipCmd.Flags().StringVar(&ipip, "ip", "127.0.0.1", "start to test ip lookup service connection")
+	createUserCmd.Flags().StringVar(&usercmd, "add", "admin@127.0.0.1", "create/remove system admin user")
 	RegisterCmdlineCommand(versionCmd)
 	RegisterCmdlineCommand(emailCmd)
 	RegisterCmdlineCommand(ipCmd)
+	RegisterCmdlineCommand(createUserCmd)
 }

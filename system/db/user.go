@@ -163,6 +163,45 @@ func User(email string) ([]byte, error) {
 	return val.Bytes(), nil
 }
 
+// User gets the user by email from the db
+func FindUser(email string) ([][]byte, error) {
+	var posts [][]byte
+	//var total int
+	//val := &bytes.Buffer{}
+	err := store.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(DB__users))
+		if b == nil {
+			return bolt.ErrBucketNotFound
+		}
+
+		c := b.Cursor()
+		n := b.Stats().KeyN
+		//total = n
+
+		// return nil if no content
+		if n == 0 {
+			return nil
+		}
+
+		//start := 0
+		//end := n
+		for k, v := c.Last(); k != nil; k, v = c.Prev() {
+			if !bytes.Contains(v, []byte(fmt.Sprintf(`"%s"`, email))) { // email需要全名
+				continue
+			}
+			posts = append(posts, v)
+
+		}
+		return nil
+	})
+	if err != nil {
+		logger.Error("Search user error!", err)
+		return posts, err
+	}
+	logger.Debugf("Search user %s result:%d", email, len(posts))
+	return posts, nil
+}
+
 // UserAll returns all users from the db
 func UserAll() ([][]byte, error) {
 	var users [][]byte

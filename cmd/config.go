@@ -95,7 +95,7 @@ func SetConfig(key string, value interface{}) {
 	if err != nil {
 		fmt.Println("Error: ", err.Error())
 	}
-	fmt.Println("Config %s saved! ", key)
+	fmt.Printf("Config %s with value %s saved! \n", key, value)
 }
 
 // GetConfig to get one key's value
@@ -108,9 +108,9 @@ func GetConfig(key string) {
 	if err != nil {
 		fmt.Println("Error: ", err.Error())
 	}
-	value := string(result[:])
+	//value := string(result[:])
 	fmt.Println("===================================================================")
-	fmt.Printf("\t\tConfig [%s] value is [%v ]\n", key, value)
+	fmt.Printf("\t\tConfig [%s] value is [%v ]\n", key, result)
 	fmt.Println("===================================================================")
 }
 

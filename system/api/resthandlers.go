@@ -265,18 +265,28 @@ func content(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	if hook.EnableOwnerCheck() { //check the content is user belong
-		email, ok := getEmailFromCookie(req)
-		if ok == nil {
-			theemail := retdata["email"].(string)
-			if email != theemail {
-				logger.Warn("Try to get other user content", email, theemail)
-				res.WriteHeader(http.StatusMethodNotAllowed)
+		ee := q.Get("email") //check url to see if have email parameter
+		if ee == "" {
+			email, ok := getEmailFromCookie(req) //otherwise check the cookie
+			if ok == nil {
+				theemail := retdata["email"].(string)
+				if email != theemail {
+					logger.Warn("Try to get other user content", email, theemail)
+					res.WriteHeader(http.StatusMethodNotAllowed)
+					return
+				}
+			} else {
+				logger.Warn("User information in cookie have problem ")
+				res.WriteHeader(http.StatusBadRequest)
 				return
 			}
 		} else {
-			logger.Warn("User information in cookie have problem ")
-			res.WriteHeader(http.StatusBadRequest)
-			return
+			theemail := retdata["email"].(string)
+			if ee != theemail {
+				logger.Warn("Try to get other user content", ee, theemail)
+				res.WriteHeader(http.StatusMethodNotAllowed)
+				return
+			}
 		}
 	}
 	if ok {
@@ -527,11 +537,11 @@ func getMedia(w http.ResponseWriter, r *http.Request) {
 	//status := ""
 	contentbyte, err := db.Upload(t + ":" + id)
 	item := make(map[string]interface{})
-	//fmt.Println(contentbyte)
+
 	err = json.Unmarshal(contentbyte, &item)
 	if err != nil {
-		logger.Error("Error unmarshal json into", t, err)
-		w.WriteHeader(http.StatusInternalServerError)
+		logger.Error("Error unmarshal json into:%s", err.Error())
+		w.WriteHeader(http.StatusNotFound)
 	}
 	fff := item["path"].(string)
 	ctype := item["content_type"].(string)
@@ -543,8 +553,8 @@ func getMedia(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mediaFilename := filepath.Join(pwd, "uploads", strings.TrimPrefix(fff, "/api/uploads"))
-	logger.Debugf("The file  %s being read \n", mediaFilename)
-	logger.Debugf(strings.TrimPrefix(fff, "/api/uploads"))
+	//logger.Debugf("The file  %s being read \n", mediaFilename)
+	//logger.Debugf(strings.TrimPrefix(fff, "/api/uploads"))
 	dat, err := ioutil.ReadFile(mediaFilename)
 	if err != nil {
 		logger.Error("Couldn't read file content .")
@@ -554,7 +564,7 @@ func getMedia(w http.ResponseWriter, r *http.Request) {
 
 	//content_type := mime.TypeByExtension(file_ext)
 
-	logger.Info("content type is %s", ctype)
+	//logger.Info("content type is %s", ctype)
 
 	if len(ctype) > 0 {
 		r.Header.Set("Content-Type", ctype)
@@ -596,7 +606,7 @@ func getMedia(w http.ResponseWriter, r *http.Request) {
 		is_height_set = true
 	}
 
-	logger.Debugf("width and height is [%d, %d], status [%t, %t]", width, height, is_width_set, is_height_set)
+	//logger.Debugf("width and height is [%d, %d], status [%t, %t]", width, height, is_width_set, is_height_set)
 
 	if is_width_set || is_height_set {
 		var (
@@ -622,7 +632,7 @@ func getMedia(w http.ResponseWriter, r *http.Request) {
 LABEL_IMAGE_HANDLE_FINISHED:
 
 	w.Write(dat)
-	logger.Debugf("send media with id %s", id)
-
+	logger.Debugf("Media(id %s) sent!", id)
+	w.WriteHeader(http.StatusOK)
 	//http.Redirect(w, r, "/api/uploads"+fmt.Sprint(item["path"]), http.StatusFound)
 }

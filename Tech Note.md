@@ -1,6 +1,8 @@
-1. Payment
+1. Payment connector
 
    - Paypal
+     -notification
+     -transaction search
    - Payssion
    - Skrill
 
@@ -17,8 +19,10 @@
    - Bolt DB
 
 5. mail
+
    - DNS email forward cloudns.cc
+
    * SMTP send smtp2go.com
    * Gmail sent as another for administror operation.
 
-6 lqCMS
+6. lqCMS

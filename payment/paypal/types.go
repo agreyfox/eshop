@@ -3,6 +3,7 @@ package paypal
 import (
 	"encoding/json"
 	"fmt"
+
 	"go.uber.org/zap"
 
 	"net/http"
@@ -42,8 +43,8 @@ const (
 //
 // https://developer.paypal.com/docs/api/payment-experience/#definition-flow_config
 const (
-	LandingPageTypeBilling string = "Billing"
-	LandingPageTypeLogin   string = "Login"
+	LandingPageTypeBilling string = "BILLING"
+	LandingPageTypeLogin   string = "LOGIN"
 )
 
 // Possible value for `allowed_payment_method` in PaymentOptions
@@ -99,6 +100,8 @@ const (
 	EventPaymentCaptureCompleted       string = "PAYMENT.CAPTURE.COMPLETED"
 	EventPaymentCaptureDenied          string = "PAYMENT.CAPTURE.DENIED"
 	EventPaymentCaptureRefunded        string = "PAYMENT.CAPTURE.REFUNDED"
+	EventPaymentOrderCreated           string = "PAYMENT.ORDER.CREATED"
+	EventCheckOrderApproved            string = "CHECKOUT.ORDER.APPROVED"
 	EventCustomerDisputeResolved       string = "CUSTOMER.DISPUTE.RESOLVED"
 	EventMerchantOnboardingCompleted   string = "MERCHANT.ONBOARDING.COMPLETED"
 	EventMerchantPartnerConsentRevoked string = "MERCHANT.PARTNER-CONSENT.REVOKED"
@@ -389,10 +392,11 @@ type (
 
 	// Item struct
 	Item struct {
-		Quantity    uint32 `json:"quantity"`
+		//	Quantity    uint32 `json:"quantity"`
+		Quantity    string `json:"quantity"`
 		Name        string `json:"name"`
-		Price       string `json:"price"`
-		Currency    string `json:"currency"`
+		Price       string `json:"price,omitempty"`
+		Currency    string `json:"currency,omitempty"`
 		SKU         string `json:"sku,omitempty"`
 		Description string `json:"description,omitempty"`
 		Tax         string `json:"tax,omitempty"`
@@ -514,6 +518,15 @@ type (
 		UpdateTime    *time.Time            `json:"update_time,omitempty"`
 	}
 
+	// OrderRequest represent custmer submit an order to eshop system
+	OrderRequest struct {
+		Payer    string                `json:"payer"`
+		Email    string                `json:"email"`
+		ItemList []PurchaseUnitRequest `json:"item_list"`
+		Method   string                `json:"method"`
+		Locale   string                `json:"locale,omitempty"`
+		Comments string                `json:"comments,omitempty"`
+	}
 	// CaptureAmount struct
 	CaptureAmount struct {
 		ID     string              `json:"id,omitempty"`
@@ -1089,12 +1102,12 @@ type (
 	SearchPayerInfo struct {
 		AccountID     string               `json:"account_id"`
 		EmailAddress  string               `json:"email_address"`
-		PhoneNumber   *PhoneWithTypeNumber `json:"phone_number"`
+		PhoneNumber   *PhoneWithTypeNumber `json:"phone_number,omitempty"`
 		AddressStatus string               `json:"address_status"`
 		PayerStatus   string               `json:"payer_status"`
-		PayerName     SearchPayerName      `json:"payer_name"`
-		CountryCode   string               `json:"country_code"`
-		Address       *Address             `json:"address"`
+		PayerName     SearchPayerName      `json:"payer_name,omitempty"`
+		CountryCode   string               `json:"country_code,omitempty"`
+		Address       *Address             `json:"address,omitempty"`
 	}
 
 	SearchTaxAmount struct {
@@ -1102,43 +1115,61 @@ type (
 	}
 
 	SearchTransactionInfo struct {
-		PayPalAccountID           string   `json:"paypal_account_id"`
-		TransactionID             string   `json:"transaction_id"`
-		PayPalReferenceID         string   `json:"paypal_reference_id"`
-		PayPalReferenceIDType     string   `json:"paypal_reference_id_type"`
-		TransactionEventCode      string   `json:"transaction_event_code"`
-		TransactionInitiationDate JSONTime `json:"transaction_initiation_date"`
-		TransactionUpdatedDate    JSONTime `json:"transaction_updated_date"`
-		TransactionAmount         Money    `json:"transaction_amount"`
-		FeeAmount                 *Money   `json:"fee_amount"`
-		InsuranceAmount           *Money   `json:"insurance_amount"`
-		ShippingAmount            *Money   `json:"shipping_amount"`
-		ShippingDiscountAmount    *Money   `json:"shipping_discount_amount"`
-		ShippingTaxAmount         *Money   `json:"shipping_tax_amount"`
-		OtherAmount               *Money   `json:"other_amount"`
-		TipAmount                 *Money   `json:"tip_amount"`
-		TransactionStatus         string   `json:"transaction_status"`
-		TransactionSubject        string   `json:"transaction_subject"`
-		PaymentTrackingID         string   `json:"payment_tracking_id"`
-		BankReferenceID           string   `json:"bank_reference_id"`
-		TransactionNote           string   `json:"transaction_note"`
-		EndingBalance             *Money   `json:"ending_balance"`
-		AvailableBalance          *Money   `json:"available_balance"`
-		InvoiceID                 string   `json:"invoice_id"`
-		CustomField               string   `json:"custom_field"`
-		ProtectionEligibility     string   `json:"protection_eligibility"`
-		CreditTerm                string   `json:"credit_term"`
-		CreditTransactionalFee    *Money   `json:"credit_transactional_fee"`
-		CreditPromotionalFee      *Money   `json:"credit_promotional_fee"`
-		AnnualPercentageRate      string   `json:"annual_percentage_rate"`
-		PaymentMethodType         string   `json:"payment_method_type"`
+		PayPalAccountID           string `json:"paypal_account_id"`
+		TransactionID             string `json:"transaction_id"`
+		PayPalReferenceID         string `json:"paypal_reference_id"`
+		PayPalReferenceIDType     string `json:"paypal_reference_id_type"`
+		TransactionEventCode      string `json:"transaction_event_code"`
+		TransactionInitiationDate string `json:"transaction_initiation_date"`
+		TransactionUpdatedDate    string `json:"transaction_updated_date"`
+		TransactionAmount         Money  `json:"transaction_amount"`
+		FeeAmount                 *Money `json:"fee_amount"`
+		InsuranceAmount           *Money `json:"insurance_amount"`
+		ShippingAmount            *Money `json:"shipping_amount"`
+		ShippingDiscountAmount    *Money `json:"shipping_discount_amount"`
+		ShippingTaxAmount         *Money `json:"shipping_tax_amount"`
+		OtherAmount               *Money `json:"other_amount"`
+		TipAmount                 *Money `json:"tip_amount"`
+		TransactionStatus         string `json:"transaction_status"`
+		TransactionSubject        string `json:"transaction_subject"`
+		PaymentTrackingID         string `json:"payment_tracking_id"`
+		BankReferenceID           string `json:"bank_reference_id"`
+		TransactionNote           string `json:"transaction_note"`
+		EndingBalance             *Money `json:"ending_balance"`
+		AvailableBalance          *Money `json:"available_balance"`
+		InvoiceID                 string `json:"invoice_id"`
+		CustomField               string `json:"custom_field"`
+		ProtectionEligibility     string `json:"protection_eligibility"`
+		CreditTerm                string `json:"credit_term"`
+		CreditTransactionalFee    *Money `json:"credit_transactional_fee"`
+		CreditPromotionalFee      *Money `json:"credit_promotional_fee"`
+		AnnualPercentageRate      string `json:"annual_percentage_rate"`
+		PaymentMethodType         string `json:"payment_method_type"`
 	}
 
 	SearchTransactionDetails struct {
 		TransactionInfo SearchTransactionInfo `json:"transaction_info"`
-		PayerInfo       *SearchPayerInfo      `json:"payer_info"`
-		ShippingInfo    *SearchShippingInfo   `json:"shipping_info"`
-		CartInfo        *SearchCartInfo       `json:"cart_info"`
+		PayerInfo       SearchPayerInfo       `json:"payer_info"`
+		ShippingInfo    SearchShippingInfo    `json:"shipping_info,omitempty"`
+		CartInfo        SearchCartInfo        `json:"cart_info,omitempty"`
+	}
+
+	SharedResponse struct {
+		CreateTime string `json:"create_time"`
+		UpdateTime string `json:"update_time"`
+		Links      []Link `json:"links"`
+	}
+
+	ListParams struct {
+		Page          string `json:"page,omitempty"`           //Default: 0.
+		PageSize      string `json:"page_size,omitempty"`      //Default: 10.
+		TotalRequired string `json:"total_required,omitempty"` //Default: no.
+	}
+
+	SharedListResponse struct {
+		TotalItems string `json:"total_items,omitempty"`
+		TotalPages string `json:"total_pages,omitempty"`
+		Links      []Link `json:"links,omitempty"`
 	}
 
 	WebHookNotifiedEvent struct {

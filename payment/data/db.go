@@ -1,9 +1,11 @@
 package data
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/agreyfox/eshop/system/admin"
@@ -61,6 +63,7 @@ func SavePaymentLog(log *PaymentLog) bool {
 	return true
 }
 
+// return a orderid 's key
 func GetLog(orderid string) ([]string, error) {
 	///ID := orderid + IDMaker + vendor
 	ret := make([]string, 0)
@@ -81,6 +84,31 @@ func GetLog(orderid string) ([]string, error) {
 		return ret, err
 	}
 	return ret, nil
+}
+
+// return a id's status content
+func GetLogContent(id string, status string) ([]byte, error) {
+	val := &bytes.Buffer{}
+	err := PaymentDBHandler.View(func(tx *bolt.Tx) error {
+
+		b := tx.Bucket([]byte(DBName)).Bucket([]byte(id))
+
+		c := b.Cursor()
+
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			if strings.EqualFold(string(k[:]), status) {
+				val.Write(v)
+				break
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		logger.Error("Get payment log content  error ", err)
+		return val.Bytes(), err
+	}
+	//logger.Debug(string(val.Bytes()))
+	return val.Bytes(), nil
 }
 
 func GetRequestByState(orderid string, state string) (*PaymentLog, error) {
@@ -107,6 +135,7 @@ func GetRequestByState(orderid string, state string) (*PaymentLog, error) {
 		logger.Error("Get order state error ", err)
 		return ret, err
 	}
+	logger.Debug("done:", ret.BuyerEmail)
 	return ret, nil
 }
 
@@ -237,24 +266,58 @@ func IsValidStatus(state string) bool {
 	return false
 }
 
-func SendConfirmEmail(orderid, emailaddr string) {
+// SendConfimEmail is formal email sending
+func SendConfirmEmail(orderid, content, price, currency string, mailaddr string) {
 	tomail := []string{"18901882538@189.cn"}
-	tomail = append(tomail, emailaddr)
-	fmt.Printf("Try to send email to %v\n", emailaddr)
+
+	tomail = append(tomail, removeQuote(mailaddr))
+	htmlbody := `
+	<p>
+	Dear,<br>
+		This is content of your order below:<br>
+	========================================<br>
+	Order Number : %s<br>
+	Order Contain : %s <br>
+	Price: %s %s <br>
+	========================================<br>
+	Thanks for your consistent support our delivery guy is coming to trade. ifyou don't get any whisper in 15 mins, Please contract out livechat.<br>
+	This is an automated email form system mainbox, Please do not reply. <br>
+	
+	
+	======= <br>
+
+	wwww.egpal.com<br>
+	</p>
+	`
+
+	logger.Debugf("Try to send email to %s\n", removeQuote(mailaddr))
+	fmt.Println(tomail)
 	msg := email.Email{
 		//From: admin.MailUser,
 		To:       tomail,
 		Subject:  "EGPal EShop Order notification letter",
-		TextBody: fmt.Sprintf("You have make purchase order(%s),We will check and delivery soon", orderid),
-		HtmlBody: fmt.Sprintf("<h1>EGPal Purchase Confirmation</h1> <p>You have make order(%s) Successfully. We will check and delivery soon</p>", orderid),
+		TextBody: fmt.Sprintf("You have make purchase order(%s),Total %s%sWe will check and delivery soon\n Thanks!", orderid, price, currency),
+		//HtmlBody: fmt.Sprintf("<h1>EGPal Purchase Confirmation</h1> <p>You have make order(%s) Successfully. We will check and delivery soon</p>", orderid),
+		HtmlBody: fmt.Sprintf(htmlbody, orderid, content, price, currency),
 	}
 	res, err := email.Send(&msg)
 	if err != nil {
 		fmt.Printf("An Error Occurred: %s\n", err)
 	}
+
 	if res.Data.Succeeded == 1 {
 		logger.Debugf("Order Sent Successfully: %s\n", orderid)
 	} else {
-		logger.Errorf("Order Sent with error: %v\n", res)
+		logger.Errorf("Order Sent with error: %v\n", res.Data)
 	}
+}
+
+// remove string head and tail quote
+func removeQuote(s string) string {
+	if len(s) >= 2 {
+		if s[0] == '"' && s[len(s)-1] == '"' {
+			return s[1 : len(s)-1]
+		}
+	}
+	return s
 }

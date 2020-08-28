@@ -14,6 +14,9 @@ type Country struct {
 	Fullname string `json:"fullname,omitempty"`
 	Icon     string `json:"icon,omitempty"`
 	Desc     string `json:"description:omitempty"`
+	Paypal   string `json:"paypal,omitempty"`
+	SkrilL   string `json:"skrill,omitempty"`
+	Payssion string `json:"payssion,omitempty"`
 }
 
 // MarshalEditor writes a buffer of html to edit a Country within the CMS
@@ -88,12 +91,26 @@ func (o *Country) ContentStruct() map[string]interface{} {
 			DataType:   "field",
 			DataSource: []string{},
 			Order:      6},
-
+		"paypal": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      7},
+		"payssion": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      8},
+		"skrill": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      9},
 		"description": {
 			Type:       "textarea",
 			DataType:   "field",
 			DataSource: []string{},
-			Order:      7},
+			Order:      10},
 	}
 	//retStr, _ := json.Marshal(dd)
 	return map[string]interface{}{

@@ -9,13 +9,13 @@ import (
 )
 
 const (
-	brand_name string = "Abc 公司"
+	brand_name string = "egpal 公司"
 	prefer     string = "return=representation"
 )
 
 var (
-	returnURL = "http://view.bk.cloudns.cc:8080/payment/payssion/return"
-	cancelURL = "http://view.bk.cloudns.cc:8080/payment/payssion/cancle"
+	returnURL = "https://support.bk.cloudns.cc:8081/payment/payssion/return"
+	cancelURL = "https://support.bk.cloudns.cc:8081/payment/payssion/cancle"
 
 	//APIKey    = "90a00a8dc3231897"
 	//SecretKey = "0f0772dc61a1480c2fe80f9a4e1b2c85"
@@ -179,13 +179,19 @@ http://view.bk.cloudns.cc:8080/payment/payssion/return?transaction_id=T525675987
 func Succeed(w http.ResponseWriter, r *http.Request) {
 	logger.Debug("Payssion return  data from payment")
 	q := r.URL.Query()
-	///logger.Debugf("%v", r.URL)
+
 	payID := q.Get("transaction_id")
 	order_id := q.Get("order_id")
 	logger.Debugf("User finished payment %s is down  order id  is %s,", payID, order_id)
 
-	w.Write([]byte(fmt.Sprintf("订单号 ：%s已付款,Thanks！", order_id)))
-
+	//w.Write([]byte(fmt.Sprintf("订单号 ：%s已付款,Thanks！", order_id)))
+	url := data.OnlineURL
+	if len(order_id) > 0 {
+		url += fmt.Sprintf("?status=1&orderno=%s", order_id)
+	} else {
+		url += fmt.Sprintf("status=0&msg=%s", "Payment finished with error")
+	}
+	http.Redirect(w, r, url, http.StatusFound)
 }
 
 func Notify(w http.ResponseWriter, r *http.Request) {
@@ -213,7 +219,7 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 					if ok {
 						logger.Infof("Order %d created! and orderid %s ", oid, orderState.OrderID)
 						if len(oo.Payer) > 0 {
-							go data.SendConfirmEmail(oo.OrderID, oo.Payer)
+							go data.SendConfirmEmail(oo.OrderID, orderState.AppName, orderState.Amount, orderState.Currency, oo.Payer)
 						}
 					} else {
 						logger.Warn("Create %s order error,Need check!", orderState.OrderID)

@@ -1,17 +1,19 @@
 {
-	"folders": [
-		{
-			"path": "/home/lq/ifb"
-		},
-		{
-			"path": "."
-		}
-	],
-	"settings": {
-		"git.ignoreLimitWarning": true,
-		"go.autocompleteUnimportedPackages": true,
-		"go.formatTool": "gofmt",
-		"editor.formatOnSave": true
-	},
-	
+  "folders": [
+    {
+      "path": "."
+    },
+    {
+      "path": "../../UserManagerSystem"
+    },
+    {
+      "path": "../../egpalWeb/shoppingMall/shoppingMall1"
+    }
+  ],
+  "settings": {
+    "git.ignoreLimitWarning": true,
+    "go.autocompleteUnimportedPackages": true,
+    "go.formatTool": "gofmt",
+    "editor.formatOnSave": true
+  }
 }

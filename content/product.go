@@ -10,20 +10,22 @@ import (
 type Product struct {
 	item.Item
 	Name            string  `json:"name"`
-	Hot             bool    `json:"hotItem"`     //是否在hotitem 中显示
-	Stock           uint    `json:"stock"`       //库存数量
-	Desc            string  `json:"description"` //html
-	Logo            string  `json:"logo"`        //图标文件
-	Type            uint    `json:"type"`        //coin,item 两种
+	Hot             bool    `json:"hotItem,omitempty"`     //是否在hotitem 中显示
+	Stock           uint    `json:"stock"`                 //库存数量
+	Desc            string  `json:"description,omitempty"` //html
+	Logo            string  `json:"logo,omitempty"`        //图标文件
+	Type            string  `json:"type"`                  //coin,item 两种
 	Game            string  `json:"game"`
 	Online          bool    `json:"online"`
-	Price           float32 `json:"price"`               //单价
-	HintImage       string  `json:"hintImage,omitempty"` //提示图片
-	HintText        string  `json:"hintText,omitempty"`  //提示文字
-	MN              int     `json:"miniNumber"`          //最小购买数
-	PurchaseLabel   string  `json:"customerLabel"`       //用户输入提示内容
-	PurchaseCaution string  `json:"customerCaution"`     //用户输入要求购买内容
-	Discount        string  `json:"discount,omitempty"`  //使用discount模板
+	Price           float32 `json:"price"`                     //单价
+	MN              uint    `json:"miniNumber"`                //最小购买数
+	Unit            string  `json:"unit"`                      //购买数量的单位
+	HintImage       string  `json:"hintImage,omitempty"`       //提示图片
+	HintText        string  `json:"hintText,omitempty"`        //提示文字
+	PurchaseLabel   string  `json:"customerLabel"`             //用户输入提示内容
+	PurchaseCaution string  `json:"customerCaution,omitempty"` //用户输入要求购买内容
+	Discount        string  `json:"discount,omitempty"`        //使用discount模板
+
 }
 
 // MarshalEditor writes a buffer of html to edit a Product within the CMS
@@ -120,6 +122,7 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			Type:       "bool",
 			DataType:   "field",
 			DataSource: []string{},
+			Help:       "本产品是否出现在hotitem 栏目，选择是表示显示",
 			Order:      2,
 			Others:     "false",
 		},
@@ -129,6 +132,7 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			DataSource: []string{},
 			Required:   true,
 			Order:      3,
+			Help:       "输入库存数量",
 			Others:     "99999",
 		},
 		"game": {
@@ -143,20 +147,23 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			DataType:   "field",
 			DataSource: []string{"coin", "item"},
 			Required:   true,
-			Order:      4,
+			Help:       "产品类型，金币类还是道具类",
+			Order:      5,
 		},
 		"price": {
 			Type:       "input",
 			DataType:   "field",
 			DataSource: []string{},
+			Help:       "产品的单价",
 			Required:   true,
-			Order:      5,
+			Order:      6,
 		},
 		"discount": {
 			Type:       "select",
 			DataType:   "content",
 			DataSource: []string{"/admin/v1/contents?type=Discount"},
 			Required:   false,
+			Help:       "若是金币类别，可使用系统中定义的discount为客户提供折扣，若为\n道具类，则这个字段无意义",
 			Order:      7,
 		},
 		"online": {
@@ -176,40 +183,54 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			Type:       "file",
 			DataType:   "field",
 			DataSource: []string{},
-			Order:      9,
+			Help:       "产品的小方图片",
+			Order:      15,
 		},
 		"hintImage": {
 			Type:       "file",
 			DataType:   "field",
 			DataSource: []string{},
 			Required:   true,
-			Order:      10,
+			Help:       "用户鼠标移动到本产品图片上方时，显示改产品的详细说明，也是一张图片",
+			Order:      11,
 		},
 		"hintText": {
 			Type:       "input",
 			DataType:   "field",
 			DataSource: []string{},
-			Order:      11,
+			Help:       "当鼠标移动到产品图片时，也可以显示文字说明，该文字说明和将显示在hintImage上方",
+			Order:      12,
 		},
 		"miniNumber": {
 			Type:       "input",
 			DataType:   "field",
 			DataSource: []string{},
 			Required:   true,
-			Order:      6,
+			Help:       "本产品销售时，最小单位的数量",
+			Order:      9,
+		},
+		"Unit": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Required:   true,
+			Help:       "本产品销售时，最小单位的数量的单位，用于网页显示",
+			Order:      10,
 		},
 		"customerLabel": {
 			Type:       "input",
 			DataType:   "field",
 			DataSource: []string{},
 			Required:   true,
-			Order:      12,
+			Help:       "当用户购买本产品时，提示用户输入购买要求，在输入框的下方",
+			Order:      13,
 		},
 		"customerCaution": {
 			Type:       "input",
 			DataType:   "field",
 			DataSource: []string{},
-			Order:      13,
+			Help:       "当用购买本产品时，提示用户购买注意事项，在输入框下方",
+			Order:      14,
 		},
 	}
 	//retStr, _ := json.Marshal(dd)

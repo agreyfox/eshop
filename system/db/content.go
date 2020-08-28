@@ -712,7 +712,7 @@ func Query(namespace string, opts QueryOptions) (int, [][]byte) {
 func QueryByFieldValue(namespace string, field, value string, opts QueryOptions) (int, [][]byte) {
 	var posts [][]byte
 	var total int
-	logger.Debugf("query with fields [%s] and value [%s]", field, value)
+	//logger.Debugf("query with fields [%s] and value [%s]", field, value)
 	// correct bad input rather than return nil or error
 	// similar to default case for opts.Order switch below
 	if opts.Count < 0 {

@@ -3,6 +3,7 @@ package paypal
 import (
 	"bytes"
 	"crypto/md5"
+	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -49,11 +50,11 @@ func getJSONFromBody(req *http.Request) map[string]interface{} {
 	}
 	var t map[string]interface{}
 
-	//fmt.Println(body)
+	fmt.Println(string(bodyBytes[:]))
 
 	if err = json.Unmarshal(bodyBytes, &t); err != nil {
 		logger.Debug("Data looks like bad, Maybe it is not json data")
-		logger.Debugf("%+v", err)
+		//		logger.Debugf("%+v", err)
 		return nil
 	}
 	return t
@@ -61,15 +62,17 @@ func getJSONFromBody(req *http.Request) map[string]interface{} {
 
 // to save a record
 func saveOrderRequest(order Order, request map[string]interface{}, ip string) error {
-	logger.Debug(order)
+	//logger.Debug(order)
 	record := data.PaymentLog{
 		RequestData: request,
 		ReturnData:  order,
 	}
 	oid := ""
+	comments := ""
 	if len(order.PurchaseUnits) > 0 {
 		item := order.PurchaseUnits[0]
 		oid = item.InvoiceID
+		comments = order.PurchaseUnits[0].Description
 	} else {
 		oid = order.ID
 	}
@@ -79,7 +82,8 @@ func saveOrderRequest(order Order, request map[string]interface{}, ip string) er
 	record.PaymentState = order.Status
 	da, _ := json.Marshal(order.PurchaseUnits)
 	record.Info = string(da)
-
+	record.Description = GetPurchaseContentFromOrder(order)
+	record.Comments = comments
 	var tt float64
 	currency := ""
 	for _, item := range order.PurchaseUnits {
@@ -94,20 +98,20 @@ func saveOrderRequest(order Order, request map[string]interface{}, ip string) er
 	record.Total = fmt.Sprintf("%.2f", tt)
 	record.Currency = currency
 
-	email, ok := json.Marshal(request["email"]) // should support email
-	if ok == nil {
-		record.BuyerEmail = string(email[:])
+	email, ok := request["email"].(string) // should support email
+	if ok {
+		record.BuyerEmail = email // string(email[:])
 	}
 	record.RequestTime = time.Now().Unix()
 	record.IP = ip
 
 	s := data.SavePaymentLog(&record)
 	if s {
-		logger.Info("Save payment log done!")
+		logger.Debug("Save payment log done! orderid:", order.ID)
 	} else {
-		logger.Info("Save payment log error!")
+		logger.Error("Save payment log error!,orderid :", order.ID)
 	}
-	return ok
+	return nil
 }
 
 // to save a capture
@@ -249,7 +253,7 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap CaptureResource) (
 	//logger.Info(states)
 	paymentid := getOrderIDFromUrl(cap.Links)
 	detail := PrettyPrint(cap)
-	logger.Debugf("Invoice id is %s, order id is %s,paymentID is %s ", ID, ID, paymentid)
+	//logger.Debugf("Invoice id is %s, order id is %s,paymentID is %s ", ID, ID, paymentid)
 	databin, _ := json.Marshal(notifyData)
 	order := data.Order{
 
@@ -258,17 +262,17 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap CaptureResource) (
 		OrderDetail:   detail,
 		OrderID:       ID,
 		PaymentID:     paymentid,
+		TransactionID: cap.ID,
 		PaymentVendor: "paypal",
 		PaymentMethod: notifyData.ResourceType,
 		PaymentNote:   brand_name,
 		NotifyInfo:    string(databin[:]),
-		Description:   notifyData.Summary,
-		Comments:      "",
+		Description:   notifyData.Summary + "," + ID, // just for flil up incase no item list
 		Currency:      cap.Amount.Currency,
 		Total:         cap.Amount.Value,
 		Paid:          "", //cap.SellerPayableBreakdown.PayPalFee.Value,
 		Net:           "", //cap.SellerPayableBreakdown.NetAmount.Value,
-		AdminNote:     ID,
+		AdminNote:     "",
 		UpdateTime:    fmt.Sprint(time.Now().Format(time.RFC1123)),
 		Paytime:       fmt.Sprint(time.Now().Format(time.RFC1123)),
 		IsRefund:      false,
@@ -280,13 +284,17 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap CaptureResource) (
 	if err == nil {
 		order.Payer = originReq.BuyerEmail
 		order.PayerIP = originReq.IP
+		order.Comments = originReq.Comments
 		order.RequestTime = fmt.Sprint(time.Unix(originReq.RequestTime, 0).Format(time.RFC1123))
+		order.Description = originReq.Description
 	}
 	mm, _ := json.Marshal(order)
 
 	retcode, ok := admin.CreateContent("Order", mm)
-	logger.Debugf("Find orderid by payment id is %s", admin.FindContentID("Order", cap.ID, "payment_id"))
+
+	//logger.Debugf("Find orderid by payment id is %s", admin.FindContentID("Order", cap.ID, "payment_id"))
 	if ok {
+		logger.Debug("Order created!", retcode)
 		return retcode, order, true
 	} else {
 		return 0, data.Order{}, false
@@ -328,4 +336,95 @@ func UpdateOrderStatusByOrderID(id, state string) bool {
 	}
 	logger.Error("Not valid status!")
 	return false
+}
+
+func GetBytes(key interface{}) ([]byte, error) {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(key)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+// GetPurchaseContent via invoice id
+func GetPurchaseContent(id string) string {
+	ret := "Digital GOODS"
+	record, err := data.GetLogContent(id, PaypalCreated)
+	if err == nil {
+		paymentlog := data.PaymentLog{}
+
+		err := json.Unmarshal(record, &paymentlog)
+		if err == nil {
+			ret = paymentlog.Description
+		}
+		/*if err == nil {
+			req := []byte(PrettyPrint(paymentlog.RequestData))
+			sd := OrderRequest{}
+			err = json.Unmarshal(req, &sd)
+			if err == nil && len(sd.ItemList) > 0 {
+				if len(sd.ItemList[0].Items) != 0 {
+					ret = ""
+					for _, item := range sd.ItemList[0].Items {
+						ret = ret + item.Name + ":" + item.Description + "<br>"
+					}
+				}
+			}
+		} */
+	}
+	//logger.Debug(ret)
+	return ret
+}
+
+// 生成购买物品的简单内容
+func GetPurchaseContentFromOrder(order Order) string {
+	ret := ""
+	for i, ordeEntry := range order.PurchaseUnits {
+		ret = ret + fmt.Sprint("%d", i+1) + ":"
+		for _, item := range ordeEntry.Items {
+			ret = ret + item.Name + "--" + item.Description + "<br>"
+		}
+	}
+	if ret == "" {
+		ret = "DIGIT GOODS"
+	}
+	return ret
+}
+
+func GetTransationDetail(id string) (SearchTransactionDetails, bool) {
+	logger.Debug("=========================================================================search for id :", id)
+	now := time.Now()
+	last := now.AddDate(0, 0, -30) //两年内的单子
+	//fmt.Print(now, last)
+	page := 1
+	pageSize := 5
+	allField := "all"
+	req := TransactionSearchRequest{
+		//	TransactionID: &tid,
+		EndDate:   now,
+		StartDate: last,
+		Page:      &page,
+		PageSize:  &pageSize,
+		Fields:    &allField,
+	}
+	if id == "" || id == "nil" {
+		logger.Debug("Search Transaction without transactions id ")
+	} else {
+		req.TransactionID = &id
+	}
+
+	result, err := payClient.ListTransactions(&req)
+	if err == nil {
+		logger.Debug(result)
+		if len(result.TransactionDetails) > 0 {
+			return result.TransactionDetails[0], true
+		}
+		//PrettyPrint(result)
+		return SearchTransactionDetails{}, false
+	} else {
+		logger.Debug(err)
+		return SearchTransactionDetails{}, false
+	}
+
 }

@@ -12,6 +12,7 @@ type Carousel struct {
 
 	Name   string `json:"name"`
 	Alt    string `json:"alt,omitempty"`
+	Game   string `json:"game,omitempty"`
 	Image  string `json:"image,omitempty"`
 	Desc   string `json:"description,omitempty"`
 	Number int    `json:"number,omitempty"`
@@ -90,6 +91,12 @@ func (o *Carousel) ContentStruct() map[string]interface{} {
 			DataType:   "field",
 			DataSource: []string{},
 			Order:      2},
+		"game": {
+			Type:       "select",
+			DataType:   "content",
+			DataSource: []string{"/admin/v1/contents?type=Game"},
+			Required:   true,
+			Order:      3},
 		"image": {
 			Type:       "file",
 			DataType:   "field",

@@ -2,6 +2,7 @@ package content
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/agreyfox/eshop/management/editor"
 	"github.com/agreyfox/eshop/system/item"
@@ -122,3 +123,23 @@ func (o *Carts) ContentStruct() map[string]interface{} {
 	}
 }
 */
+
+//enable use can create the content.
+func (o *Carts) Create(http.ResponseWriter, *http.Request) error {
+	return nil
+}
+
+// EnableOwnerCheck, Indicate only get belone to user's content
+func (o *Carts) EnableOwnerCheck() bool {
+	return true
+}
+
+func (o *Carts) Approve(w http.ResponseWriter, r *http.Request) error {
+	logger.Debug("approve the cart from pending to public")
+	return nil
+}
+
+// enable autopprove
+func (o *Carts) AutoApprove(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}

@@ -158,6 +158,52 @@ func logout(res http.ResponseWriter, req *http.Request) {
 	http.Redirect(res, req, req.URL.Scheme+req.URL.Host+"/admin/", http.StatusFound)
 }
 
+func searchUser(res http.ResponseWriter, req *http.Request) {
+	ipaddr := GetIP(req)
+	logger.Debug("admin search user from:", ipaddr)
+	if !user.IsValid(req) {
+		renderJSON(res, req, ReturnData{
+			RetCode: 2,
+			Msg:     "You should login first",
+		})
+		return
+	}
+	q := req.URL.Query()
+
+	email := q.Get("q")
+	if len(email) == 0 {
+		renderJSON(res, req, ReturnData{
+			RetCode: -99,
+			Msg:     "Search parameter error ",
+		})
+		return
+	}
+	data, err := GetUsers(email)
+	if err != nil {
+		renderJSON(res, req, ReturnData{
+			RetCode: -99,
+			Msg:     "Search user error:" + err.Error(),
+		})
+		return
+	}
+	retdata := map[string]interface{}{}
+	if len(data) == 0 {
+		retdata = map[string]interface{}{
+			"retCode": -1,
+			"msg":     "Not Found",
+		}
+	} else {
+		retdata = map[string]interface{}{
+			"retCode": 0,
+			"msg":     "Done",
+			"data":    data,
+		}
+	}
+
+	renderJSON(res, req, retdata)
+	return
+}
+
 func recoverRequest(w http.ResponseWriter, r *http.Request) {
 	logger.Debugf("User try to recover password form :%s", GetIP(r))
 
@@ -444,6 +490,241 @@ func saveConfig(res http.ResponseWriter, req *http.Request) {
 			Msg:     "Permission Denied",
 		})
 	}
+}
+
+func newAdmin(w http.ResponseWriter, r *http.Request) {
+	logger.Debugf("Admin  try to create new admin user :%s", GetIP(r))
+	reqJSON := getJsonFromBody(r)
+	email := strings.ToLower(fmt.Sprint(reqJSON["email"]))
+	password, ok := reqJSON["password"].(string)
+	if !ok || len(email) == 0 || !isValidateEmail(email) {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	usr, err := user.New(email, password)
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	_, err = db.SetUser(usr)
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	renderJSON(w, r, ReturnData{
+		RetCode: 0,
+		Msg:     "Done",
+	})
+
+}
+
+func updateAdmin(w http.ResponseWriter, r *http.Request) {
+	ipaddr := GetIP(r)
+	logger.Debugf("Admin  try to update admin user :%s", ipaddr)
+	reqJSON := getJsonFromBody(r)
+	if !user.IsValidAdmin(r) {
+		logger.Error(err)
+		renderJSON(w, r, ReturnData{
+			RetCode: -99,
+			Msg:     "Permission Denied",
+		})
+		return
+	}
+
+	// check email & password
+	em := fmt.Sprintf("%s", reqJSON["email"])
+
+	logger.Debug("try to update user % password ", em)
+	j, err := db.User(strings.ToLower(em))
+	if err != nil {
+		logger.Error(err)
+		renderJSON(w, r, ReturnData{
+			RetCode: -99,
+			Msg:     "No Such user",
+		})
+		return
+	}
+
+	if j == nil {
+		logger.Error(err)
+		renderJSON(w, r, ReturnData{
+			RetCode: -99,
+			Msg:     "User Not Found",
+		})
+		return
+	}
+
+	usr := &user.User{}
+	err = json.Unmarshal(j, usr)
+	if err != nil {
+		logger.Error(err)
+		renderJSON(w, r, ReturnData{
+			RetCode: -99,
+			Msg:     "Internal error",
+		})
+		return
+	}
+
+	// check if password matches
+	password, ok := reqJSON["password"].(string)
+	if !ok {
+		logger.Error(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if !user.IsUser(usr, password) {
+		logger.Errorf("Unexpected user/password combination for %s", usr.Email)
+		renderJSON(w, r, ReturnData{
+			RetCode: -99,
+			Msg:     "Old password is wrong",
+		})
+		return
+	}
+
+	newPassword, ok := reqJSON["new_password"].(string)
+	if !ok {
+		logger.Errorf("New password setting error for user %s", usr.Email)
+		renderJSON(w, r, ReturnData{
+			RetCode: -99,
+			Msg:     "New password is missing",
+		})
+		return
+	}
+	var updatedUser *user.User
+	if newPassword != "" {
+		updatedUser, err = user.New(em, newPassword)
+		if err != nil {
+			logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	} else {
+		updatedUser, err = user.New(em, password)
+		if err != nil {
+			logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// set the ID to the same ID as current user
+	updatedUser.ID = usr.ID
+
+	// set user in db
+	err = db.UpdateUser(usr, updatedUser)
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	ipSearchHandler := ip.NewClient("", true)
+
+	countryInfor, _ := ipSearchHandler.QueryIPByDB(ipaddr)
+	// create new token
+	week := time.Now().Add(time.Hour * 24 * 7)
+	claims := map[string]interface{}{
+		"exp":     week,
+		"user":    updatedUser.Email,
+		"country": countryInfor,
+	}
+
+	token, err := jwt.New(claims)
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// add token to cookie +1 week expiration
+	cookie := &http.Cookie{
+		Name:    user.Lqcmstoken,
+		Value:   token,
+		Expires: week,
+		Path:    "/",
+	}
+	http.SetCookie(w, cookie)
+
+	// add new token cookie to the request
+	//w.AddCookie(cookie)
+	contentStructData := getContentsStruct() // 获得系统open的内容列表
+	currency := getContentList("Currency")
+	country := getContentList("Country")
+	logger.Debugf("Admin User %s logged in !", usr.Email)
+	retdata := map[string]interface{}{
+		"retCode":        0,
+		"msg":            "Done",
+		"data":           token,
+		"DefaultCountry": countryInfor,
+		"Country":        country,
+		"Currency":       currency,
+		"contents":       string(contentStructData[:]),
+	}
+
+	renderJSON(w, r, retdata)
+}
+
+func deleteAdmin(w http.ResponseWriter, r *http.Request) {
+	ipaddr := GetIP(r)
+	logger.Debugf("Admin  try to delete admin user :%s", ipaddr)
+
+	reqJSON := getJsonFromBody(r)
+
+	// do not allow current user to delete themselves
+	j, err := db.CurrentUser(r)
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+
+		return
+	}
+
+	usr := &user.User{}
+	err = json.Unmarshal(j, &usr)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+
+		return
+	}
+
+	email := strings.ToLower(fmt.Sprintf("%s", reqJSON["email"]))
+
+	if usr.Email == email || email == "admin@eshop.com" {
+		logger.Error(err)
+		w.WriteHeader(http.StatusBadRequest)
+
+		return
+	}
+	adminemail, err := db.Config("admin_email")
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if email == string(adminemail[:]) {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	// delete existing user
+	err = db.DeleteUser(email)
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+
+		return
+	}
+
+	renderJSON(w, r, ReturnData{
+		RetCode: 0,
+		Msg:     "Done",
+	})
 }
 
 func configRestHandler(res http.ResponseWriter, req *http.Request) {
@@ -1595,6 +1876,7 @@ func getMedia(w http.ResponseWriter, r *http.Request) {
 		logger.Error("Error unmarshal json into", t, err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
+	logger.Debug("+++", item["path"], item["content_type"], "+++")
 	fff := item["path"].(string)
 	ctype := item["content_type"].(string)
 	pwd, err := os.Getwd()
@@ -1605,7 +1887,7 @@ func getMedia(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mediaFilename := filepath.Join(pwd, "uploads", strings.TrimPrefix(fff, "/api/uploads"))
-	logger.Debugf("The file  %s being read \n", mediaFilename)
+	logger.Debugf("The file  %s being read", mediaFilename)
 	logger.Debugf(strings.TrimPrefix(fff, "/api/uploads"))
 	dat, err := ioutil.ReadFile(mediaFilename)
 	if err != nil {
@@ -1836,7 +2118,7 @@ func getContents(w http.ResponseWriter, r *http.Request) {
 	hook, ok := pt.(item.Hookable)
 	if ok {
 		// hook before response
-		fields, hasSubContent := hook.EnableSubContent()
+		fields, hasSubContent := hook.EnableSubContent() //check是否需要验证用户访问资源
 		if hasSubContent {
 
 			logger.Debug("Now process sub-contents")
@@ -1936,7 +2218,6 @@ func getContent(w http.ResponseWriter, r *http.Request) {
 			// hook before response
 			fields, hasSubContent := hook.EnableSubContent()
 			if hasSubContent {
-
 				logger.Debug("Now process sub-content ")
 
 				for index := range fields {
@@ -2035,9 +2316,9 @@ func updateContent(w http.ResponseWriter, r *http.Request) {
 		dec.SetAliasTag("json")
 		err = dec.Decode(post, upp)
 		if err != nil {
-			logger.Debug("Error decoding post form for edit handler:", t, err)
+			logger.Debug(post, "\n", upp)
+			logger.Debugf("Error decoding post form for edit handler:%s,%s", t, err)
 			w.WriteHeader(http.StatusBadRequest)
-
 			return
 		}
 

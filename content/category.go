@@ -13,10 +13,10 @@ type Category struct {
 	Name     string `json:"name"`
 	Game     string `json:"game"`
 	Online   bool   `json:"online"`
-	Belongto string `json:"belongto"`
-	Desc     string `json:"description"`
-	Icon     string `json:"icon"`
-	Hint     string `json:"hint"`
+	Belongto string `json:"belongto,omitempty"`
+	Desc     string `json:"description,omitempty"`
+	Icon     string `json:"icon,omitempty"`
+	Hint     string `json:"hint,omitempty"`
 }
 
 // MarshalEditor writes a buffer of html to edit a Category within the CMS
@@ -97,8 +97,7 @@ func (o *Category) ContentStruct() map[string]interface{} {
 			Type:       "tree",
 			DataType:   "content",
 			DataSource: []string{"tree"},
-
-			Order: 4,
+			Order:      4,
 		},
 		"hint": {
 			Type:       "input",

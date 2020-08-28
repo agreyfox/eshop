@@ -122,7 +122,7 @@ func setupDev() {
 		logger.Fatal("Couldn't find working directory to locate or save dev certificates:", err)
 	}
 
-	vendorTLSPath := filepath.Join(pwd, "cmd", "dms", "vendor", "github.com", "agreyfox", "dms", "system", "tls")
+	vendorTLSPath := filepath.Join(pwd, "key")
 	devcertsPath := filepath.Join(vendorTLSPath, "devcerts")
 
 	// clear all old certs if found

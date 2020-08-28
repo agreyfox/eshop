@@ -9,6 +9,7 @@ import (
 	"fmt"
 	mrand "math/rand"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/agreyfox/eshop/system/logs"
@@ -19,15 +20,16 @@ import (
 
 // User defines a admin user in the system
 type User struct {
-	ID     int         `json:"id"`
-	Email  string      `json:"email"`
-	Hash   string      `json:"hash"`
-	Salt   string      `json:"salt"`
-	Locale string      `json:"locale"`
-	Perm   Permissions `json:"perm"`
-	Phone  string      `json:phone,omitempty`
-	Social string      `json:"social,omitempty"`
-	Meta   string      `json:metadata,omitempty`
+	ID      int    `json:"id"`
+	Email   string `json:"email"`
+	Hash    string `json:"hash"`
+	Salt    string
+	Locale  string `json:"locale"`
+	Perm    Permissions
+	IsAdmin bool   `json:"isAdmin"`
+	Phone   string `json:phone,omitempty`
+	Social  string `json:"social,omitempty"`
+	Meta    string `json:metadata,omitempty`
 }
 
 const (
@@ -63,7 +65,7 @@ func New(email, password string) (*User, error) {
 	return user, nil
 }
 
-// New creates a customer user from web
+// New creates a customer user from web and ready to push to db
 func NewCustomer(email, password string) (*User, error) {
 	salt, err := randSalt()
 	if err != nil {
@@ -88,7 +90,7 @@ func NewCustomer(email, password string) (*User, error) {
 // Auth is HTTP middleware to ensure the request has proper token credentials
 func Auth(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		redir := req.URL.Scheme + req.URL.Host + "/admin/login"
+		redir := req.URL.Scheme + req.URL.Host + "/admin/v1/login"
 		//logger.Debugf("Auth with request is %v", req)
 		if IsValid(req) {
 			next.ServeHTTP(res, req)
@@ -114,16 +116,44 @@ func CustomerAuth(next http.HandlerFunc) http.HandlerFunc {
 
 // IsValid checks if the user request is authenticated
 func IsValid(req *http.Request) bool {
+	var token string
+	tt := req.Header.Get(Lqcmstoken)
+	if len(tt) > 0 {
+		token = tt
+		return jwt.Passes(token)
+	}
 
-	// check if token exists in cookie
 	cookie, err := req.Cookie(Lqcmstoken)
 	if err != nil {
-		return false
+		logger.Error("Cookie Token is not found!")
+		logger.Debug(req)
+	} else {
+		token = cookie.Value
 	}
+	if len(token) == 0 {
+		reqToken := req.Header.Get("Authorization")
+		if len(reqToken) == 0 {
+			logger.Error("Authorization Token is not found!")
+			logger.Debug(req)
+			return false
+		} else {
+			splitToken := strings.Split(reqToken, "Bearer ")
+			if len(splitToken) >= 1 {
+				token = splitToken[1]
+			} else {
+				logger.Error("Authorization Token is not present!")
+				logger.Debug(req)
+				return false
+			}
+		}
+	}
+	// check if token exists in cookie
+
 	// validate it and allow or redirect request
-	token := cookie.Value
-	//fmt.Println(token)
-	return jwt.Passes(token)
+	if len(token) > 0 {
+		return jwt.Passes(token)
+	}
+	return false
 }
 
 // IsValid checks if the user request is authenticated
@@ -132,6 +162,7 @@ func IsValidAdmin(req *http.Request) bool {
 	if err != nil {
 		return false
 	}
+	logger.Debug("user cookie:", cookie)
 	// validate it and allow or redirect request
 	token := cookie.Value
 	if jwt.Passes(token) {

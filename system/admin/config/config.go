@@ -20,6 +20,8 @@ type Config struct {
 	HTTPPort                string   `json:"http_port"`
 	HTTPSPort               string   `json:"https_port"`
 	AdminEmail              string   `json:"admin_email"`
+	EmailDomain             string   `json:"email_domain"`
+	EmailServer             string   `json:"email_server"`
 	EmailSecret             string   `json:"email_password"`
 	EmailHost               string   `json:"email_host"`
 	ClientSecret            string   `json:"client_secret"`

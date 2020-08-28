@@ -84,7 +84,7 @@ func Start(mainMux *bone.Mux) {
 
 	mainMux.Get("/payssion/*", http.StripPrefix("/payssion/", http.FileServer(http.Dir(pageDir))))
 	mainMux.Get("/thanks", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Thanks! WelCome "))
+		w.Write([]byte("Thanks! WelCome"))
 	}))
 	mainMux.SubRoute("/payment/payssion", boltMux)
 

@@ -1,9 +1,10 @@
 package data
 
-import ()
-import "github.com/agreyfox/eshop/system/logs"
-import "go.uber.org/zap"
-import "github.com/boltdb/bolt"
+import (
+	"github.com/agreyfox/eshop/system/logs"
+	"github.com/boltdb/bolt"
+	"go.uber.org/zap"
+)
 
 const (
 	IDMaker string = "--"
@@ -35,6 +36,7 @@ var (
 	PaymentDBHandler *bolt.DB
 
 	SystemDBHandler *bolt.DB
+	OnlineURL       = "https://support.bk.cloudns.cc/#/Result"
 )
 
 type (
@@ -55,6 +57,7 @@ type (
 		Info          string      `json:"info,omitempty"`
 		Comments      string      `json:"comments,omitempty"`
 		Address       string      `json:"delivery_address,omitempty"`
+		Description   string      `json:"description,omitempty"`
 	}
 
 	PaymentRecord struct {
@@ -87,6 +90,7 @@ type (
 		OrderDetail    string `json:"order_detail,omitempty"`
 		OrderID        string `json:"order_id"`
 		PaymentID      string `json:"payment_id,omitempty"`
+		TransactionID  string `json:"transaction_id,omitempty"`
 		PaymentVendor  string `json:"vendor"`
 		PaymentMethod  string `json:"method"`
 		PaymentNote    string `json:"payment_note,omitempty"`

@@ -4,7 +4,6 @@
 package tls
 
 import (
-	"crypto/tls"
 	"fmt"
 	"net/http"
 	"os"
@@ -67,16 +66,27 @@ func newManager() autocert.Manager {
 
 // Enable runs the setup for creating or locating production certificates and
 // starts the TLS server
-func Enable() {
-	m := newManager()
+func Enable(mux http.Handler) {
+	//m := newManager()
+	/*
+		server := &http.Server{
+			Addr:      fmt.Sprintf(":%s", db.ConfigCache("https_port").(string)),
+			TLSConfig: &tls.Config{GetCertificate: m.GetCertificate},
+		} */
 
-	server := &http.Server{
-		Addr:      fmt.Sprintf(":%s", db.ConfigCache("https_port").(string)),
-		TLSConfig: &tls.Config{GetCertificate: m.GetCertificate},
-	}
-
+	/* 	cert, err := tls.LoadX509KeyPair("key/prod/server.pem", "key/prod/server.key")
+	   	if err != nil {
+	   		log.Fatalln(err)
+	   		return
+	   	} */
+	/* 	server := &http.Server{
+	   		Addr:      fmt.Sprintf(":%s", db.ConfigCache("https_port").(string)),
+	   		TLSConfig: &tls.Config{Certificates: []tls.Certificate{cert}},
+	   	}
+	*/
 	// launch http listener for "http-01" ACME challenge
-	go http.ListenAndServe(":http", m.HTTPHandler(nil))
+	//go http.ListenAndServe(":http", m.HTTPHandler(nil))
 
-	logger.Fatal(server.ListenAndServeTLS("", ""))
+	//logger.Fatal(server.ListenAndServeTLS("", ""))
+	logger.Fatal(http.ListenAndServeTLS(fmt.Sprintf(":%s", db.ConfigCache("https_port").(string)), "key/prod/server.pem", "key/prod/server.key", mux))
 }

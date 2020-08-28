@@ -252,6 +252,28 @@ func Login(res http.ResponseWriter, req *http.Request) {
 
 }
 
+// customer login function , check login credential and return data
+func Config(res http.ResponseWriter, req *http.Request) {
+	ipAddr := GetIP(req)
+	logger.Debugf("User access web site , from:", ipAddr)
+
+	ipSearchHandler := ip.NewClient("", true)
+
+	countryInfor, _ := ipSearchHandler.QueryIPByDB(ipAddr)
+
+	currency := getContentList("Currency")
+	country := getContentList("Country")
+	RenderJSON(res, req, RetUser{
+		RetCode:        0,
+		Msg:            "Done",
+		Data:           "",
+		DefaultCountry: countryInfor,
+		Country:        country,
+		Currency:       currency,
+	})
+	return
+}
+
 func Renew(res http.ResponseWriter, req *http.Request) {
 	logger.Debugf("User try to renew token ,From :", GetIP(req))
 

@@ -10,13 +10,16 @@ import (
 	"regexp"
 
 	"github.com/agreyfox/eshop/system/db"
+	"github.com/agreyfox/eshop/system/logs"
+	"go.uber.org/zap"
 )
 
 var (
-	MailServer     = "mail.smtp2go.com"
-	MailServerHTTP = "https://api.smtp2go.com/v3"
-	MailKey        = "api-E408790EAED711EA8BC0F23C91C88F4E"
-	MailUser       = "support@bk.cloudns.cc"
+	MailServer                        = "mail.smtp2go.com"
+	MailServerHTTP                    = "https://api.smtp2go.com/v3"
+	MailKey                           = "api-E408790EAED711EA8BC0F23C91C88F4E"
+	MailUser                          = "support@bk.cloudns.cc"
+	logger         *zap.SugaredLogger = logs.Log.Sugar()
 )
 
 const api_root_env string = "ESHOP_MAIL_ROOT"
@@ -91,7 +94,7 @@ func api_request(endpoint string, request io.Reader) (*Smtp2goApiResult, error) 
 	// grab the api_root_env, set it if it's empty
 	api_root, found := os.LookupEnv(api_root_env)
 	if !found || len(api_root) == 0 {
-		r, err := db.Config("domain")
+		r, err := db.Config("email_domain")
 		if err == nil {
 			api_root = string(r)
 			MailServerHTTP = string(r)
@@ -118,6 +121,7 @@ func api_request(endpoint string, request io.Reader) (*Smtp2goApiResult, error) 
 	if !api_key_regex.MatchString(api_key) {
 		return nil, &IncorrectAPIKeyFormatError{found: api_key}
 	}
+	logger.Infof("Email api called with url:", api_root+"/"+endpoint)
 
 	// create the http request client
 	client := &http.Client{}
@@ -146,7 +150,7 @@ func api_request(endpoint string, request io.Reader) (*Smtp2goApiResult, error) 
 	if err != nil {
 		return nil, &InvalidJSONError{err: err}
 	}
-	fmt.Printf("%v\n", ret2)
+	logger.Debugf("%v\n", ret2)
 	// finally return the result object
 	return ret2, nil
 }
@@ -174,6 +178,7 @@ func Send(e *Email) (*Smtp2goApiResult, error) {
 	}
 	e.ApiKey = MailKey
 	e.From = MailUser
+	fmt.Printf("%v", e)
 	// if we get here we have enough information to send
 	request_json, err := json.Marshal(e)
 	if err != nil {

@@ -19,8 +19,8 @@ type Coupon struct {
 	Starttime     string  `json:"starttime"`
 	Endtime       string  `json:"endtime"`
 	Code          string  `json:"code"`
-	Desc          string  `json:"desc"`
-	Meta          string  `json:"meta"`
+	Desc          string  `json:"desc,omitempty"`
+	Meta          string  `json:"meta,omitempty"`
 }
 
 // MarshalEditor writes a buffer of html to edit a Coupon within the CMS

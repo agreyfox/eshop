@@ -151,7 +151,7 @@ func GetJsonFromBody(req *http.Request) map[string]interface{} {
 	//fmt.Println(body)
 
 	if err = json.Unmarshal(bodyBytes, &t); err != nil {
-
+		logger.Error("Error:", err)
 		return map[string]interface{}{}
 	}
 	req.Header.Add("lqcms_json", string(bodyBytes[:]))
@@ -256,7 +256,6 @@ func getEmailFromCookie(req *http.Request) (string, error) {
 	userEmail := ""
 	cookie, err := req.Cookie(LQCMStoken)
 	if err != nil {
-
 		return "", ErrNoCookie
 	}
 	// validate it and allow or redirect request

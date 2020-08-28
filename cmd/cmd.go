@@ -21,6 +21,7 @@ var (
 	cli       bool
 	email     bool
 	ipip      string
+	usercmd   string
 
 	gocmd string
 	fork  string

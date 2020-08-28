@@ -13,7 +13,7 @@ type Orderstatus struct {
 	Name  string `json:"name"`
 	Label string `json:"label"`
 	Icon  string `json:"icon,omitempty"`
-	Desc  string `json:"desc"`
+	Desc  string `json:"desc,omitempty"`
 }
 
 // MarshalEditor writes a buffer of html to edit a Orderstatus within the CMS
