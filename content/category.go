@@ -11,11 +11,13 @@ type Category struct {
 	item.Item
 
 	Name     string `json:"name"`
+	Sname    string `json:"sname"`
 	Game     string `json:"game"`
 	Online   bool   `json:"online"`
 	Belongto string `json:"belongto,omitempty"`
 	Desc     string `json:"description,omitempty"`
 	Icon     string `json:"icon,omitempty"`
+	Class    string `json:"class"` //是金币还是物品
 	Hint     string `json:"hint,omitempty"`
 }
 
@@ -79,6 +81,14 @@ func (o *Category) ContentStruct() map[string]interface{} {
 			DataType:   "field",
 			DataSource: []string{},
 			Required:   true,
+
+			Order: 1,
+		},
+		"sname": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Help:       "名字描述，用于内部",
 			Order:      1,
 		},
 		"game": {
@@ -86,34 +96,41 @@ func (o *Category) ContentStruct() map[string]interface{} {
 			DataType:   "content",
 			DataSource: []string{"/admin/v1/contents?type=Game"},
 			Required:   true,
-			Order:      2},
+			Order:      20},
+		"class": {
+			Type:       "select",
+			DataType:   "field",
+			DataSource: []string{"coin", "item"},
+			Required:   true,
+			Help:       "目录类型，选择icon,或者item",
+			Order:      22},
 		"online": {
 			Type:       "bool",
 			DataType:   "field",
 			DataSource: []string{},
 			Required:   true,
-			Order:      3},
+			Order:      30},
 		"belongto": {
 			Type:       "tree",
 			DataType:   "content",
 			DataSource: []string{"tree"},
-			Order:      4,
+			Order:      40,
 		},
 		"hint": {
 			Type:       "input",
 			DataType:   "field",
 			DataSource: []string{},
-			Order:      5},
+			Order:      50},
 		"description": {
 			Type:       "textarea",
 			DataType:   "field",
 			DataSource: []string{},
-			Order:      6},
+			Order:      60},
 		"icon": {
 			Type:       "file",
 			DataType:   "field",
 			DataSource: []string{},
-			Order:      7},
+			Order:      70},
 	}
 	return map[string]interface{}{
 		"data": dd,

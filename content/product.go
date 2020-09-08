@@ -19,7 +19,7 @@ type Product struct {
 	Online          bool    `json:"online"`
 	Price           float32 `json:"price"`                     //单价
 	MN              uint    `json:"miniNumber"`                //最小购买数
-	Unit            string  `json:"unit"`                      //购买数量的单位
+	Unit            string  `json:"Unit"`                      //购买数量的单位
 	HintImage       string  `json:"hintImage,omitempty"`       //提示图片
 	HintText        string  `json:"hintText,omitempty"`        //提示文字
 	PurchaseLabel   string  `json:"customerLabel"`             //用户输入提示内容
@@ -123,7 +123,7 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			DataType:   "field",
 			DataSource: []string{},
 			Help:       "本产品是否出现在hotitem 栏目，选择是表示显示",
-			Order:      2,
+			Order:      20,
 			Others:     "false",
 		},
 		"stock": {
@@ -131,7 +131,7 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			DataType:   "field",
 			DataSource: []string{},
 			Required:   true,
-			Order:      3,
+			Order:      30,
 			Help:       "输入库存数量",
 			Others:     "99999",
 		},
@@ -140,7 +140,7 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			DataType:   "content",
 			DataSource: []string{"/admin/v1/contents?type=Game"},
 			Required:   true,
-			Order:      4,
+			Order:      40,
 		},
 		"type": {
 			Type:       "select",
@@ -148,7 +148,7 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			DataSource: []string{"coin", "item"},
 			Required:   true,
 			Help:       "产品类型，金币类还是道具类",
-			Order:      5,
+			Order:      50,
 		},
 		"price": {
 			Type:       "input",
@@ -156,7 +156,7 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			DataSource: []string{},
 			Help:       "产品的单价",
 			Required:   true,
-			Order:      6,
+			Order:      50,
 		},
 		"discount": {
 			Type:       "select",
@@ -164,27 +164,27 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			DataSource: []string{"/admin/v1/contents?type=Discount"},
 			Required:   false,
 			Help:       "若是金币类别，可使用系统中定义的discount为客户提供折扣，若为\n道具类，则这个字段无意义",
-			Order:      7,
+			Order:      70,
 		},
 		"online": {
 			Type:       "bool",
 			DataType:   "field",
 			DataSource: []string{},
 			Required:   true,
-			Order:      8,
+			Order:      80,
 		},
 		"description": {
 			Type:       "textarea",
 			DataType:   "field",
 			DataSource: []string{},
-			Order:      19,
+			Order:      190,
 		},
 		"logo": {
 			Type:       "file",
 			DataType:   "field",
 			DataSource: []string{},
 			Help:       "产品的小方图片",
-			Order:      15,
+			Order:      150,
 		},
 		"hintImage": {
 			Type:       "file",
@@ -192,14 +192,14 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			DataSource: []string{},
 			Required:   true,
 			Help:       "用户鼠标移动到本产品图片上方时，显示改产品的详细说明，也是一张图片",
-			Order:      11,
+			Order:      110,
 		},
 		"hintText": {
 			Type:       "input",
 			DataType:   "field",
 			DataSource: []string{},
 			Help:       "当鼠标移动到产品图片时，也可以显示文字说明，该文字说明和将显示在hintImage上方",
-			Order:      12,
+			Order:      120,
 		},
 		"miniNumber": {
 			Type:       "input",
@@ -207,7 +207,7 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			DataSource: []string{},
 			Required:   true,
 			Help:       "本产品销售时，最小单位的数量",
-			Order:      9,
+			Order:      90,
 		},
 		"Unit": {
 			Type:       "input",
@@ -215,7 +215,7 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			DataSource: []string{},
 			Required:   true,
 			Help:       "本产品销售时，最小单位的数量的单位，用于网页显示",
-			Order:      10,
+			Order:      50,
 		},
 		"customerLabel": {
 			Type:       "input",
@@ -223,14 +223,14 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			DataSource: []string{},
 			Required:   true,
 			Help:       "当用户购买本产品时，提示用户输入购买要求，在输入框的下方",
-			Order:      13,
+			Order:      130,
 		},
 		"customerCaution": {
 			Type:       "input",
 			DataType:   "field",
 			DataSource: []string{},
 			Help:       "当用购买本产品时，提示用户购买注意事项，在输入框下方",
-			Order:      14,
+			Order:      140,
 		},
 	}
 	//retStr, _ := json.Marshal(dd)

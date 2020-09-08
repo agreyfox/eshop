@@ -10,15 +10,18 @@ import (
 type Server struct {
 	item.Item
 
-	Name     string `json:"name"`
-	LongName string `json:"longName,omitempty"` //长名
-	Game     string `json:"game"`
-	Online   bool   `json:"online"`
-	Category string `json:"category,omitempty"`
-	Tags     string `json:"tags,omitempty"`
-	Coins    string `json:"coins,omitempty"` //服务器上所有在卖的coin
-	Items    string `json:"items,omitempty"` //服务器上的所有在卖的item
-	desc     string `json:"description,omitempty`
+	Name      string  `json:"name"`
+	ShortName string  `json:"sName,omitempty"`    //长名
+	LongName  string  `json:"longName,omitempty"` //长名
+	Game      string  `json:"game"`
+	Online    bool    `json:"online"`
+	Category  string  `json:"category,omitempty"`
+	Tags      string  `json:"tags,omitempty"`
+	Coins     string  `json:"coins,omitempty"` //服务器上所有在卖的coin
+	Items     string  `json:"items,omitempty"` //服务器上的所有在卖的item
+	UnitPrice float32 `json:"price"`           // 金币单价
+	UnitName  string  `json:"unitName"`
+	desc      string  `json:"description,omitempty`
 }
 
 // MarshalEditor writes a buffer of html to edit a Server within the CMS
@@ -98,60 +101,68 @@ func (o *Server) ContentStruct() map[string]interface{} {
 			Required:   true,
 			Order:      1,
 		},
+		"sName": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Required:   true,
+			Help:       "游戏的短名，显示在后台管理列表中",
+			Order:      5,
+		},
 		"longName": {
 			Type:       "input",
 			DataType:   "field",
 			DataSource: []string{},
 			Required:   true,
-			Order:      2,
+			Order:      20,
 		},
 		"game": {
 			Type:       "select",
 			DataType:   "content",
 			DataSource: []string{"/admin/v1/contents?type=Game"},
 			Required:   true,
-			Order:      3,
+			Order:      30,
 		},
 		"category": {
 			Type:       "select",
 			DataType:   "content",
-			DataSource: []string{"/admin/v1/contents?type=Category", "array"},
+			DataSource: []string{"/admin/v1/contents/search?type=Category&q=[[game]]"},
 			Required:   false,
-			Order:      4,
+			Order:      40,
 		},
 		"tags": {
 			Type:       "input",
 			DataType:   "field",
 			DataSource: []string{"array"},
 			Help:       "游戏的标签，可以输入多个，用空格分开",
-			Order:      5,
+			Order:      50,
 		},
 		"coins": {
 			Type:       "multiselect",
 			DataType:   "content",
 			DataSource: []string{"/admin/v1/contents?type=Product", "array"},
 			Help:       "本服务器只销售的金币类产品，为多选",
-			Order:      6,
+			Order:      60,
 		},
 		"items": {
 			Type:       "multiselect",
 			DataType:   "content",
 			DataSource: []string{"/admin/v1/contents?type=Product", "array"},
 			Help:       "本服务器在销售的道具，多选",
-			Order:      7,
+			Order:      70,
 		},
 		"online": {
 			Type:       "bool",
 			DataType:   "field",
 			DataSource: []string{""},
 			Required:   true,
-			Order:      8,
+			Order:      80,
 		},
 		"description": {
 			Type:       "textarea",
 			DataType:   "field",
 			DataSource: []string{""},
-			Order:      9,
+			Order:      90,
 		},
 	}
 	//retStr, _ := json.Marshal(dd)

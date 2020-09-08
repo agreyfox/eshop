@@ -40,7 +40,7 @@ func Run(mainMux *bone.Mux) {
 	apiv1Mux.Get("/pics", Record(CORS(Gzip(getMedia))))
 
 	//apiv1Mux.HandleFunc("/user/register", CORS(user.RegisterUsersHandler))
-	apiv1Mux.Post("/register", CORS(RegisterUser))
+	apiv1Mux.Post("/register", Record(CORS(RegisterUser)))
 	apiv1Mux.Get("/renew", CORS(Renew))
 	apiv1Mux.Post("/logout", CORS(CustomerAuth(Logout)))
 	apiv1Mux.Post("/forgot", CORS(Forgot))
