@@ -10,6 +10,7 @@ import (
 type Product struct {
 	item.Item
 	Name            string  `json:"name"`
+	Sname           string  `json:"sname"`
 	Hot             bool    `json:"hotItem,omitempty"`     //是否在hotitem 中显示
 	Stock           uint    `json:"stock"`                 //库存数量
 	Desc            string  `json:"description,omitempty"` //html
@@ -118,6 +119,13 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			Required:   true,
 			Order:      1,
 		},
+		"sname": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Help:       "内部使用的名字说明",
+			Order:      5,
+		},
 		"hotItem": {
 			Type:       "bool",
 			DataType:   "field",
@@ -156,7 +164,7 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			DataSource: []string{},
 			Help:       "产品的单价",
 			Required:   true,
-			Order:      50,
+			Order:      52,
 		},
 		"discount": {
 			Type:       "select",
@@ -215,7 +223,7 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			DataSource: []string{},
 			Required:   true,
 			Help:       "本产品销售时，最小单位的数量的单位，用于网页显示",
-			Order:      50,
+			Order:      56,
 		},
 		"customerLabel": {
 			Type:       "input",

@@ -2,13 +2,16 @@ package paypal
 
 import (
 	"bytes"
-	"crypto/md5"
+	"errors"
+
 	"encoding/gob"
-	"encoding/hex"
+
 	"encoding/json"
 	"fmt"
 
 	"github.com/agreyfox/eshop/payment/data"
+	"github.com/agreyfox/eshop/payment/utils"
+
 	"github.com/agreyfox/eshop/system/admin"
 
 	"io/ioutil"
@@ -17,8 +20,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/gofrs/uuid"
 )
 
 func GetIP(r *http.Request) string {
@@ -36,6 +37,7 @@ func getBinaryDataFromBody(req *http.Request) []byte {
 	}
 	// Restore the io.ReadCloser to its original state
 	req.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
+	fmt.Println("User submit:", string(bodyBytes[:]))
 	return bodyBytes
 }
 
@@ -50,7 +52,7 @@ func getJSONFromBody(req *http.Request) map[string]interface{} {
 	}
 	var t map[string]interface{}
 
-	fmt.Println(string(bodyBytes[:]))
+	//fmt.Println("User submit:", string(bodyBytes[:]))
 
 	if err = json.Unmarshal(bodyBytes, &t); err != nil {
 		logger.Debug("Data looks like bad, Maybe it is not json data")
@@ -61,7 +63,7 @@ func getJSONFromBody(req *http.Request) map[string]interface{} {
 }
 
 // to save a record
-func saveOrderRequest(order Order, request map[string]interface{}, ip string) error {
+func saveOrderRequest(order Order, request *OrderRequest, ip string) error {
 	//logger.Debug(order)
 	record := data.PaymentLog{
 		RequestData: request,
@@ -80,9 +82,9 @@ func saveOrderRequest(order Order, request map[string]interface{}, ip string) er
 	record.OrderID = oid
 	record.PaymentID = order.Intent
 	record.PaymentState = order.Status
-	da, _ := json.Marshal(order.PurchaseUnits)
+	da, _ := json.Marshal(request)
 	record.Info = string(da)
-	record.Description = GetPurchaseContentFromOrder(order)
+	record.Description = GetPurchaseContentFromRequest(request)
 	record.Comments = comments
 	var tt float64
 	currency := ""
@@ -98,18 +100,18 @@ func saveOrderRequest(order Order, request map[string]interface{}, ip string) er
 	record.Total = fmt.Sprintf("%.2f", tt)
 	record.Currency = currency
 
-	email, ok := request["email"].(string) // should support email
-	if ok {
+	record.BuyerEmail = request.Email // should support email
+	/* if ok {
 		record.BuyerEmail = email // string(email[:])
-	}
+	} */
 	record.RequestTime = time.Now().Unix()
 	record.IP = ip
 
 	s := data.SavePaymentLog(&record)
 	if s {
-		logger.Debug("Save payment log done! orderid:", order.ID)
+		logger.Debug("Save payment log done! order id:", order.ID)
 	} else {
-		logger.Error("Save payment log error!,orderid :", order.ID)
+		logger.Error("Save payment log error!,order id :", order.ID)
 	}
 	return nil
 }
@@ -146,13 +148,14 @@ func saveCapture(order CaptureOrderResponse) bool {
 }
 
 func getOrderID() string {
-	uid, err := uuid.NewV1()
-	if err != nil {
-		return ""
-	}
-	hash := md5.Sum([]byte(uid.String()))
+	return utils.RandomString(10)
+	/* 	uid, err := uuid.NewV1()
+	   	if err != nil {
+	   		return ""
+	   	}
+	   	hash := md5.Sum([]byte(uid.String()))
 
-	return hex.EncodeToString(hash[:])
+	   	return hex.EncodeToString(hash[:]) */
 	//return uid.String()
 }
 
@@ -380,8 +383,11 @@ func GetPurchaseContent(id string) string {
 // 生成购买物品的简单内容
 func GetPurchaseContentFromOrder(order Order) string {
 	ret := ""
+	logger.Debug("Order infor:========================")
+	PrettyPrint(order)
 	for i, ordeEntry := range order.PurchaseUnits {
-		ret = ret + fmt.Sprint("%d", i+1) + ":"
+
+		ret = ret + fmt.Sprintf("%d", i+1) + ":"
 		for _, item := range ordeEntry.Items {
 			ret = ret + item.Name + "--" + item.Description + "<br>"
 		}
@@ -392,8 +398,60 @@ func GetPurchaseContentFromOrder(order Order) string {
 	return ret
 }
 
+// 生成购买物品的简单内容
+func GetPurchaseContentFromRequest(request *OrderRequest) string {
+	ret := ""
+	logger.Debug("Request infor:========================")
+	//PrettyPrint(request)
+
+	for _, orderEntry := range request.ItemList {
+
+		for j, item := range orderEntry.Items {
+			logger.Debug("found item name ", item.Name)
+			if len(item.Name) > 0 {
+				ret += fmt.Sprintf("%d", j+1) + ":" + item.Name
+				if len(item.Description) > 0 {
+					ret += ":" + item.Description + "<br>"
+				} else {
+					ret += "<br>"
+				}
+			}
+		}
+
+	}
+
+	if ret == "" {
+		ret = "DIGIT GOODS"
+	}
+	return ret
+}
+
+// 生成购买物品的简单内容
+func GeneratePurchaseContentFromRequest(request *PurchaseUnitRequest) string {
+	ret := ""
+	logger.Debug("Request infor:========================")
+	PrettyPrint(request)
+	PrettyPrint(*request)
+	for j, item := range request.Items {
+		logger.Debug("found item name ", item.Name)
+		if len(item.Name) > 0 {
+			ret += fmt.Sprintf("%d", j+1) + ":" + item.Name
+			if len(item.Description) > 0 {
+				ret += ":" + item.Description + "<br>"
+			} else {
+				ret += "<br>"
+			}
+		}
+	}
+
+	if ret == "" {
+		ret = "DIGIT GOODS"
+	}
+	return ret
+}
+
 func GetTransationDetail(id string) (SearchTransactionDetails, bool) {
-	logger.Debug("=========================================================================search for id :", id)
+	logger.Debug("==================search for id :", id)
 	now := time.Now()
 	last := now.AddDate(0, 0, -30) //两年内的单子
 	//fmt.Print(now, last)
@@ -427,4 +485,39 @@ func GetTransationDetail(id string) (SearchTransactionDetails, bool) {
 		return SearchTransactionDetails{}, false
 	}
 
+}
+
+func getOrderRequestFromUserSubmit(userSubmit []byte) (*OrderRequest, error) {
+	content := OrderRequest{}
+	json.Unmarshal(userSubmit, &content)
+	order := OrderRequest{}
+	order.Email = content.Email
+	order.Payer = content.Payer
+	order.Method = content.Method
+	local := content.Locale
+	if len(local) > 0 {
+		order.Locale = local
+	} else {
+		order.Locale = "en-US"
+	}
+	comment := content.Comments
+	if len(comment) > 0 {
+		order.Comments = comment
+	}
+	order.ItemList = content.ItemList
+	if len(order.ItemList) == 0 {
+		return &OrderRequest{}, errors.New("No payment list")
+	}
+	/* type purchaselist struct {
+		List []interface{} `json:"item_list"`
+	}
+
+	listview := purchaselist{}
+	json.Unmarshal(userSubmit, &listview)
+	//err := json.Unmarshal([]byte(content["item_list"]), list)
+	if len(listview.List) == 0 {
+		return &OrderRequest{}, errors.New("No item")
+	}
+	fmt.Println(listview.List) */
+	return &order, nil
 }

@@ -540,7 +540,9 @@ type (
 
 	// CapturedPurchaseUnit are purchase units for a captured order
 	CapturedPurchaseUnit struct {
-		Payments *CapturedPayments `json:"payments,omitempty"`
+		Payments    *CapturedPayments `json:"payments,omitempty"`
+		InvoiceID   string            `json:"invoice_id,omitempty"`
+		Description string            `json:"description,omitempty"`
 	}
 
 	// PayerWithNameAndPhone struct

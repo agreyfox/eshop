@@ -1,20 +1,17 @@
 package payssion
 
 import (
-	"crypto/md5"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 
 	"github.com/agreyfox/eshop/payment/data"
+	"github.com/agreyfox/eshop/payment/utils"
 	"github.com/agreyfox/eshop/system/admin"
 
 	"io/ioutil"
 	"net/http"
 	"reflect"
 	"time"
-
-	"github.com/gofrs/uuid"
 )
 
 func GetIP(r *http.Request) string {
@@ -171,13 +168,14 @@ func isNil(i interface{}) bool {
 }
 
 func getOrderID() string {
-	uid, err := uuid.NewV1()
+	return utils.RandomString(10)
+	/* uid, err := uuid.NewV1()
 	if err != nil {
 		return ""
 	}
 	hash := md5.Sum([]byte(uid.String()))
 
-	return hex.EncodeToString(hash[:])
+	return hex.EncodeToString(hash[:]) */
 	//return uid.String()
 }
 

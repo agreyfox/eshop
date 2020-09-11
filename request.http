@@ -212,7 +212,6 @@ Content-Type: application/json
   "email":"e_raeb@yahoo.com",
   "comments":"sdm,dssfds sdfsdf",
   "method":"BILLING",
-  "Locale":"DE",
   "item_list": [
     {
      "amount":{
@@ -261,6 +260,49 @@ Content-Type: application/json
      ]
     }
   ]  
+}
+
+
+###
+
+POST http://127.0.0.1:8080/payment/paypal/pay
+Content-Type: application/json
+
+{
+  "email": "ce",
+  "payer": "paypal",
+  "comments": "12",
+  "method": "BILLING",
+  "item_list": [
+    {
+      "reference_id": "",
+      "items": [
+          {
+            "name": "Exalted Orb",
+            "quantity": "2",
+            "method": "BILLING",
+            "unit_amount": {
+              "currency_code": "USD",
+              "value": "0.90"
+            },
+            "description": "mm"
+          }
+        ],
+      "amount": {
+        "currency_code": "USD",
+        "value": "1.80",
+        "breakdown": {
+          "item_total": {
+            "currency_code": "USD",
+            "value": "1.80"
+          }
+        },
+        
+        "customer_id": "",
+        "description": "21facebook"
+      }
+    }
+  ]
 }
 
 

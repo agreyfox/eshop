@@ -5023,3 +5023,1121 @@ Visit '/admin' to get started.
 2020-08-03T10:33:35.061+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/api/resthandlers.go:212	Get content by id, From 127.0.0.1:54020
 2020-08-03T10:33:35.061+0800	[33mWARN[0m	/home/lq/ifb/src/eshop/system/api/resthandlers.go:279	User information in cookie have problem 
 2020-08-03T10:33:46.824+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/api/resthandlers.go:212	Get content by id, From 127.0.0.1:54032
+2020-09-09T18:44:28.490+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-09T18:44:28.490+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-09T18:44:28.491+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-09T18:44:28.500+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-09T18:44:28.500+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-09T18:44:28.500+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-09T18:44:28.500+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-09T18:44:28.500+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-09T18:44:28.500+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-09T18:44:30.581+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Wed, 09 Sep 2020 10:44:30 GMT
+Paypal-Debug-Id: 87a4c884b841
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AAJZsWHbkpyImpbFJ3UeXduyh_YWj2bYkS5QjV7Lk2364r9dXy5tX0YeFEi9-WMkAvm4UzeNPRVxLZ6Kqa5u-HNyNhD2hA","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":32400,"nonce":"2020-09-09T10:44:30ZblR01UjSJZtLV1bHjDVPOE2j_Tn5BYVkF9TCgyAdqlk"}
+
+2020-09-09T18:44:30.581+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AAJZsWHbkpyImpbFJ3UeXduyh_YWj2bYkS5QjV7Lk2364r9dXy5tX0YeFEi9-WMkAvm4UzeNPRVxLZ6Kqa5u-HNyNhD2hA Bearer 32400}
+2020-09-09T18:44:30.581+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-09T18:44:30.626+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-09T18:44:30.626+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-09T18:45:48.547+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-09T18:45:48.548+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:342	Ready to create a order,Data Save to tempdb!
+2020-09-09T18:45:52.211+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:345	This item_list is [{ 0xc003d0ba40 <nil> sdm,dssfds sdfsdf  LnfgDsc2WD  [{5 hat111    Brown hat.  0xc003d09980 DIGITAL_GOODS} {1 handbag222    Black handbag.  0xc003d099a0 DIGITAL_GOODS}] 0xc003d1dd90}]
+2020-09-09T18:53:04.638+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-09T18:53:04.638+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-09T18:53:04.638+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-09T18:53:04.645+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-09T18:53:04.645+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-09T18:53:04.646+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-09T18:53:04.646+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-09T18:53:04.646+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-09T18:53:04.646+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-09T18:53:10.899+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Wed, 09 Sep 2020 10:53:10 GMT
+Paypal-Debug-Id: af8aad5b29e42
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AAJZsWHbkpyImpbFJ3UeXduyh_YWj2bYkS5QjV7Lk2364r9dXy5tX0YeFEi9-WMkAvm4UzeNPRVxLZ6Kqa5u-HNyNhD2hA","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":31880,"nonce":"2020-09-09T10:44:30ZblR01UjSJZtLV1bHjDVPOE2j_Tn5BYVkF9TCgyAdqlk"}
+
+2020-09-09T18:53:10.900+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AAJZsWHbkpyImpbFJ3UeXduyh_YWj2bYkS5QjV7Lk2364r9dXy5tX0YeFEi9-WMkAvm4UzeNPRVxLZ6Kqa5u-HNyNhD2hA Bearer 31880}
+2020-09-09T18:53:10.900+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-09T18:53:10.936+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-09T18:53:10.936+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-09T18:53:13.116+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-09T18:53:13.116+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:342	Ready to create a order,Data Save to tempdb!
+2020-09-09T18:53:17.061+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v2/checkout/orders. Data: 
+Response: HTTP/1.1 400 Bad Request
+Content-Length: 489
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Wed, 09 Sep 2020 10:53:16 GMT
+Paypal-Debug-Id: ae9b493f03ef7
+
+{"name":"INVALID_REQUEST","message":"Request is not well-formed, syntactically incorrect, or violates schema.","debug_id":"ae9b493f03ef7","details":[{"field":"/application_context/locale","value":"DE","location":"body","issue":"INVALID_PARAMETER_SYNTAX","description":"The value of a field does not conform to the expected format."}],"links":[{"href":"https://developer.paypal.com/docs/api/orders/v2/#error-INVALID_PARAMETER_SYNTAX","rel":"information_link","encType":"application/json"}]}
+
+2020-09-09T18:53:17.062+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:349	create paypal order error:POST https://api.sandbox.paypal.com/v2/checkout/orders: 400 Request is not well-formed, syntactically incorrect, or violates schema.
+2020-09-09T18:53:42.429+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-09T18:53:42.429+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:342	Ready to create a order,Data Save to tempdb!
+2020-09-09T18:53:43.024+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v2/checkout/orders. Data: 
+Response: HTTP/1.1 400 Bad Request
+Content-Length: 489
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Wed, 09 Sep 2020 10:53:42 GMT
+Paypal-Debug-Id: a4dbe1abae958
+
+{"name":"INVALID_REQUEST","message":"Request is not well-formed, syntactically incorrect, or violates schema.","debug_id":"a4dbe1abae958","details":[{"field":"/application_context/locale","value":"US","location":"body","issue":"INVALID_PARAMETER_SYNTAX","description":"The value of a field does not conform to the expected format."}],"links":[{"href":"https://developer.paypal.com/docs/api/orders/v2/#error-INVALID_PARAMETER_SYNTAX","rel":"information_link","encType":"application/json"}]}
+
+2020-09-09T18:53:43.024+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:349	create paypal order error:POST https://api.sandbox.paypal.com/v2/checkout/orders: 400 Request is not well-formed, syntactically incorrect, or violates schema.
+2020-09-09T18:55:31.483+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-09T18:55:31.483+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-09T18:55:31.483+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-09T18:55:31.503+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-09T18:55:31.503+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-09T18:55:31.503+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-09T18:55:31.503+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-09T18:55:31.504+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-09T18:55:31.504+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-09T18:55:36.001+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Wed, 09 Sep 2020 10:55:35 GMT
+Paypal-Debug-Id: 92c3622fa0810
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AAJZsWHbkpyImpbFJ3UeXduyh_YWj2bYkS5QjV7Lk2364r9dXy5tX0YeFEi9-WMkAvm4UzeNPRVxLZ6Kqa5u-HNyNhD2hA","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":31735,"nonce":"2020-09-09T10:44:30ZblR01UjSJZtLV1bHjDVPOE2j_Tn5BYVkF9TCgyAdqlk"}
+
+2020-09-09T18:55:36.001+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AAJZsWHbkpyImpbFJ3UeXduyh_YWj2bYkS5QjV7Lk2364r9dXy5tX0YeFEi9-WMkAvm4UzeNPRVxLZ6Kqa5u-HNyNhD2hA Bearer 31735}
+2020-09-09T18:55:36.002+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-09T18:55:36.132+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-09T18:55:36.132+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-09T18:55:38.824+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-09T18:55:38.825+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:342	Ready to create a order,Data Save to tempdb!
+2020-09-09T18:55:38.825+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/utils.go:402	Request infor:========================
+2020-09-09T19:45:19.088+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-09T19:45:19.089+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-09T19:45:19.089+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-09T19:45:19.105+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-09T19:45:19.105+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-09T19:45:19.105+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-09T19:45:19.105+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-09T19:45:19.106+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-09T19:45:19.106+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-09T19:45:26.048+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Wed, 09 Sep 2020 11:45:25 GMT
+Paypal-Debug-Id: 84b32346d7f2
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AAK_X6VJshaL5KquqG7LSS6172u18tYrUnMe6suwu379TQz-nnR4asqpvJzOnQQnZjTVY3u9O1w62vVD5PSwtoaO52dF7Q","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":29713,"nonce":"2020-09-09T11:00:38Z2WjDnvXx4TqQR0RwgDMw3SJ5jD55imXVMixbInQqkR0"}
+
+2020-09-09T19:45:26.048+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AAK_X6VJshaL5KquqG7LSS6172u18tYrUnMe6suwu379TQz-nnR4asqpvJzOnQQnZjTVY3u9O1w62vVD5PSwtoaO52dF7Q Bearer 29713}
+2020-09-09T19:45:26.049+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-09T19:45:26.088+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-09T19:45:26.088+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-09T19:45:27.621+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-09T19:45:55.641+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/utils.go:431	Request infor:========================
+2020-09-09T19:46:15.420+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/utils.go:435	found item name hat111
+2020-09-09T19:50:35.768+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-09T19:50:35.768+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-09T19:50:35.768+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-09T19:50:35.783+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-09T19:50:35.783+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-09T19:50:35.784+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-09T19:50:35.784+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-09T19:50:35.784+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-09T19:50:35.784+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-09T19:50:37.711+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Wed, 09 Sep 2020 11:50:36 GMT
+Paypal-Debug-Id: 14293ae7bfd51
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AAK_X6VJshaL5KquqG7LSS6172u18tYrUnMe6suwu379TQz-nnR4asqpvJzOnQQnZjTVY3u9O1w62vVD5PSwtoaO52dF7Q","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":29401,"nonce":"2020-09-09T11:00:38Z2WjDnvXx4TqQR0RwgDMw3SJ5jD55imXVMixbInQqkR0"}
+
+2020-09-09T19:50:37.711+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AAK_X6VJshaL5KquqG7LSS6172u18tYrUnMe6suwu379TQz-nnR4asqpvJzOnQQnZjTVY3u9O1w62vVD5PSwtoaO52dF7Q Bearer 29401}
+2020-09-09T19:50:37.712+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-09T19:50:37.797+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-09T19:50:37.797+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-09T19:51:17.871+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-09T19:51:17.872+0800	[31mERROR[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:309	invalid character 'P' after top-level value
+2020-09-09T19:52:06.477+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-09T19:52:06.477+0800	[31mERROR[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:309	invalid character 'P' after top-level value
+2020-09-09T19:52:54.656+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-09T19:52:54.656+0800	[31mERROR[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:309	invalid character '}' looking for beginning of object key string
+2020-09-09T19:53:29.192+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-09T19:53:29.192+0800	[31mERROR[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:309	invalid character '}' looking for beginning of object key string
+2020-09-09T19:54:27.241+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-09T19:56:27.918+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-09T19:56:27.918+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-09T19:56:27.918+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-09T19:56:27.939+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-09T19:56:27.940+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-09T19:56:27.940+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-09T19:56:27.940+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-09T19:56:27.940+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-09T19:56:27.942+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-09T19:56:30.794+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Wed, 09 Sep 2020 11:56:29 GMT
+Paypal-Debug-Id: dc39730f60854
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AAK_X6VJshaL5KquqG7LSS6172u18tYrUnMe6suwu379TQz-nnR4asqpvJzOnQQnZjTVY3u9O1w62vVD5PSwtoaO52dF7Q","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":29048,"nonce":"2020-09-09T11:00:38Z2WjDnvXx4TqQR0RwgDMw3SJ5jD55imXVMixbInQqkR0"}
+
+2020-09-09T19:56:30.794+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AAK_X6VJshaL5KquqG7LSS6172u18tYrUnMe6suwu379TQz-nnR4asqpvJzOnQQnZjTVY3u9O1w62vVD5PSwtoaO52dF7Q Bearer 29048}
+2020-09-09T19:56:30.794+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-09T19:56:30.828+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-09T19:56:30.828+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-09T19:56:31.059+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-09T20:04:31.576+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-09T20:04:31.576+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-09T20:04:31.576+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-09T20:04:31.588+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-09T20:04:31.588+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-09T20:04:31.589+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-09T20:04:31.589+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-09T20:04:31.589+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-09T20:04:31.589+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-09T20:04:40.788+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Wed, 09 Sep 2020 12:04:39 GMT
+Paypal-Debug-Id: c253c445c3239
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AALMm0rYsaJOIIU1zX7ZO9Aib5rI-9AVruBKQA6W60H2--EJ9SlZme-2mdbL8rOCC8668WAfcfPONCM07aZsFlQXFEKjIQ","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":32400,"nonce":"2020-09-09T12:04:40ZYGACwPH-Nafuivjwg0Z4T8Yy8UKImGOhwiwSEk0dUtI"}
+
+2020-09-09T20:04:40.788+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AALMm0rYsaJOIIU1zX7ZO9Aib5rI-9AVruBKQA6W60H2--EJ9SlZme-2mdbL8rOCC8668WAfcfPONCM07aZsFlQXFEKjIQ Bearer 32400}
+2020-09-09T20:04:40.788+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-09T20:04:40.845+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-09T20:04:40.845+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-09T20:04:49.969+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-09T20:04:49.969+0800	[31mERROR[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:309	json: cannot unmarshal array into Go struct field OrderRequest.item_list of type paypal.PurchaseUnitRequest
+2020-09-09T20:05:05.895+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-09T20:05:08.851+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/utils.go:427	Request infor:========================
+2020-09-10T18:48:12.993+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-10T18:48:12.994+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-10T18:48:12.994+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-10T18:48:13.009+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-10T18:48:13.010+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-10T18:48:13.010+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-10T18:48:13.010+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-10T18:48:13.010+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-10T18:48:13.010+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-10T18:48:16.032+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Thu, 10 Sep 2020 10:48:15 GMT
+Paypal-Debug-Id: ea09384f75ba6
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AALp3RdHvBXrwQa6u1Inasdes1Up3hpfA7SQbzN9HsUTvsILEnO7vu_lv4rWRhCEyDbDgWFFP-nC_PEcTMg8XKhjWJhexQ","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":32400,"nonce":"2020-09-10T10:48:15ZfYQEgUz3owr-yN0pLViZ8wOpvViwl9JVUuX7Ymw0jR4"}
+
+2020-09-10T18:48:16.032+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AALp3RdHvBXrwQa6u1Inasdes1Up3hpfA7SQbzN9HsUTvsILEnO7vu_lv4rWRhCEyDbDgWFFP-nC_PEcTMg8XKhjWJhexQ Bearer 32400}
+2020-09-10T18:48:16.033+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-10T18:48:16.149+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-10T18:48:16.149+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-10T18:48:20.002+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-10T18:48:48.769+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/utils.go:431	Request infor:========================
+2020-09-10T18:50:34.155+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-10T18:50:34.155+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-10T18:50:34.155+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-10T18:50:34.169+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-10T18:50:34.170+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-10T18:50:34.170+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-10T18:50:34.170+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-10T18:50:34.170+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-10T18:50:34.170+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-10T18:50:36.950+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Thu, 10 Sep 2020 10:50:36 GMT
+Paypal-Debug-Id: 53388f48f29cd
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AALp3RdHvBXrwQa6u1Inasdes1Up3hpfA7SQbzN9HsUTvsILEnO7vu_lv4rWRhCEyDbDgWFFP-nC_PEcTMg8XKhjWJhexQ","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":32259,"nonce":"2020-09-10T10:48:15ZfYQEgUz3owr-yN0pLViZ8wOpvViwl9JVUuX7Ymw0jR4"}
+
+2020-09-10T18:50:36.950+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AALp3RdHvBXrwQa6u1Inasdes1Up3hpfA7SQbzN9HsUTvsILEnO7vu_lv4rWRhCEyDbDgWFFP-nC_PEcTMg8XKhjWJhexQ Bearer 32259}
+2020-09-10T18:50:36.950+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-10T18:50:37.035+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-10T18:50:37.035+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-10T18:50:39.439+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-10T18:50:39.439+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:128	[123 10 32 32 34 101 109 97 105 108 34 58 32 34 99 101 34 44 10 32 32 34 112 97 121 101 114 34 58 32 34 112 97 121 112 97 108 34 44 10 32 32 34 99 111 109 109 101 110 116 115 34 58 32 34 49 50 34 44 10 32 32 34 109 101 116 104 111 100 34 58 32 34 66 73 76 76 73 78 71 34 44 10 32 32 34 105 116 101 109 95 108 105 115 116 34 58 32 91 10 32 32 32 32 123 10 32 32 32 32 32 32 34 114 101 102 101 114 101 110 99 101 95 105 100 34 58 32 34 34 44 10 32 32 32 32 32 32 34 97 109 111 117 110 116 34 58 32 123 10 32 32 32 32 32 32 32 32 34 99 117 114 114 101 110 99 121 95 99 111 100 101 34 58 32 34 85 83 68 34 44 10 32 32 32 32 32 32 32 32 34 118 97 108 117 101 34 58 32 34 49 46 56 48 34 44 10 32 32 32 32 32 32 32 32 34 98 114 101 97 107 100 111 119 110 34 58 32 123 10 32 32 32 32 32 32 32 32 32 32 34 105 116 101 109 95 116 111 116 97 108 34 58 32 123 10 32 32 32 32 32 32 32 32 32 32 32 32 34 99 117 114 114 101 110 99 121 95 99 111 100 101 34 58 32 34 85 83 68 34 44 10 32 32 32 32 32 32 32 32 32 32 32 32 34 118 97 108 117 101 34 58 32 34 49 46 56 48 34 10 32 32 32 32 32 32 32 32 32 32 125 10 32 32 32 32 32 32 32 32 125 44 10 32 32 32 32 32 32 32 32 34 105 116 101 109 115 34 58 32 91 10 32 32 32 32 32 32 32 32 32 32 123 10 32 32 32 32 32 32 32 32 32 32 32 32 34 110 97 109 101 34 58 32 34 69 120 97 108 116 101 100 32 79 114 98 34 44 10 32 32 32 32 32 32 32 32 32 32 32 32 34 113 117 97 110 116 105 116 121 34 58 32 34 50 34 44 10 32 32 32 32 32 32 32 32 32 32 32 32 34 109 101 116 104 111 100 34 58 32 34 66 73 76 76 73 78 71 34 44 10 32 32 32 32 32 32 32 32 32 32 32 32 34 117 110 105 116 95 97 109 111 117 110 116 34 58 32 123 10 32 32 32 32 32 32 32 32 32 32 32 32 32 32 34 99 117 114 114 101 110 99 121 95 99 111 100 101 34 58 32 34 85 83 68 34 44 10 32 32 32 32 32 32 32 32 32 32 32 32 32 32 34 118 97 108 117 101 34 58 32 34 48 46 57 48 34 10 32 32 32 32 32 32 32 32 32 32 32 32 125 44 10 32 32 32 32 32 32 32 32 32 32 32 32 34 100 101 115 99 114 105 112 116 105 111 110 34 58 32 34 109 109 34 10 32 32 32 32 32 32 32 32 32 32 125 10 32 32 32 32 32 32 32 32 93 44 10 32 32 32 32 32 32 32 32 34 99 117 115 116 111 109 101 114 95 105 100 34 58 32 34 34 44 10 32 32 32 32 32 32 32 32 34 100 101 115 99 114 105 112 116 105 111 110 34 58 32 34 50 49 102 97 99 101 98 111 111 107 34 10 32 32 32 32 32 32 125 10 32 32 32 32 125 10 32 32 93 10 125]
+2020-09-10T18:51:03.110+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-10T18:51:03.111+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-10T18:51:03.111+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-10T18:51:03.125+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-10T18:51:03.125+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-10T18:51:03.125+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-10T18:51:03.125+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-10T18:51:03.126+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-10T18:51:03.126+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-10T18:51:05.243+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Thu, 10 Sep 2020 10:51:04 GMT
+Paypal-Debug-Id: 66cc13cbb7087
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AALp3RdHvBXrwQa6u1Inasdes1Up3hpfA7SQbzN9HsUTvsILEnO7vu_lv4rWRhCEyDbDgWFFP-nC_PEcTMg8XKhjWJhexQ","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":32230,"nonce":"2020-09-10T10:48:15ZfYQEgUz3owr-yN0pLViZ8wOpvViwl9JVUuX7Ymw0jR4"}
+
+2020-09-10T18:51:05.243+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AALp3RdHvBXrwQa6u1Inasdes1Up3hpfA7SQbzN9HsUTvsILEnO7vu_lv4rWRhCEyDbDgWFFP-nC_PEcTMg8XKhjWJhexQ Bearer 32230}
+2020-09-10T18:51:05.243+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-10T18:51:05.334+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-10T18:51:05.334+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-10T18:51:05.468+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-10T18:51:05.469+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:128	{
+  "email": "ce",
+  "payer": "paypal",
+  "comments": "12",
+  "method": "BILLING",
+  "item_list": [
+    {
+      "reference_id": "",
+      "amount": {
+        "currency_code": "USD",
+        "value": "1.80",
+        "breakdown": {
+          "item_total": {
+            "currency_code": "USD",
+            "value": "1.80"
+          }
+        },
+        "items": [
+          {
+            "name": "Exalted Orb",
+            "quantity": "2",
+            "method": "BILLING",
+            "unit_amount": {
+              "currency_code": "USD",
+              "value": "0.90"
+            },
+            "description": "mm"
+          }
+        ],
+        "customer_id": "",
+        "description": "21facebook"
+      }
+    }
+  ]
+}
+2020-09-10T19:01:30.197+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-10T19:01:30.197+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-10T19:01:30.197+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-10T19:01:30.207+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-10T19:01:30.207+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-10T19:01:30.207+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-10T19:01:30.207+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-10T19:01:30.207+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-10T19:01:30.207+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-10T19:01:33.469+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Thu, 10 Sep 2020 11:01:33 GMT
+Paypal-Debug-Id: d62b93702b3ab
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":32400,"nonce":"2020-09-10T11:01:33ZfU79RyM1bZaQBIRFc7ADKdrq9dYj-Br4br3ZfBRgxmE"}
+
+2020-09-10T19:01:33.469+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg Bearer 32400}
+2020-09-10T19:01:33.469+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-10T19:01:33.557+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-10T19:01:33.557+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-10T19:01:35.169+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-10T19:01:35.170+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:128	{
+  "email": "ce",
+  "payer": "paypal",
+  "comments": "12",
+  "method": "BILLING",
+  "item_list": [
+    {
+      "reference_id": "",
+      "amount": {
+        "currency_code": "USD",
+        "value": "1.80",
+        "breakdown": {
+          "item_total": {
+            "currency_code": "USD",
+            "value": "1.80"
+          }
+        },
+        "items": [
+          {
+            "name": "Exalted Orb",
+            "quantity": "2",
+            "method": "BILLING",
+            "unit_amount": {
+              "currency_code": "USD",
+              "value": "0.90"
+            },
+            "description": "mm"
+          }
+        ],
+        "customer_id": "",
+        "description": "21facebook"
+      }
+    }
+  ]
+}
+2020-09-10T19:18:04.457+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-10T19:18:04.458+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-10T19:18:04.458+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-10T19:18:04.472+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-10T19:18:04.472+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-10T19:18:04.472+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-10T19:18:04.472+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-10T19:18:04.472+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-10T19:18:04.472+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-10T19:18:08.511+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Thu, 10 Sep 2020 11:18:06 GMT
+Paypal-Debug-Id: f9e44d36d296b
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":31406,"nonce":"2020-09-10T11:01:33ZfU79RyM1bZaQBIRFc7ADKdrq9dYj-Br4br3ZfBRgxmE"}
+
+2020-09-10T19:18:08.512+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg Bearer 31406}
+2020-09-10T19:18:08.512+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-10T19:18:08.595+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-10T19:18:08.595+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-10T19:18:10.695+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-10T19:18:10.695+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:128	{
+  "email": "ce",
+  "payer": "paypal",
+  "comments": "12",
+  "method": "BILLING",
+  "item_list": [
+    {
+      "reference_id": "",
+      "amount": {
+        "currency_code": "USD",
+        "value": "1.80",
+        "breakdown": {
+          "item_total": {
+            "currency_code": "USD",
+            "value": "1.80"
+          }
+        },
+        "items": [
+          {
+            "name": "Exalted Orb",
+            "quantity": "2",
+            "method": "BILLING",
+            "unit_amount": {
+              "currency_code": "USD",
+              "value": "0.90"
+            },
+            "description": "mm"
+          }
+        ],
+        "customer_id": "",
+        "description": "21facebook"
+      }
+    }
+  ]
+}
+2020-09-10T19:18:28.176+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-10T19:18:28.176+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:128	{
+  "email": "ce",
+  "payer": "paypal",
+  "comments": "12",
+  "method": "BILLING",
+  "item_list": [
+    {
+      "reference_id": "",
+      "amount": {
+        "currency_code": "USD",
+        "value": "1.80",
+        "breakdown": {
+          "item_total": {
+            "currency_code": "USD",
+            "value": "1.80"
+          }
+        },
+        "items": [
+          {
+            "name": "Exalted Orb",
+            "quantity": "2",
+            "method": "BILLING",
+            "unit_amount": {
+              "currency_code": "USD",
+              "value": "0.90"
+            },
+            "description": "mm"
+          }
+        ],
+        "customer_id": "",
+        "description": "21facebook"
+      }
+    }
+  ]
+}
+2020-09-10T19:18:50.065+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-10T19:18:50.066+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-10T19:18:50.066+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-10T19:18:50.085+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-10T19:18:50.085+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-10T19:18:50.085+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-10T19:18:50.085+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-10T19:18:50.085+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-10T19:18:50.085+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-10T19:18:52.601+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Thu, 10 Sep 2020 11:18:52 GMT
+Paypal-Debug-Id: 2fb27fbf1d06
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":31361,"nonce":"2020-09-10T11:01:33ZfU79RyM1bZaQBIRFc7ADKdrq9dYj-Br4br3ZfBRgxmE"}
+
+2020-09-10T19:18:52.601+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg Bearer 31361}
+2020-09-10T19:18:52.601+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-10T19:18:52.716+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-10T19:18:52.716+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-10T19:18:53.650+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-10T19:18:53.651+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:128	{
+  "email": "ce",
+  "payer": "paypal",
+  "comments": "12",
+  "method": "BILLING",
+  "item_list": [
+    {
+      "reference_id": "",
+      "amount": {
+        "currency_code": "USD",
+        "value": "1.80",
+        "breakdown": {
+          "item_total": {
+            "currency_code": "USD",
+            "value": "1.80"
+          }
+        },
+        "items": [
+          {
+            "name": "Exalted Orb",
+            "quantity": "2",
+            "method": "BILLING",
+            "unit_amount": {
+              "currency_code": "USD",
+              "value": "0.90"
+            },
+            "description": "mm"
+          }
+        ],
+        "customer_id": "",
+        "description": "21facebook"
+      }
+    }
+  ]
+}
+2020-09-10T19:20:00.863+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-10T19:20:00.863+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:128	{
+  "email": "ce",
+  "payer": "paypal",
+  "comments": "12",
+  "method": "BILLING",
+  "item_list": [
+    {
+      "reference_id": "",
+      "amount": {
+        "currency_code": "USD",
+        "value": "1.80",
+        "breakdown": {
+          "item_total": {
+            "currency_code": "USD",
+            "value": "1.80"
+          }
+        },
+        "items": [
+          {
+            "name": "Exalted Orb",
+            "quantity": "2",
+            "method": "BILLING",
+            "unit_amount": {
+              "currency_code": "USD",
+              "value": "0.90"
+            },
+            "description": "mm"
+          }
+        ],
+        "customer_id": "",
+        "description": "21facebook"
+      }
+    }
+  ]
+}
+2020-09-10T19:20:19.192+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-10T19:20:19.192+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-10T19:20:19.192+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-10T19:20:19.195+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-10T19:20:19.195+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-10T19:20:19.196+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-10T19:20:19.196+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-10T19:20:19.196+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-10T19:20:19.196+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-10T19:20:24.628+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Thu, 10 Sep 2020 11:20:23 GMT
+Paypal-Debug-Id: 89fef72eb058
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":31269,"nonce":"2020-09-10T11:01:33ZfU79RyM1bZaQBIRFc7ADKdrq9dYj-Br4br3ZfBRgxmE"}
+
+2020-09-10T19:20:24.628+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg Bearer 31269}
+2020-09-10T19:20:24.628+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-10T19:20:24.687+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-10T19:20:24.687+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-10T19:20:27.849+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-10T19:20:27.850+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:128	{
+  "email": "ce",
+  "payer": "paypal",
+  "comments": "12",
+  "method": "BILLING",
+  "item_list": [
+    {
+      "reference_id": "",
+      "amount": {
+        "currency_code": "USD",
+        "value": "1.80",
+        "breakdown": {
+          "item_total": {
+            "currency_code": "USD",
+            "value": "1.80"
+          }
+        },
+        "items": [
+          {
+            "name": "Exalted Orb",
+            "quantity": "2",
+            "method": "BILLING",
+            "unit_amount": {
+              "currency_code": "USD",
+              "value": "0.90"
+            },
+            "description": "mm"
+          }
+        ],
+        "customer_id": "",
+        "description": "21facebook"
+      }
+    }
+  ]
+}
+2020-09-10T19:20:57.714+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-10T19:20:57.715+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-10T19:20:57.715+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-10T19:20:57.731+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-10T19:20:57.731+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-10T19:20:57.731+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-10T19:20:57.731+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-10T19:20:57.731+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-10T19:20:57.731+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-10T19:21:03.271+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Thu, 10 Sep 2020 11:21:02 GMT
+Paypal-Debug-Id: 482db4d5e5403
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":31230,"nonce":"2020-09-10T11:01:33ZfU79RyM1bZaQBIRFc7ADKdrq9dYj-Br4br3ZfBRgxmE"}
+
+2020-09-10T19:21:03.272+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg Bearer 31230}
+2020-09-10T19:21:03.272+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-10T19:21:03.321+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-10T19:21:03.321+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-10T19:21:30.252+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-10T19:21:30.252+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:128	{
+  "email": "ce",
+  "payer": "paypal",
+  "comments": "12",
+  "method": "BILLING",
+  "item_list": [
+    {
+      "reference_id": "",
+      "amount": {
+        "currency_code": "USD",
+        "value": "1.80",
+        "breakdown": {
+          "item_total": {
+            "currency_code": "USD",
+            "value": "1.80"
+          }
+        },
+        "items": [
+          {
+            "name": "Exalted Orb",
+            "quantity": "2",
+            "method": "BILLING",
+            "unit_amount": {
+              "currency_code": "USD",
+              "value": "0.90"
+            },
+            "description": "mm"
+          }
+        ],
+        "customer_id": "",
+        "description": "21facebook"
+      }
+    }
+  ]
+}
+2020-09-10T19:33:55.856+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-10T19:33:55.856+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-10T19:33:55.856+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-10T19:33:55.860+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-10T19:33:55.860+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-10T19:33:55.860+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-10T19:33:55.860+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-10T19:33:55.860+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-10T19:33:55.860+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-10T19:33:58.756+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Thu, 10 Sep 2020 11:33:58 GMT
+Paypal-Debug-Id: 7123e4060f1e
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":30455,"nonce":"2020-09-10T11:01:33ZfU79RyM1bZaQBIRFc7ADKdrq9dYj-Br4br3ZfBRgxmE"}
+
+2020-09-10T19:33:58.756+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg Bearer 30455}
+2020-09-10T19:33:58.756+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-10T19:33:58.805+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-10T19:33:58.805+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-10T19:34:37.642+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-10T19:34:37.642+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-10T19:34:37.642+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-10T19:34:37.655+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-10T19:34:37.655+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-10T19:34:37.655+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-10T19:34:37.656+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-10T19:34:37.656+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-10T19:34:37.656+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-10T19:34:51.896+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Thu, 10 Sep 2020 11:34:46 GMT
+Paypal-Debug-Id: e1b9068ae7db1
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":30406,"nonce":"2020-09-10T11:01:33ZfU79RyM1bZaQBIRFc7ADKdrq9dYj-Br4br3ZfBRgxmE"}
+
+2020-09-10T19:34:51.896+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg Bearer 30406}
+2020-09-10T19:34:51.896+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-10T19:34:51.931+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-10T19:34:51.931+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-10T19:35:01.183+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-10T19:35:01.183+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:128	{
+  "email": "ce",
+  "payer": "paypal",
+  "comments": "12",
+  "method": "BILLING",
+  "item_list": [
+    {
+      "reference_id": "",
+      "amount": {
+        "currency_code": "USD",
+        "value": "1.80",
+        "breakdown": {
+          "item_total": {
+            "currency_code": "USD",
+            "value": "1.80"
+          }
+        },
+        "items": [
+          {
+            "name": "Exalted Orb",
+            "quantity": "2",
+            "method": "BILLING",
+            "unit_amount": {
+              "currency_code": "USD",
+              "value": "0.90"
+            },
+            "description": "mm"
+          }
+        ],
+        "customer_id": "",
+        "description": "21facebook"
+      }
+    }
+  ]
+}
+2020-09-10T19:36:50.514+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-10T19:36:50.514+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-10T19:36:50.514+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-10T19:36:50.524+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-10T19:36:50.524+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-10T19:36:50.525+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-10T19:36:50.525+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-10T19:36:50.525+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-10T19:36:50.525+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-10T19:36:52.100+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Thu, 10 Sep 2020 11:36:51 GMT
+Paypal-Debug-Id: b3c55470b4c2a
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":30282,"nonce":"2020-09-10T11:01:33ZfU79RyM1bZaQBIRFc7ADKdrq9dYj-Br4br3ZfBRgxmE"}
+
+2020-09-10T19:36:52.100+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg Bearer 30282}
+2020-09-10T19:36:52.100+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-10T19:36:52.179+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-10T19:36:52.179+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-10T19:36:54.719+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-10T19:36:54.719+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:128	{
+  "email": "ce",
+  "payer": "paypal",
+  "comments": "12",
+  "method": "BILLING",
+  "item_list": [
+    {
+      "reference_id": "",
+      "amount": {
+        "currency_code": "USD",
+        "value": "1.80",
+        "breakdown": {
+          "item_total": {
+            "currency_code": "USD",
+            "value": "1.80"
+          }
+        },
+        "items": [
+          {
+            "name": "Exalted Orb",
+            "quantity": "2",
+            "method": "BILLING",
+            "unit_amount": {
+              "currency_code": "USD",
+              "value": "0.90"
+            },
+            "description": "mm"
+          }
+        ],
+        "customer_id": "",
+        "description": "21facebook"
+      }
+    }
+  ]
+}
+2020-09-10T19:38:28.217+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-10T19:38:28.218+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-10T19:38:28.218+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-10T19:38:28.226+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-10T19:38:28.226+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-10T19:38:28.227+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-10T19:38:28.227+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-10T19:38:28.227+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-10T19:38:28.227+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-10T19:38:35.425+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Thu, 10 Sep 2020 11:38:35 GMT
+Paypal-Debug-Id: fc6a751a4381f
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":30178,"nonce":"2020-09-10T11:01:33ZfU79RyM1bZaQBIRFc7ADKdrq9dYj-Br4br3ZfBRgxmE"}
+
+2020-09-10T19:38:35.426+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg Bearer 30178}
+2020-09-10T19:38:35.426+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-10T19:38:35.480+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-10T19:38:35.480+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-10T19:38:43.694+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-10T19:38:43.694+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:128	{
+  "email": "ce",
+  "payer": "paypal",
+  "comments": "12",
+  "method": "BILLING",
+  "item_list": [
+    {
+      "reference_id": "",
+      "items": [
+          {
+            "name": "Exalted Orb",
+            "quantity": "2",
+            "method": "BILLING",
+            "unit_amount": {
+              "currency_code": "USD",
+              "value": "0.90"
+            },
+            "description": "mm"
+          }
+        ],
+      "amount": {
+        "currency_code": "USD",
+        "value": "1.80",
+        "breakdown": {
+          "item_total": {
+            "currency_code": "USD",
+            "value": "1.80"
+          }
+        },
+        
+        "customer_id": "",
+        "description": "21facebook"
+      }
+    }
+  ]
+}
+2020-09-10T19:39:47.247+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-10T19:39:47.247+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-10T19:39:47.247+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-10T19:39:47.261+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-10T19:39:47.261+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-10T19:39:47.262+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-10T19:39:47.262+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-10T19:39:47.262+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-10T19:39:47.262+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-10T19:39:53.466+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Thu, 10 Sep 2020 11:39:51 GMT
+Paypal-Debug-Id: 70adabeee04d8
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":30101,"nonce":"2020-09-10T11:01:33ZfU79RyM1bZaQBIRFc7ADKdrq9dYj-Br4br3ZfBRgxmE"}
+
+2020-09-10T19:39:53.466+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg Bearer 30101}
+2020-09-10T19:39:53.466+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-10T19:39:53.505+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-10T19:39:53.505+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-10T19:39:54.607+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-10T19:39:54.608+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:128	{
+  "email": "ce",
+  "payer": "paypal",
+  "comments": "12",
+  "method": "BILLING",
+  "item_list": [
+    {
+      "reference_id": "",
+      "items": [
+          {
+            "name": "Exalted Orb",
+            "quantity": "2",
+            "method": "BILLING",
+            "unit_amount": {
+              "currency_code": "USD",
+              "value": "0.90"
+            },
+            "description": "mm"
+          }
+        ],
+      "amount": {
+        "currency_code": "USD",
+        "value": "1.80",
+        "breakdown": {
+          "item_total": {
+            "currency_code": "USD",
+            "value": "1.80"
+          }
+        },
+        
+        "customer_id": "",
+        "description": "21facebook"
+      }
+    }
+  ]
+}
+2020-09-10T19:39:54.609+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/utils.go:431	Request infor:========================
+2020-09-10T19:39:54.609+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/utils.go:435	found item name Exalted Orb
+2020-09-10T19:39:54.609+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:347	Ready to create a order,Data Save to tempdb!
+2020-09-10T19:43:14.671+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-09-10T19:43:14.671+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-09-10T19:43:14.671+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-09-10T19:43:14.685+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-09-10T19:43:14.685+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-09-10T19:43:14.685+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-09-10T19:43:14.685+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-09-10T19:43:14.685+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-09-10T19:43:14.685+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-09-10T19:43:20.496+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Thu, 10 Sep 2020 11:43:19 GMT
+Paypal-Debug-Id: 9ef142ae1f60c
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":29893,"nonce":"2020-09-10T11:01:33ZfU79RyM1bZaQBIRFc7ADKdrq9dYj-Br4br3ZfBRgxmE"}
+
+2020-09-10T19:43:20.496+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AAICik8RjtTCIJGFgmpZPrhc6Fg2Xywhi8Bj5CnmNcxGHru2USzIy9UKP9GVmO25jWrKNvXRIsvQW-bCQLY2KJj7NhREqg Bearer 29893}
+2020-09-10T19:43:20.496+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-09-10T19:43:20.538+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-09-10T19:43:20.538+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-09-10T19:43:22.232+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:123	User create the paypal payment
+2020-09-10T19:43:22.233+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:128	{
+  "email": "ce",
+  "payer": "paypal",
+  "comments": "12",
+  "method": "BILLING",
+  "item_list": [
+    {
+      "reference_id": "",
+      "items": [
+          {
+            "name": "Exalted Orb",
+            "quantity": "2",
+            "method": "BILLING",
+            "unit_amount": {
+              "currency_code": "USD",
+              "value": "0.90"
+            },
+            "description": "mm"
+          }
+        ],
+      "amount": {
+        "currency_code": "USD",
+        "value": "1.80",
+        "breakdown": {
+          "item_total": {
+            "currency_code": "USD",
+            "value": "1.80"
+          }
+        },
+        
+        "customer_id": "",
+        "description": "21facebook"
+      }
+    }
+  ]
+}
+2020-09-10T19:43:22.233+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/utils.go:432	Request infor:========================
+2020-09-10T19:43:22.233+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/utils.go:436	found item name Exalted Orb
+2020-09-10T19:43:22.233+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:355	Ready to create a order,Data Save to tempdb!

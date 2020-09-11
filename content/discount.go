@@ -13,6 +13,7 @@ type Discount struct {
 	Name      string `json:"name"`
 	List      string `json:"list"`
 	Currency  string `json:"currency"`
+	SellText  string `json:"selltext"` //encourge selling
 	Starttime string `json:"starttime"`
 	Endtime   string `json:"endtime"`
 	Online    bool   `json:"online"`

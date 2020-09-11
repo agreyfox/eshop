@@ -125,7 +125,8 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 	IP := GetIP(r)
 	//reqJSON := getJSONFromBody(r)
 	rawData := getBinaryDataFromBody(r)
-	reqJSON := getJSONFromBody(r)
+	logger.Info(string(rawData[:]))
+	//reqJSON := getJSONFromBody(r)
 	/* payer := fmt.Sprint(reqJSON["payer"])
 	if len(payer) == 0 || payer != "paypal" {
 		renderJSON(w, r, map[string]interface{}{
@@ -301,10 +302,21 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 		}
 		purchaseReqArray = append(purchaseReqArray, onePurchaseReq)
 	} */
-	orderReq := OrderRequest{}
+
+	orderReq, err := getOrderRequestFromUserSubmit(rawData)
+	if err != nil {
+		logger.Error(err)
+		renderJSON(w, r, map[string]interface{}{
+			"retCode": -1,
+			"msg":     err.Error(),
+		})
+		return
+	}
+	//fmt.Println(or, err)
+	//orderReq := *or
 	invoiceID := getOrderID()
 
-	err := json.Unmarshal(rawData, &orderReq)
+	err = json.Unmarshal(rawData, &orderReq)
 	if err != nil {
 		logger.Error(err)
 		renderJSON(w, r, map[string]interface{}{
@@ -313,9 +325,10 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
 	for i := range orderReq.ItemList {
 		orderReq.ItemList[i].InvoiceID = invoiceID
-		orderReq.ItemList[i].Description = orderReq.Comments
+		orderReq.ItemList[i].Description = GeneratePurchaseContentFromRequest(&orderReq.ItemList[i])
 	}
 
 	orderPayer := &CreateOrderPayer{
@@ -342,6 +355,8 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 	logger.Debug("Ready to create a order,Data Save to tempdb!")
 
 	//	client.Lock()
+	//logger.Debugf("This item_list is %v", orderReq.ItemList)
+
 	order, err := payClient.CreateOrder(intent, orderReq.ItemList, orderPayer, context)
 	//	client.Unlock()
 	if err != nil {
@@ -356,7 +371,7 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 
 	if order.Status == PaypalCreated {
 		logger.Info("Payment Step 1 done")
-		go saveOrderRequest(*order, reqJSON, IP)
+		go saveOrderRequest(*order, orderReq, IP)
 		lk := order.Links
 		rd := ""
 		for _, item := range lk { //get the approve link for customer approve
@@ -424,7 +439,7 @@ func Succeed(w http.ResponseWriter, r *http.Request) {
 		//w.Write([]byte(fmt.Sprintf("订单号 ：%s,Thanks！", captureRes.ID)))
 		url := data.OnlineURL
 		if len(captureRes.ID) > 0 {
-			url += fmt.Sprintf("?status=1&orderno=%s", captureRes.ID)
+			url += fmt.Sprintf("?status=1&orderno=%s", captureRes.PurchaseUnits[0].InvoiceID)
 		} else {
 			url += fmt.Sprintf("status=0&msg=%s", "Payment finished with error")
 		}

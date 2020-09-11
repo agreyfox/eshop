@@ -137,6 +137,22 @@ func (o *Server) ContentStruct() map[string]interface{} {
 			Help:       "游戏的标签，可以输入多个，用空格分开",
 			Order:      50,
 		},
+		"price": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Help:       "coin产品的单价",
+			Required:   true,
+			Order:      52,
+		},
+		"unitName": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Required:   true,
+			Help:       "本产品销售时，最小单位的数量的单位，用于网页显示",
+			Order:      55,
+		},
 		"coins": {
 			Type:       "multiselect",
 			DataType:   "content",

@@ -81,15 +81,15 @@ func (o *Category) ContentStruct() map[string]interface{} {
 			DataType:   "field",
 			DataSource: []string{},
 			Required:   true,
-
-			Order: 1,
+			Order:      1,
 		},
 		"sname": {
 			Type:       "input",
 			DataType:   "field",
 			DataSource: []string{},
 			Help:       "名字描述，用于内部",
-			Order:      1,
+			Required:   true,
+			Order:      5,
 		},
 		"game": {
 			Type:       "select",
