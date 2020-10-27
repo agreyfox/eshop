@@ -51,6 +51,12 @@ type (
 		Data    []interface{} `json:"data,omitempty"`
 		Meta    MetaData      `json:"meta,omitempty"`
 	}
+
+	ResultFilter struct {
+		KeyName string `json:"keyName"`
+		Value   string `json:"value"`
+		Include bool   `json:"include"`
+	}
 )
 
 var (

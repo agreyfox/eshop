@@ -128,7 +128,7 @@ func (o *Game) ContentStruct() map[string]interface{} {
 		"coupon": {
 			Type:       "select",
 			DataType:   "content",
-			DataSource: []string{"/admin/v1/contents?type=Coupon"},
+			DataSource: []string{"/admin/v1/contents?type=Coupon&count=-1"},
 			Help:       "选择当前激活的coupon",
 			Order:      60},
 		"online": {

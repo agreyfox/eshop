@@ -511,3 +511,13 @@ Post https://api.smtp2go.com/v3/allowed_senders/view
 ### 
 
 GET http://api.ipstack.com/134.201.250.155?access_key=16fb28ea154934b40d30858c34a28ca4
+
+###
+
+Get https://support.bk.cloudns.cc:8081/admin/v1/contents/search?type=Product&count=-1&q=Path of Exile
+Content-Type: application/json
+
+###
+
+Get http://127.0.0.1:8080/admin/v1/contents/search?type=Game&count=-1&q=game-测试&filter=!logo:1
+Content-Type: application/json

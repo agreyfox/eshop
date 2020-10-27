@@ -2493,6 +2493,28 @@ func searchContent(w http.ResponseWriter, r *http.Request) {
 	regexsearch := q.Get("r")
 	starttime := q.Get("start") // this is base on time query
 	endtime := q.Get("end")     // this is base on time query
+	filter := q.Get("filter")   // add 2020/10/27 增加filter，在查询结果上加上filter，必须冒号分割,key:value,key !开头就是否（包含的不要）
+	var filterObj *ResultFilter
+	if len(filter) >= 0 {
+		filterStr := strings.Split(filter, ":")
+		if len(filterStr) != 2 {
+			filterStr = []string{}
+			filterObj = nil
+		} else {
+			filterObj = &ResultFilter{}
+			if filterStr[0][0] == '!' {
+				filterObj.KeyName = filterStr[0][1:]
+				filterObj.Value = filterStr[1]
+				filterObj.Include = false
+			} else {
+				filterObj.KeyName = filterStr[0]
+				filterObj.Value = filterStr[1]
+				filterObj.Include = true
+			}
+		}
+	} else {
+		filterObj = nil
+	}
 	var checkTime bool
 	checkTime = false
 	var stime, etime uint64
@@ -2560,13 +2582,27 @@ func searchContent(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 			item := make(map[string]interface{})
-			err := json.Unmarshal(posts[i], &item)
 
+			err := json.Unmarshal(posts[i], &item)
 			if err != nil {
 				logger.Debug("Error unmarshal search result json into", t, err, posts[i])
 				continue
 			}
-			retData = append(retData, item)
+			if filterObj != nil {
+				value := fmt.Sprint(item[filterObj.KeyName])
+				if filterObj.Include {
+					if value == filterObj.Value {
+						retData = append(retData, item)
+					}
+				} else {
+					if value != filterObj.Value {
+						retData = append(retData, item)
+					}
+				}
+			} else {
+				retData = append(retData, item)
+			}
+
 		} else if regexsearch != "" { // use regex to search
 			re := regexp.MustCompile(regexsearch)
 			if re.Match(posts[i]) {
@@ -2578,7 +2614,20 @@ func searchContent(w http.ResponseWriter, r *http.Request) {
 					continue
 				}
 				//fmt.Println(item)
-				retData = append(retData, item)
+				if filterObj != nil {
+					value := fmt.Sprint(item[filterObj.KeyName])
+					if filterObj.Include {
+						if value == filterObj.Value {
+							retData = append(retData, item)
+						}
+					} else {
+						if value != filterObj.Value {
+							retData = append(retData, item)
+						}
+					}
+				} else {
+					retData = append(retData, item)
+				}
 			}
 		} else {
 			item := make(map[string]interface{})
@@ -2588,10 +2637,24 @@ func searchContent(w http.ResponseWriter, r *http.Request) {
 				logger.Debug("Error unmarshal search result json into", t, err, posts[i])
 				continue
 			}
-			retData = append(retData, item)
+			if filterObj != nil {
+				value := fmt.Sprint(item[filterObj.KeyName])
+				if filterObj.Include {
+					if value == filterObj.Value { // note: here is compare string
+						retData = append(retData, item)
+					}
+				} else {
+					if value != filterObj.Value {
+						retData = append(retData, item)
+					}
+				}
+			} else {
+				retData = append(retData, item)
+			}
 		}
 	}
 	total := len(posts)
+
 	meta := MetaData{
 		Total:     uint(total),
 		PageCount: 1,

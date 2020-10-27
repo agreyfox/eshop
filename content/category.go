@@ -94,7 +94,7 @@ func (o *Category) ContentStruct() map[string]interface{} {
 		"game": {
 			Type:       "select",
 			DataType:   "content",
-			DataSource: []string{"/admin/v1/contents?type=Game"},
+			DataSource: []string{"/admin/v1/contents?type=Game&count=-1"},
 			Required:   true,
 			Order:      20},
 		"class": {

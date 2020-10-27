@@ -12,7 +12,7 @@ type Product struct {
 	Name            string  `json:"name"`
 	Sname           string  `json:"sname"`
 	Hot             bool    `json:"hotItem,omitempty"`     //是否在hotitem 中显示
-	Stock           uint    `json:"stock"`                 //库存数量
+	Stock           uint64  `json:"stock"`                 //库存数量
 	Desc            string  `json:"description,omitempty"` //html
 	Logo            string  `json:"logo,omitempty"`        //图标文件
 	Type            string  `json:"type"`                  //coin,item 两种
@@ -146,7 +146,7 @@ func (p *Product) ContentStruct() map[string]interface{} {
 		"game": {
 			Type:       "select",
 			DataType:   "content",
-			DataSource: []string{"/admin/v1/contents?type=Game"},
+			DataSource: []string{"/admin/v1/contents?type=Game&count=-1"},
 			Required:   true,
 			Order:      40,
 		},
@@ -169,7 +169,7 @@ func (p *Product) ContentStruct() map[string]interface{} {
 		"discount": {
 			Type:       "select",
 			DataType:   "content",
-			DataSource: []string{"/admin/v1/contents?type=Discount"},
+			DataSource: []string{"/admin/v1/contents?type=Discount&count=-1"},
 			Required:   false,
 			Help:       "若是金币类别，可使用系统中定义的discount为客户提供折扣，若为\n道具类，则这个字段无意义",
 			Order:      70,

@@ -6141,3 +6141,86 @@ Visit '/admin' to get started.
 2020-09-10T19:43:22.233+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/utils.go:432	Request infor:========================
 2020-09-10T19:43:22.233+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/utils.go:436	found item name Exalted Orb
 2020-09-10T19:43:22.233+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:355	Ready to create a order,Data Save to tempdb!
+2020-10-27T17:01:39.423+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-10-27T17:01:39.424+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-10-27T17:01:39.424+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-10-27T17:01:39.442+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-10-27T17:01:39.442+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-10-27T17:01:39.442+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-10-27T17:01:39.442+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-10-27T17:01:39.442+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-10-27T17:01:39.442+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-10-27T17:01:40.946+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Tue, 27 Oct 2020 09:01:40 GMT
+Paypal-Debug-Id: dc49a9f29d4ce
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AAISp3uYqRMLANpnuX6Z3_ATttze5HvnSHZ2yvbjDTszpSj8yh5jQHG2M1DpR2M08tmxvkc4wCra94dl6Z9pDku3MjY4RA","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":32400,"nonce":"2020-10-27T09:01:40ZegwLlbiFaD6cUIamq-T0vwknMO6ZcF53xaUZrfwEaf4"}
+
+2020-10-27T17:01:40.947+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AAISp3uYqRMLANpnuX6Z3_ATttze5HvnSHZ2yvbjDTszpSj8yh5jQHG2M1DpR2M08tmxvkc4wCra94dl6Z9pDku3MjY4RA Bearer 32400}
+2020-10-27T17:01:40.947+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-10-27T17:01:41.013+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-10-27T17:01:41.013+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-10-27T17:03:17.212+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:1984	get Content type Product from :127.0.0.1:36510
+2020-10-27T17:03:17.212+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2101	No creatable item and query public data direclty with option:{-1 0 desc}
+2020-10-27T17:03:17.212+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2163	get content list ,total 0 record
+2020-10-27T17:04:04.530+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:1984	get Content type Game from :127.0.0.1:36540
+2020-10-27T17:04:04.530+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2101	No creatable item and query public data direclty with option:{-1 0 desc}
+2020-10-27T17:04:04.530+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2163	get content list ,total 1 record
+2020-10-27T17:05:35.271+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2491	Search content Game with  from 127.0.0.1:36614
+2020-10-27T17:06:08.013+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2539	No Time range search present 
+2020-10-27T17:06:11.964+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2547	Search parameter missing
+2020-10-27T17:06:32.726+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2491	Search content Game with game:game-测试 from 127.0.0.1:36654
+2020-10-27T17:06:36.861+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2539	No Time range search present 
+2020-10-27T17:06:36.861+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2557	Get all content:
+2020-10-27T17:06:53.660+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2491	Search content Game with game:game-测试 from 127.0.0.1:36666
+2020-10-27T17:06:53.660+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2539	No Time range search present 
+2020-10-27T17:06:53.660+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2557	Get all content:
+2020-10-27T17:07:07.292+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2491	Search content Game with game:game-测试 from 127.0.0.1:36670
+2020-10-27T17:07:07.294+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2539	No Time range search present 
+2020-10-27T17:07:07.294+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2557	Get all content:
+2020-10-27T17:07:45.025+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:45	Start Service : [admin paypal]
+2020-10-27T17:07:45.026+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:55	Prepare Eshop Payment service environnement...
+2020-10-27T17:07:45.026+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/payment.go:62	Initial eshop payment record data file 
+2020-10-27T17:07:45.037+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:26	Start admin interface
+2020-10-27T17:07:45.037+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/system/admin/server.go:98	Server static  root is /home/lq/ifb/src/eshop/static
+
+2020-10-27T17:07:45.037+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:163	Magement server   root is /home/lq/ifb/src/eshop/pages
+
+2020-10-27T17:07:45.037+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/server.go:178	Start admin rest interface
+2020-10-27T17:07:45.037+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/paypal.go:51	starting PayPal beckend service...
+2020-10-27T17:07:45.037+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:45	Paypal get access token result:<nil>
+2020-10-27T17:07:46.298+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/client.go:191	Request: POST https://api.sandbox.paypal.com/v1/oauth2/token. Data: 
+Response: HTTP/1.1 200 OK
+Content-Length: 972
+Cache-Control: max-age=0, no-cache, no-store, must-revalidate
+Content-Type: application/json
+Date: Tue, 27 Oct 2020 09:07:46 GMT
+Paypal-Debug-Id: 509117913ba9a
+X-Paypal-Token-Service: IAAS
+
+{"scope":"https://uri.paypal.com/services/invoicing https://uri.paypal.com/services/disputes/read-buyer https://uri.paypal.com/services/payments/realtimepayment https://uri.paypal.com/services/disputes/update-seller https://uri.paypal.com/services/payments/payment/authcapture openid https://uri.paypal.com/services/disputes/read-seller https://uri.paypal.com/services/payments/refund https://api.paypal.com/v1/vault/credit-card https://api.paypal.com/v1/payments/.* https://uri.paypal.com/services/reporting/search/read https://uri.paypal.com/payments/payouts https://api.paypal.com/v1/vault/credit-card/.* https://uri.paypal.com/services/subscriptions https://uri.paypal.com/services/applications/webhooks","access_token":"A21AAISp3uYqRMLANpnuX6Z3_ATttze5HvnSHZ2yvbjDTszpSj8yh5jQHG2M1DpR2M08tmxvkc4wCra94dl6Z9pDku3MjY4RA","token_type":"Bearer","app_id":"APP-80W284485P519543T","expires_in":32034,"nonce":"2020-10-27T09:01:40ZegwLlbiFaD6cUIamq-T0vwknMO6ZcF53xaUZrfwEaf4"}
+
+2020-10-27T17:07:46.298+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:47	&{ A21AAISp3uYqRMLANpnuX6Z3_ATttze5HvnSHZ2yvbjDTszpSj8yh5jQHG2M1DpR2M08tmxvkc4wCra94dl6Z9pDku3MjY4RA Bearer 32034}
+2020-10-27T17:07:46.298+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/payment/paypal/service.go:49	Start Paypal access token refresh 
+2020-10-27T17:07:46.367+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:129	Server listening at localhost:8080 for HTTP requests...
+
+2020-10-27T17:07:46.367+0800	[34mINFO[0m	/home/lq/ifb/src/eshop/cmd/serve.go:130	
+Visit '/admin' to get started.
+2020-10-27T17:07:59.755+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2491	Search content Game with game-测试 from 127.0.0.1:36712
+2020-10-27T17:07:59.755+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2539	No Time range search present 
+2020-10-27T17:07:59.755+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2557	Get all content:
+2020-10-27T17:08:26.153+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2491	Search content Game with game-测试 from 127.0.0.1:36734
+2020-10-27T17:08:26.153+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2539	No Time range search present 
+2020-10-27T17:08:26.153+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2557	Get all content:
+2020-10-27T17:09:10.741+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2491	Search content Game with game-测试 from 127.0.0.1:36752
+2020-10-27T17:09:10.741+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2539	No Time range search present 
+2020-10-27T17:09:10.741+0800	[35mDEBUG[0m	/home/lq/ifb/src/eshop/system/admin/apihandlers.go:2557	Get all content:
