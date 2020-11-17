@@ -9,8 +9,12 @@ package payment
 //go:generate go-bindata-assetfs -o web_static.go web/...
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
+	"net/http"
+	"os"
+
 	"github.com/agreyfox/eshop/payment/data"
 	"github.com/agreyfox/eshop/payment/paypal"
 	"github.com/agreyfox/eshop/payment/payssion"
@@ -18,7 +22,6 @@ import (
 	"github.com/agreyfox/eshop/system/logs"
 	"github.com/go-zoo/bone"
 	"go.uber.org/zap"
-	"os"
 
 	"github.com/boltdb/bolt"
 )
@@ -51,6 +54,10 @@ func init() {
 	initial = false
 }
 
+func IsInitialized() bool {
+	return initial
+}
+
 func InitialPayment(db *bolt.DB, mux *bone.Mux) {
 	logger.Info("Prepare Eshop Payment service environnement...")
 
@@ -59,31 +66,59 @@ func InitialPayment(db *bolt.DB, mux *bone.Mux) {
 		logger.Error("Couldn't find current directory for file server.")
 	}
 
-	logger.Info("Initial eshop payment record data file ")
+	logger.Info("Initial eshop payment record data file in ", pwd)
 
 	data.SystemDBHandler = db // keep main db
 	mainMux = mux
 
 	var err error
-
-	data.PaymentDBHandler, err = bolt.Open(pwd+"/"+data.DbFile, 0666, nil)
+	data.PaymentDBHandler, err = bolt.Open(pwd+"/"+data.DBRequestFile, 0666, nil)
 	if err != nil {
 		logger.Fatal(err)
 	}
-
+	data.PaymentLogHandler, err = bolt.Open(pwd+"/"+data.DBPaymentLog, 0666, nil)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	/* data.PaymentDBHandler, err = bolt.Open(pwd+"/"+data.DbFile, 0666, nil)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	*/
 	err = data.PaymentDBHandler.Update(func(tx *bolt.Tx) error {
 		// initialize db with all content type buckets & sorted bucket for type
-		_, err := tx.CreateBucketIfNotExists([]byte(data.DBName))
+		/* 		_, err := tx.CreateBucketIfNotExists([]byte(data.DBName))
+		   		if err != nil {
+		   			logger.Debug("Error in check Record db")
+		   			return err
+		   		} */
+		_, err = tx.CreateBucketIfNotExists([]byte(data.DBRequest))
 		if err != nil {
-			logger.Debug("Error in check Record db")
+			logger.Debug("Error in check Request db")
 			return err
 		}
 		return nil
 	})
 
 	if err != nil {
-		logger.Fatal("initialize payment record db with buckets.Please check!", err)
+		logger.Fatal("initialize payment request&record db with buckets.Please check!", err)
 	}
+
+	err = data.PaymentLogHandler.Update(func(tx *bolt.Tx) error {
+		// initialize db with all content type buckets & sorted bucket for type
+		_, err := tx.CreateBucketIfNotExists([]byte(data.DBLogName))
+		if err != nil {
+			logger.Debug("Error in check Record db")
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		logger.Fatal("initialize payment request&record db with buckets.Please check!", err)
+	}
+
 	initial = true
 
 }
@@ -102,7 +137,7 @@ func Run(serviceName string) {
 	default:
 		logger.Fatal(" Wrong payment service name!")
 	}
-
+	mainMux.Get("/payment/orderid/:id", http.HandlerFunc(request))
 }
 
 //for other module to access db handler.
@@ -113,4 +148,38 @@ func GetDBHandler() *bolt.DB {
 		logger.Debug("You need should initialize first ")
 		return nil
 	}
+}
+
+func request(w http.ResponseWriter, r *http.Request) {
+	id := bone.GetValue(r, "id")
+	abc, err := data.GetRequestByID(id)
+	if err != nil {
+		renderJSON(w, r, map[string]interface{}{
+			"retCode": -1,
+			"msg":     err.Error(),
+		})
+		return
+	}
+	renderJSON(w, r, map[string]interface{}{
+		"retCode": 0,
+		"msg":     "",
+		"data":    abc,
+	})
+
+}
+
+//将interface 简单传回
+func renderJSON(w http.ResponseWriter, r *http.Request, data interface{}) (int, error) {
+
+	marsh, err := json.Marshal(data)
+	if err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	if _, err := w.Write(marsh); err != nil {
+		return http.StatusInternalServerError, err
+	}
+
+	return 0, nil
 }

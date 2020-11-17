@@ -5,42 +5,87 @@ import (
 	"fmt"
 
 	"github.com/agreyfox/eshop/payment/data"
-	"github.com/agreyfox/eshop/payment/utils"
 	"github.com/agreyfox/eshop/system/admin"
 
-	"io/ioutil"
-	"net/http"
-	"reflect"
 	"time"
 )
 
-func GetIP(r *http.Request) string {
-	forwarded := r.Header.Get("X-FORWARDED-FOR")
-	if forwarded != "" {
-		return forwarded
+// valid user request for payssion
+func validateRequest(req *data.UserSubmitOrderRequest) error {
+
+	if !isRightPMID(req.PaymentChannel) {
+		return fmt.Errorf("wrong pm_id")
 	}
-	return r.RemoteAddr
+
+	if req.Amount <= 0 {
+		return fmt.Errorf("amount data error")
+	}
+	if req.Amount < 0.0001 {
+		return fmt.Errorf("amount data too small")
+	}
+	if len(req.Email) == 0 {
+		return fmt.Errorf("no payer id")
+	}
+	if len(req.RequestInfo) == 0 {
+		return fmt.Errorf("no user request info")
+	}
+	if len(req.Currency) == 0 {
+		return fmt.Errorf("no user currency info")
+	}
+	return nil
 }
 
-func getJSONFromBody(req *http.Request) map[string]interface{} {
-	var body string
-	bodyBytes, err := ioutil.ReadAll(req.Body)
-	defer req.Body.Close()
+func createOrder(r *data.UserSubmitOrderRequest) (*PaymentResponse, error) {
+	pmid := r.PaymentChannel
+	pmid, amount, currency, orderid := r.PaymentChannel, r.Amount, r.Currency, r.OrderID
+	//sigArray := []string{APIKey, pmid, amount, currency, orderid, SecretKey}
+	sigArray := []string{APIKey, pmid, fmt.Sprint(amount), currency, orderid, SecretKey}
+	appsig := Signature(sigArray)
+
+	email, payname, desc := r.Email, r.LastName+" "+r.FirstName, r.RequestInfo
+
+	purchaseReq := PaymentRequest{
+		APIKey:      APIKey,
+		PMID:        pmid,
+		Amount:      fmt.Sprint(amount),
+		Currency:    currency,
+		Description: desc,
+		OrderID:     orderid,
+		APISig:      appsig,
+		//ReturnURL:   returnURL,
+		PayerEmail: email,
+		PayerName:  payname,
+		PayerIP:    r.IPAddr,
+	}
+
+	logger.Debug("Ready to create a payssion order,Data Save to tempdb!")
+
+	//	client.Lock()
+	order, err := payClient.CreateOrder(&purchaseReq)
+	//	client.Unlock()
 	if err != nil {
-		body = fmt.Sprintf("failed read Read response body: %v", err)
-		logger.Debug(body)
-		return nil
+		logger.Errorf("create payssion order error:%s", err)
+		return nil, fmt.Errorf("创建订单失败%s", err.Error())
 	}
-	var t map[string]interface{}
+	//go saveRequest(order, reqJSON)
 
-	//fmt.Println(body)
-
-	if err = json.Unmarshal(bodyBytes, &t); err != nil {
-		logger.Debug("json data looks like bad")
-		logger.Debugf("%+v", err)
-		return nil
+	if order.ResultCode == PayssionOK {
+		return order, nil
+		/* renderJSON(w, r, map[string]interface{}{
+			"retCode": 0,
+			"msg":     "ok",
+			"data":    order,
+		}) */
+	} else {
+		return order, fmt.Errorf("创建失败:%s", order.Transaction.State)
+		/* 	renderJSON(w, r, map[string]interface{}{
+			"retCode": -10,
+			"msg":     "Something error ",
+			"data":    order.Transaction.State,
+		})
+		*/
 	}
-	return t
+
 }
 
 // to save a record
@@ -107,78 +152,6 @@ func saveNotify(t *NotifyResponse) bool {
 
 }
 
-/*
-// to save a capture
-func saveCapture(order CaptureOrderResponse) error {
-	// Store the user model in the user bucket using the username as the key.
-	err := tempDBHandler.Update(func(tx *bolt.Tx) error {
-		b, err := tx.CreateBucketIfNotExists([]byte(dbName))
-
-		if err != nil {
-			return err
-		}
-
-		encoded, err := json.Marshal(order)
-		if err != nil {
-			return err
-		}
-		id := order.Transaction.ID + "-" + order.Transaction.OrderID + "-capture"
-		return b.Put([]byte(id), encoded)
-	})
-	return err
-}
-*/
-//将interface 简单传回
-func renderJSON(w http.ResponseWriter, r *http.Request, data interface{}) (int, error) {
-
-	marsh, err := json.Marshal(data)
-	if err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	if _, err := w.Write(marsh); err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	return 0, nil
-}
-
-// print pretty map[string]internface output
-func PrettyPrint(obj interface{}) {
-
-	prettyJSON, err := json.MarshalIndent(obj, "", "    ")
-	if err != nil {
-		logger.Fatal("Failed to generate json", err)
-	}
-	fmt.Println("===================================================================")
-	fmt.Printf("%s\n", string(prettyJSON))
-	fmt.Println("===================================================================")
-}
-
-func isNil(i interface{}) bool {
-	if i == nil {
-		return true
-	}
-	switch reflect.TypeOf(i).Kind() {
-	case reflect.Ptr, reflect.Map, reflect.Array, reflect.Chan, reflect.Slice:
-		return reflect.ValueOf(i).IsNil()
-	}
-	return false
-}
-
-func getOrderID() string {
-	return utils.RandomString(10)
-	/* uid, err := uuid.NewV1()
-	if err != nil {
-		return ""
-	}
-	hash := md5.Sum([]byte(uid.String()))
-
-	return hex.EncodeToString(hash[:]) */
-	//return uid.String()
-}
-
 // CreateNewOrderInDB try to create new order in backend system with the information provide data and the record
 /*
  system db structure is
@@ -189,8 +162,8 @@ func CreateNewOrderInDB(notifyData *NotifyResponse) (int, data.Order, bool) {
 	oid := notifyData.OrderID
 	ID := oid
 	//val := &bytes.Buffer{}
-	states, err := data.GetLog(ID)
-	logger.Info(states)
+	//states, err := data.GetLog(ID)
+	//logger.Info(states)  // remove 2020/11/05
 	buff, _ := json.Marshal(notifyData)
 	order := data.Order{
 
@@ -214,43 +187,32 @@ func CreateNewOrderInDB(notifyData *NotifyResponse) (int, data.Order, bool) {
 		IsRefund:      false,
 		IsChargeBack:  false,
 	}
+	// now to get some data from payment request
 
-	originReq, err := data.GetRequestByState(ID, PayssionPending)
+	request, err := data.GetRequestByID(ID)
+	/* 	originReq, err := data.GetRequestByState(ID, PayssionPending)
 
+	   	if err == nil {
+	   		databuff, _ := json.Marshal(originReq.ReturnData)
+	   		order.OrderDetail = string(databuff[:])
+	   		order.Payer = originReq.BuyerEmail
+	   		order.PayerIP = originReq.IP
+	   		order.RequestTime = fmt.Sprint(time.Unix(originReq.RequestTime, 0).Format(time.RFC1123))
+	   	} */
 	if err == nil {
-		databuff, _ := json.Marshal(originReq.ReturnData)
+		databuff, _ := json.MarshalIndent(request.ItemList, "", "  ")
 		order.OrderDetail = string(databuff[:])
-		order.Payer = originReq.BuyerEmail
-		order.PayerIP = originReq.IP
-		order.RequestTime = fmt.Sprint(time.Unix(originReq.RequestTime, 0).Format(time.RFC1123))
+		order.Payer = request.Email
+		order.PayerIP = request.IPAddr
+		order.RequestTime = fmt.Sprint(time.Unix(request.OrderDate, 0).Format(time.RFC1123))
 	}
-
+	order.Status = data.OrderPaid // create a order start from order paid
 	mm, _ := json.Marshal(order)
 
 	retCode, ok := admin.CreateContent("Order", mm)
-	/*
-		errd := data.SystemDBHandler.Update(func(tx *bolt.Tx) error {
-			b, err := tx.CreateBucketIfNotExists([]byte(data.OrderName))
 
-			if err != nil {
-				return err
-			}
-
-			encoded, err := json.Marshal(order)
-			if err != nil {
-				return err
-			}
-
-			return b.Put([]byte(ID), encoded)
-
-		})
-
-		if errd != nil {
-			logger.Error("Error when save order infor", errd)
-			return false
-		} */
-	//	logger.Infof("Create order with id %s in system", ID)
-	admin.UpdateContent("Order", fmt.Sprintf("%d", retCode), "status", []byte(data.OrderInValidate))
+	//admin.UpdateContent("Order", fmt.Sprintf("%d", retCode), "status", []byte(data.OrderInValidate))
+	//to update the order status
 	if ok {
 		return retCode, order, true
 	} else {

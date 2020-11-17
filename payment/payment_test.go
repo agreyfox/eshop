@@ -3,9 +3,11 @@ package payment
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/agreyfox/eshop/payment/data"
 	"github.com/agreyfox/eshop/payment/paypal"
+	"github.com/agreyfox/eshop/payment/payssion"
 	"github.com/agreyfox/eshop/payment/skrill"
 	"github.com/agreyfox/eshop/system/db"
 	"github.com/go-zoo/bone"
@@ -36,4 +38,38 @@ func TestGetLogContent(t *testing.T) {
 	InitialPayment(db.Store(), mainMux)
 	data, err := data.GetLogContent("55065193b261eb7da0c16c92d3dbbd3a", paypal.PaypalCreated)
 	fmt.Println(data, err)
+}
+
+func TestGetShortOrderID(t *testing.T) {
+	db.Init()
+	mainMux := bone.New()
+	InitialPayment(db.Store(), mainMux)
+	//data, err := data.GetLogContent("55065193b261eb7da0c16c92d3dbbd3a", paypal.PaypalCreated)
+	payssion.Start(mainMux)
+
+	fmt.Println(payssion.GetShortOrderID())
+}
+
+func TestSaveOrderRequest(t *testing.T) {
+	db.Init()
+	mainMux := bone.New()
+	InitialPayment(db.Store(), mainMux)
+	//data, err := data.GetLogContent("55065193b261eb7da0c16c92d3dbbd3a", paypal.PaypalCreated)
+	orderdata := data.UserSubmitOrderRequest{
+		OrderID:     "1234567",
+		OrderDate:   time.Now().Unix(),
+		Email:       "jihua.gao@gmail.com",
+		RequestInfo: "abc",
+		IPAddr:      "127.0.0.1",
+		Amount:      1.9,
+		ItemList: []data.Item{
+			{Game: "abs", Server: "server1", Category: "agreyfox", Product: "刀", UnitPrice: 12.3, Quantity: 2},
+			{Game: "abc", Server: "server2", Category: "agreyfox", Product: "剑", UnitPrice: 1.3, Quantity: 1},
+		},
+	}
+
+	fmt.Println(data.SaveOrderRequest(&orderdata))
+	m, err := data.GetRequestByID("1234567")
+	fmt.Println(m, err)
+
 }

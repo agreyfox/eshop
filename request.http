@@ -308,12 +308,18 @@ Content-Type: application/json
 
 ###
 
-POST http://view.bk.cloudns.cc:8080/admin/v1/login 
+POST https://support.bk.cloudns.cc:8081/admin/v1/login 
 Content-Type: applications/json
 
 {"email":"lq@163.com","password":"qweasdzxc"}
 
 ###
+POST https://support.bk.cloudns.cc:8081/api/v1/config
+Content-Type: applications/json
+
+
+###
+
 
 POST http://view.bk.cloudns.cc:8080/admin/v1/user/update  
 Content-Type: applications/json
@@ -521,3 +527,234 @@ Content-Type: application/json
 
 Get http://127.0.0.1:8080/admin/v1/contents/search?type=Game&count=-1&q=game-测试&filter=!logo:1
 Content-Type: application/json
+
+
+###
+
+
+POST http://127.0.0.1:8080/payment/payssion/dopay
+Content-Type: applications/json
+
+{
+"payment":"payssion",
+"payment_channel":"dotpay_pl",
+"amount":221,
+"currency":"USD",
+"language":"En",
+"email":"jihua.gao@gmail.com",
+"request_info":"神奇宝贝大力及关系v2",
+"payer_email":"18901882538@189.cn",
+"contract_info":"1123345566",
+"item_list":[
+  {"game":"abc","Server":"server1","product":"东南一家","unit_price":1123,"quantity":1000,"category":"A类"},
+  {"game":"etf","Server":"server2","product":"妈妈小一家","unit_price":113,"quantity":1000,"category":"B类"}
+]
+}
+
+####
+
+
+POST http://127.0.0.1:8080/payment/skrill/dopay
+Content-Type: applications/json
+
+{
+"payment":"skrill",
+"payment_channel":"dotpay_pl",
+"currency":"EUR",
+"description":"riptifdsafsafasfdsadfsafdon",
+"email":"18901882538@189.cn",
+"address":"天2323色一万",
+"city":"上海3434",
+"country":"打算列",
+"amount":12.3,
+"language":"En",
+"request_info":"skrill神奇宝贝大力及关系v2",
+"contact_info":"1123345566ss",
+"item_list":[
+  {"game":"abc","Server":"server1","product":"东南一家","unit_price":1123,"quantity":1000,"category":"A类"},
+  {"game":"etf","Server":"server2","product":"妈妈小一家","unit_price":113,"quantity":1000,"category":"B类"}
+]
+}
+
+###
+
+POST http://127.0.0.1:8080/payment/paypal/dopay
+Content-Type: applications/json
+
+{
+"payment":"paypal",
+"payment_channel":"BILLING",
+"currency":"USD",
+"description":"dwewewewe",
+"email":"18901882538@189.cn",
+"address":"天2323色一万",
+"city":"上海3434",
+"country":"打算列",
+"amount":12.3,
+"language":"En",
+"request_info":"skrill神奇宝贝大力及关系v2",
+"contact_info":"1123345566ss",
+"item_list":[
+  {"game":"abc123","Server":"server1","product":"东南一家","unit_price":1123,"quantity":1000,"category":"A类"},
+  {"game":"etf345","Server":"server2","product":"妈妈小一家","unit_price":113,"quantity":1000,"category":"B类"}
+]
+}
+###
+GET http://127.0.0.1:8080/payment/orderid/1234567
+Content-Type: applications/json
+
+###
+
+
+POST http://127.0.0.1:8080/payment/paypal/dopay
+Content-Type: applications/json
+
+{"payment":"paypal","payment_channel":"BILLING",
+"amount":17.98,
+"currency":"USD",
+"language":"UK",
+"email":"408006570@qq.com",
+"request_info":"2112",
+"contract_info":"facebook12",
+"item_list":[
+  {"game":"Neverwinter Online","server":"PC","unit_price":8.99,"product":"NWO AD*1","quantity":2}
+  ],
+"sub_total":17.98,
+"city":"",
+"country":"",
+"first_name":"",
+"last_name":"",
+"phone":"18352862123",
+"coupon_code":"",
+"coupon_value":0,
+"payment_fee":0.018,
+"address":"",
+"description":"",
+"status":""}
+
+###
+POST http://127.0.0.1:8080/payment/paypal/dopay
+Content-Type: applications/json
+
+{"payment":"paypal",
+"payment_channel":"BILLING",
+"amount":18,
+"currency":"USD",
+"language":"UK",
+"email":"408006570@qq.com",
+"request_info":"12",
+"contract_info":"whatsappcehi",
+"item_list":[
+  {
+    "game":"Neverwinter Online",
+    "server":"PC",
+    "unit_price":8.99,
+    "product":"NWO AD*1",
+    "quantity":2}
+],
+"sub_total":17.98,
+"city":"",
+"country":"",
+"first_name":"",
+"last_name":"",
+"phone":"18352862123",
+"coupon_code":"",
+"coupon_value":0,
+"payment_fee":0.02,
+"logo_url":"",
+"address":"",
+"description":"",
+"status":""
+}
+
+###
+
+
+POST https://support.bk.cloudns.cc:8081/payment/paypal/dopay
+Content-Type: applications/json
+
+{"payment":"paypal",
+"payment_channel":"BILLING",
+"amount":18,
+"currency":"USD",
+"language":"UK",
+"email":"408006570@qq.com",
+"request_info":"12",
+"contract_info":"whatsappcehi",
+"item_list":[
+  {
+    "game":"Neverwinter Online",  
+    "server":"PC",
+    "unit_price":8.99,
+    "product":"NWO AD*1",
+    "quantity":2}
+],
+"sub_total":17.98,
+"city":"",
+"country":"",
+"first_name":"",
+"last_name":"",
+"phone":"18352862123",
+"coupon_code":"",
+"coupon_value":0,
+"payment_fee":0.02,
+"logo_url":"",
+"address":"",
+"description":"",
+"status":""
+}
+
+
+
+###
+
+POST https://support.bk.cloudns.cc:8081/admin/v1/content/update?type=Product&id=38
+Content-Type: applications/json
+
+{ "Unit":"pcs",
+  "customerLabel":"PSN",
+  "description":"",
+  "discount":"4,Sto PC",
+  "game":"9,Star Trek Online",
+  "hintImage":"",
+  "hintText":"abc",
+  "id":38,
+  "miniNumber":1,
+  "name":"Master Key - PS4",
+  "online":true,
+  "price":6.99,
+  "slug":"product-master-key---pc(复制)",
+  "sname":"Master Key - PS4",
+  "stock":999999,
+  "timestamp":0,
+  "type":"item,item",
+  "updated":1605588332310,
+  "uuid":"734d6c32-d940-4fd6-a3c1-fea2adafa35d"
+  }
+
+###
+
+
+POST http://127.0.0.1:8080/admin/v1/content/update?type=Product&id=38
+Content-Type: applications/json
+
+{ "Unit":"pcs",
+  "customerLabel":"PSN",
+  "description":"",
+  "discount":"4,Sto PC",
+  "game":"9,Star Trek Online",
+  "hintImage":"--remove--",
+  "hintText":"abc",
+  "id":38,
+  "miniNumber":1,
+  "name":"Master Key - PS4",
+  "online":true,
+  "price":6.99,
+  "slug":"product-master-key---pc(复制)",
+  "sname":"Master Key - PS4",
+  "stock":999999,
+  "timestamp":0,
+  "type":"item,item",
+  "updated":1605588332310,
+  "uuid":"734d6c32-d940-4fd6-a3c1-fea2adafa35d"
+  }

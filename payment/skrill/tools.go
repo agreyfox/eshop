@@ -1,175 +1,38 @@
 package skrill
 
 import (
-	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net/url"
+	"strconv"
 
 	"github.com/agreyfox/eshop/payment/data"
-	"github.com/agreyfox/eshop/payment/utils"
 
-	"io/ioutil"
-	"net/http"
-	"reflect"
 	"time"
 
 	"github.com/agreyfox/eshop/system/admin"
 )
 
-func GetIP(r *http.Request) string {
-	forwarded := r.Header.Get("X-FORWARDED-FOR")
-	if forwarded != "" {
-		return forwarded
+// valid user request for payssion
+func validateRequest(req *data.UserSubmitOrderRequest) error {
+
+	if req.Amount <= 0 {
+		return fmt.Errorf("amount data error")
 	}
-	return r.RemoteAddr
-}
-
-func getJSONFromBody(req *http.Request) map[string]interface{} {
-	var body string
-	bodyBytes, err := ioutil.ReadAll(req.Body)
-	defer req.Body.Close()
-	if err != nil {
-		body = fmt.Sprintf("failed read Read response body: %v", err)
-		logger.Debug(body)
-		return nil
+	if req.Amount < 0.0001 {
+		return fmt.Errorf("amount data too small")
 	}
-	var t map[string]interface{}
-
-	//fmt.Println(body)
-
-	if err = json.Unmarshal(bodyBytes, &t); err != nil {
-		logger.Debug("json data looks like bad")
-		logger.Debugf("%+v", err)
-		return nil
+	if len(req.Email) == 0 {
+		return fmt.Errorf("no payer id")
 	}
-	return t
-}
-
-/*
-// to save a record
-func saveRequest(t *PaymentResponse, request map[string]interface{}) bool {
-	// Store the user model in the user bucket using the username as the key.
-
-	record := data.PaymentLog{
-		RequestData: request,
-		ReturnData:  t,
+	if len(req.RequestInfo) == 0 {
+		return fmt.Errorf("no user request info")
 	}
-	record.OrderID = t.Transaction.OrderID
-	record.PaymentMethod = "payssion"
-	record.PaymentID = t.Transaction.PMID
-	record.Total = t.Transaction.Amount
-	record.Currency = t.Transaction.Currency
-	record.PaymentState = t.Transaction.State
-	email, ok := request["payer_email"].(string)
-	if ok {
-		record.BuyerEmail = email
+	if len(req.Currency) == 0 {
+		return fmt.Errorf("no user currency info")
 	}
-	record.RequestTime = time.Now().Unix()
-
-	buyComments, ok := request["description"].(string)
-	if ok {
-		record.Info = buyComments
-	}
-	ip, ok := request["ip"].(string)
-	if ok {
-		record.IP = ip
-	}
-	ok = data.SavePaymentLog(&record)
-	if ok {
-		logger.Info("Save payment log done!")
-	} else {
-		logger.Info("Save payment log error!")
-	}
-	return ok
-
-} */
-
-/*
-// to save a record
-func saveNotify(t *NotifyResponse) bool {
-	// Store the user model in the user bucket using the username as the key.
-
-	record := data.PaymentLog{
-		ReturnData: t,
-	}
-	record.OrderID = t.OrderID
-	record.PaymentMethod = "payssion"
-	record.PaymentID = t.PMID
-	record.Total = t.Amount
-	record.Currency = t.Currency
-	record.PaymentState = t.State
-
-	record.RequestTime = time.Now().Unix()
-	record.Info = t.Description
-	ok := data.SavePaymentLog(&record)
-	if ok {
-		logger.Info("Save payment log done!")
-	} else {
-		logger.Info("Save payment log error!")
-	}
-	return ok
-
-}
-*/
-//将interface 简单传回
-func renderJSON(w http.ResponseWriter, r *http.Request, data interface{}) (int, error) {
-
-	marsh, err := json.Marshal(data)
-	if err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	if _, err := w.Write(marsh); err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	return 0, nil
-}
-
-func getBinaryDataFromBody(req *http.Request) []byte {
-	var bodyBytes []byte
-	if req.Body != nil {
-		bodyBytes, _ = ioutil.ReadAll(req.Body)
-	}
-	// Restore the io.ReadCloser to its original state
-	req.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
-	return bodyBytes
-}
-
-// print pretty map[string]internface output
-func PrettyPrint(obj interface{}) {
-
-	prettyJSON, err := json.MarshalIndent(obj, "", "    ")
-	if err != nil {
-		logger.Fatal("Failed to generate json", err)
-	}
-	fmt.Println("===================================================================")
-	fmt.Printf("%s\n", string(prettyJSON))
-	fmt.Println("===================================================================")
-}
-
-func isNil(i interface{}) bool {
-	if i == nil {
-		return true
-	}
-	switch reflect.TypeOf(i).Kind() {
-	case reflect.Ptr, reflect.Map, reflect.Array, reflect.Chan, reflect.Slice:
-		return reflect.ValueOf(i).IsNil()
-	}
-	return false
-}
-
-func getOrderID() string {
-	return utils.RandomString(10)
-	/* uid, err := uuid.NewV1()
-	if err != nil {
-		return ""
-	}
-	hash := md5.Sum([]byte(uid.String()))
-
-	return hex.EncodeToString(hash[:]) */
-	//return uid.String()
+	return nil
 }
 
 // to save a record
@@ -204,6 +67,103 @@ func saveRequest(t *PrepareParam, request map[string]interface{}) bool {
 
 }
 
+// create skril
+func createOrder(r *data.UserSubmitOrderRequest) (string, error) {
+
+	logger.Infof("User create the Skrill payment from %s", r.IPAddr)
+
+	s := r.Amount
+	c := r.Currency
+
+	para := PrepareParam{
+		Amount:             s,
+		Currency:           GetCurrencyCode(c),
+		ReturnURL:          ReturnURL,
+		StatusURL:          NotifyURL,
+		Language:           Language(fmt.Sprintf("%s", r.Language)),
+		LogoURL:            fmt.Sprintf("%s", r.LogoURL),
+		PayFromEmail:       fmt.Sprintf("%s", r.Email),
+		MerchantFields:     "order_id",
+		OrderID:            data.GetShortOrderID(),
+		Address:            r.Address,
+		PhoneNumber:        r.Phone,
+		City:               r.City,           //fmt.Sprintf("%s", reqJSON["city"]),
+		Country:            r.Country,        //.Sprintf("%s", reqJSON["country"]),
+		Detail1Description: r.RequestInfo,    //fmt.Sprintf("%s", reqJSON["description"]),
+		FirstName:          r.FirstName,      //fmt.Sprintf("%s", reqJSON["firstname"]),
+		LastName:           r.LastName,       //fmt.Sprintf("%s", reqJSON["lastname"]),
+		PaymentMethods:     r.PaymentChannel, //fmt.Sprintf("%s", reqJSON["payment_methods"]),
+	}
+	ll, err := payClient.Prepare(&para)
+	return ll, err
+
+}
+
+func CreateOrderByNotify(Notifydata []byte) error {
+	values, err := url.ParseQuery(string(Notifydata))
+	logger.Debugf("Get skril notify data :%v\n ready to create order", values)
+	if err == nil {
+		amm, err := strconv.ParseFloat(values.Get("amount"), 64)
+		if err != nil {
+			logger.Error("amount parse error ")
+			return errors.New("amount parse error ")
+		}
+		mbmm, err := strconv.ParseFloat(values.Get("mb_amount"), 64)
+		if err != nil {
+			logger.Warn("mb amount parse error ")
+		}
+		statusvalue, err := strconv.ParseInt(values.Get("status"), 10, 0)
+		if err != nil {
+			logger.Error("Status parse error ")
+			return errors.New("State parse  error")
+		}
+		failedReasonCode, err := strconv.ParseInt(values.Get("failed_reason_code"), 10, 0)
+		if err != nil {
+			logger.Warn("FailedReasonCode parse error ")
+		}
+		retData := StatusResponse{
+			PayToEmail: values.Get("pay_to_email"),
+
+			PayFromEmail: values.Get("pay_from_email"),
+
+			MerchantID:       values.Get("merchant_id"),
+			CustomerID:       values.Get("customer_id"),
+			TransactionID:    values.Get("transaction_id"),
+			MbTransactionID:  values.Get("mb_transaction_id"),
+			MbAmount:         mbmm,
+			MbCurrency:       GetCurrencyCode(values.Get("mb_currency")),
+			Status:           Status(statusvalue),
+			FailedReasonCode: Code(failedReasonCode),
+			Md5Sig:           values.Get("md5sig"),
+			Sha2Sig:          values.Get("sha2sig"),
+			Amount:           amm,
+			Currency:         Currency(values.Get("currency")),
+			NetellerID:       values.Get("neteller_id"),
+			PaymentType:      values.Get("payment_type"),
+			OrderID:          values.Get("order_id"),
+		}
+
+		if retData.Status == SkrillProcessed { // create ok
+			oid, oo, ok := CreateNewOrderInDB(&retData)
+			if ok {
+				if len(oo.Payer) > 0 {
+					go data.SendConfirmEmail(oo.OrderID, "Game item", values.Get("amount"), values.Get("currency"), oo.Payer)
+				}
+			}
+			logger.Debugf("Skrill Order created with id:%d, OrderID is %s", oid, oo.OrderID)
+			return nil
+		} else {
+			logger.Debugf("Notify data with status %s", Status(statusvalue))
+			return errors.New("Notify result is not OK:" + Status(statusvalue).String())
+		}
+	} else {
+		logger.Error("Parse Body data error ", err)
+		return errors.New("Wrong input data")
+	}
+
+	return nil
+}
+
 // CreateNewOrderInDB try to create new order in backend system with the information provide data and the record
 /*
  system db structure is
@@ -213,9 +173,7 @@ func CreateNewOrderInDB(notifyData *StatusResponse) (int, data.Order, bool) {
 
 	oid := notifyData.OrderID
 	ID := oid
-	//val := &bytes.Buffer{}
-	/* states, err := data.GetLog(ID)
-	logger.Info(states) */
+
 	buff, _ := json.Marshal(notifyData)
 	order := data.Order{
 
@@ -237,8 +195,8 @@ func CreateNewOrderInDB(notifyData *StatusResponse) (int, data.Order, bool) {
 		IsRefund:      false,
 		IsChargeBack:  false,
 	}
-
-	originReq, err := data.GetRequestByState(ID, SkrillCreated.String())
+	// get order request fill data
+	/* originReq, err := data.GetRequestByState(ID, SkrillCreated.String())
 
 	if err == nil {
 		databuff, _ := json.Marshal(originReq.ReturnData)
@@ -247,12 +205,21 @@ func CreateNewOrderInDB(notifyData *StatusResponse) (int, data.Order, bool) {
 		order.PayerIP = originReq.IP
 		order.RequestTime = fmt.Sprint(time.Unix(originReq.RequestTime, 0).Format(time.RFC1123))
 	}
+	*/
+	request, err := data.GetRequestByID(ID)
 
+	if err == nil {
+		databuff, _ := json.Marshal(request.ItemList)
+		order.OrderDetail = string(databuff[:])
+		order.Payer = request.Email
+		order.PayerIP = request.IPAddr
+		order.RequestTime = fmt.Sprint(time.Unix(request.OrderDate, 0).Format(time.RFC1123))
+	}
+	order.Status = data.OrderPaid // create a order start from order paid
 	mm, _ := json.Marshal(order)
 
 	retCode, ok := admin.CreateContent("Order", mm)
 
-	//admin.UpdateContent("Order", fmt.Sprintf("%d", retCode), "status", []byte(data.OrderInValidate))
 	if ok {
 		return retCode, order, true
 	} else {

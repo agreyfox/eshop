@@ -4,18 +4,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/agreyfox/eshop/payment/data"
+	"github.com/agreyfox/eshop/system/db"
 )
 
 const (
-	brand_name string = "egpal 公司"
-	prefer     string = "return=representation"
+	//brand_name string = "egpal 公司"
+	prefer string = "return=representation"
 )
 
 var (
-	returnURL = "https://support.bk.cloudns.cc:8081/payment/payssion/return"
-	cancelURL = "https://support.bk.cloudns.cc:8081/payment/payssion/cancle"
+	brand_name string = "egpal 公司"
+	returnURL         = "https://support.bk.cloudns.cc:8081/payment/payssion/return"
+	cancelURL         = "https://support.bk.cloudns.cc:8081/payment/payssion/cancel"
 
 	//APIKey    = "90a00a8dc3231897"
 	//SecretKey = "0f0772dc61a1480c2fe80f9a4e1b2c85"
@@ -29,11 +32,96 @@ var (
 )
 
 func initPayssion() {
+	apibase := APIBaseSandBox
+	key, err := db.GetParameterFromConfig("PaymentSetting", "name", "company_name", "valueString")
+	if err == nil {
+		brand_name = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "payssion_returnURL", "valueString")
+	if err == nil {
+		returnURL = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "payssion_cancelURL", "valueString")
+	if err == nil {
+		cancelURL = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "notify_email", "valueString")
+	if err == nil {
+		emailURL = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "payssion_apikey", "valueString")
+	if err == nil {
+		APIKey = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "payssion_SecretKey", "valueString")
+	if err == nil {
+		SecretKey = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "payssion_notifyURL", "valueString")
+	if err == nil {
+		notifyURL = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "paysession_apibase", "valueString")
+	if err == nil {
+		apibase = key
+	}
 
-	client, _ := NewClient(APIKey, SecretKey, APIBaseSandBox)
+	client, _ := NewClient(APIKey, SecretKey, apibase)
 	client.SetLog(logger) // Set log to terminal stdout
 	payClient = client
 
+}
+
+/* the function will do
+1) accept frontend submit shoppint cart content
+	the target object is UserSubmitOrderRequest
+*/
+func userSubmit(w http.ResponseWriter, r *http.Request) {
+	logger.Debug("User submit a  payssion  payment")
+	//ip := GetIP(r)
+	//try to get user post information about the payment
+
+	payload := new(data.UserSubmitOrderRequest)
+	if err := json.NewDecoder(r.Body).Decode(payload); err != nil {
+		//RespondError(w, err, http.StatusBadRequest, GetReqID(r))
+		logger.Errorf("user submit error", err)
+		data.RenderJSON(w, r, map[string]interface{}{
+			"retCode": -1,
+			"msg":     data.PaymentErrInputData,
+		})
+		return
+	}
+	//reqJSON := getJSONFromBody(r)
+	payload.IPAddr = data.GetIP(r)
+	if err := validateRequest(payload); err != nil {
+		data.RenderJSON(w, r, map[string]interface{}{
+			"retCode": -1,
+			"msg":     err,
+		})
+		return
+	}
+	payload.OrderID = data.GetShortOrderID()
+	payload.OrderDate = time.Now().Unix()
+	respond, err := createOrder(payload) //create payssion call
+	//payload.Respond = fmt.Sprint(respond)
+
+	rettxt, _ := json.MarshalIndent(respond, "", "  ")
+	payload.Respond = string(rettxt)
+
+	err = data.SaveOrderRequest(payload) //finished save request,
+
+	if err != nil {
+		data.RenderJSON(w, r, map[string]interface{}{
+			"retCode": -1,
+			"msg":     err.Error(),
+		})
+		return
+	}
+	data.RenderJSON(w, r, map[string]interface{}{
+		"retCode": 0,
+		"msg":     "ok",
+		"data":    payload,
+	})
 }
 
 // When user to checkout "Pay Now" button ,It will send the request to beckend system and beckend system will
@@ -55,21 +143,21 @@ payer_name	string	Optional	The customer’s name
 */
 func createPayment(w http.ResponseWriter, r *http.Request) {
 	logger.Debug("User create the payssion payment")
-	ip := GetIP(r)
+	ip := data.GetIP(r)
 	//try to get user post information about the payment
 
-	reqJSON := getJSONFromBody(r)
+	reqJSON := data.GetJSONFromBody(r)
 
 	pmid, ok := reqJSON["pm_id"].(string)
 	if !ok || len(pmid) == 0 {
-		renderJSON(w, r, map[string]interface{}{
+		data.RenderJSON(w, r, map[string]interface{}{
 			"retCode": -1,
 			"msg":     "pm_id error",
 		})
 		return
 	}
 	if !isRightPMID(pmid) {
-		renderJSON(w, r, map[string]interface{}{
+		data.RenderJSON(w, r, map[string]interface{}{
 			"retCode": -1,
 			"msg":     "wrong pm_id",
 		})
@@ -78,7 +166,7 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 
 	amount, ok := reqJSON["amount"].(string)
 	if !ok || len(amount) == 0 {
-		renderJSON(w, r, map[string]interface{}{
+		data.RenderJSON(w, r, map[string]interface{}{
 			"retCode": -1,
 			"msg":     "amount error  ",
 		})
@@ -86,7 +174,7 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 	}
 	currency, ok := reqJSON["currency"].(string)
 	if !ok || len(currency) == 0 {
-		renderJSON(w, r, map[string]interface{}{
+		data.RenderJSON(w, r, map[string]interface{}{
 			"retCode": -1,
 			"msg":     "currency error  ",
 		})
@@ -94,7 +182,7 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 	}
 	desc, ok := reqJSON["description"].(string)
 	if !ok {
-		renderJSON(w, r, map[string]interface{}{
+		data.RenderJSON(w, r, map[string]interface{}{
 			"retCode": -1,
 			"msg":     "description error  ",
 		})
@@ -102,7 +190,7 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 	}
 	orderid, ok := reqJSON["order_id"].(string)
 	if !ok { //若没有orderid,生成一个
-		orderid = getOrderID()
+		orderid = data.GetShortOrderID()
 	}
 
 	sigArray := []string{APIKey, pmid, amount, currency, orderid, SecretKey}
@@ -138,7 +226,7 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 	//	client.Unlock()
 	if err != nil {
 		logger.Debug("create payssion order error:", err)
-		renderJSON(w, r, map[string]interface{}{
+		data.RenderJSON(w, r, map[string]interface{}{
 			"retCode": -2,
 			"msg":     "创建订单失败",
 		})
@@ -148,13 +236,13 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 
 	if order.ResultCode == PayssionOK {
 
-		renderJSON(w, r, map[string]interface{}{
+		data.RenderJSON(w, r, map[string]interface{}{
 			"retCode": 0,
 			"msg":     "ok",
 			"data":    order,
 		})
 	} else {
-		renderJSON(w, r, map[string]interface{}{
+		data.RenderJSON(w, r, map[string]interface{}{
 			"retCode": -10,
 			"msg":     "Something error ",
 			"data":    order.Transaction.State,
@@ -198,20 +286,20 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 	logger.Debug("Get Notify data from payssion")
 
 	//fmt.Println("got you")
-	re := getJSONFromBody(r)
+	re := data.GetJSONFromBody(r)
 
 	orderState := &NotifyResponse{}
 	bc, err := json.Marshal(re)
 	if err == nil {
 		err = json.Unmarshal(bc, orderState)
-		go saveNotify(orderState)
+		go saveNotify(orderState) //save the notify to payment log
 		if err == nil {
 			sigArray := []string{APIKey, orderState.PMID, orderState.Amount, orderState.Currency, orderState.OrderID, orderState.State, SecretKey}
 			verify := Signature(sigArray)
 			if orderState.NotifySignature == verify {
 				switch orderState.State {
 				case PayssionCompleted:
-					logger.Warnf("Order Completed! App is %s,Transactions id:%s,Total:%s ", orderState.AppName, orderState.TransactionID, orderState.Amount)
+					logger.Infof("Order Completed! App is %s,Transactions id:%s,Total:%s ", orderState.AppName, orderState.TransactionID, orderState.Amount)
 					// notification verify string: api_key|pm_id|amount|currency|order_id|state|sercret_key
 					logger.Debug("Signature is %s", verify)
 
@@ -219,6 +307,7 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 					if ok {
 						logger.Infof("Order %d created! and orderid %s ", oid, orderState.OrderID)
 						if len(oo.Payer) > 0 {
+							logger.Infof("send the confirmation letter to customer with orderid %s,email:%s", oo.OrderID, oo.Payer)
 							go data.SendConfirmEmail(oo.OrderID, orderState.AppName, orderState.Amount, orderState.Currency, oo.Payer)
 						}
 					} else {
@@ -252,7 +341,7 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 }
 
 func Failed(w http.ResponseWriter, r *http.Request) {
-	logger.Debug("User Cancle the payment")
+	logger.Debug("User Cancel the payment")
 
 }
 

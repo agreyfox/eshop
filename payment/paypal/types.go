@@ -68,6 +68,7 @@ const (
 const (
 	PaypalCreated   string = "CREATED"
 	PaypalCompleted string = "COMPLETED"
+	PaypalPending   string = "PENDING"
 	PaypalVoided    string = "VOIDED"
 	PaypalApproved  string = "APPROVED"
 	PaypalSaved     string = "SAVED"
@@ -98,6 +99,7 @@ const (
 
 const (
 	EventPaymentCaptureCompleted       string = "PAYMENT.CAPTURE.COMPLETED"
+	EventPaymentCapturePending         string = "PAYMENT.CAPTURE.PENDING"
 	EventPaymentCaptureDenied          string = "PAYMENT.CAPTURE.DENIED"
 	EventPaymentCaptureRefunded        string = "PAYMENT.CAPTURE.REFUNDED"
 	EventPaymentOrderCreated           string = "PAYMENT.ORDER.CREATED"

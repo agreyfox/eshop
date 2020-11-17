@@ -26,3 +26,7 @@
    * Gmail sent as another for administror operation.
 
 6. lqCMS
+
+//使用 eshop 创建新的 content
+
+./eshop 

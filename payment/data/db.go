@@ -22,6 +22,73 @@ records.db 中 payments 是 root bucket 相当于table
 */
 
 // SaveRequest to save the data in payment
+func SaveOrderRequest(r *UserSubmitOrderRequest) error {
+
+	//log.RequestTime = time.Now().Unix()
+	//state := log.PaymentState
+
+	//ID := r.OrderID // TODO: need find better id
+
+	tx, err := PaymentDBHandler.Begin(true)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+	defer tx.Rollback()
+
+	root := tx.Bucket([]byte(DBRequest))
+
+	if buf, err := json.Marshal(r); err != nil {
+		logger.Error(err)
+		return PaymentErrInputData
+	} else if err := root.Put([]byte(r.OrderID), buf); err != nil {
+		logger.Error(err)
+		return PaymentErrSave
+	}
+
+	// Commit the transaction.
+	if err := tx.Commit(); err != nil {
+		logger.Error(err)
+		return PaymentErrSave
+	}
+
+	logger.Info("Save user order request payment data done. ")
+
+	return nil
+}
+
+func GetRequestByID(orderid string) (*UserSubmitOrderRequest, error) {
+
+	ret := make([]byte, 0)
+	err := PaymentDBHandler.View(func(tx *bolt.Tx) error {
+
+		b := tx.Bucket([]byte(DBRequest))
+
+		ret = b.Get([]byte(orderid))
+
+		return nil
+	})
+	if err != nil {
+		logger.Error("Get order state error ", err)
+		return nil, err
+	}
+	rr := UserSubmitOrderRequest{}
+
+	datasrc := bytes.NewReader(ret)
+	err = json.NewDecoder(datasrc).Decode(&rr)
+	return &rr, err
+}
+
+///=========================================================================
+/*
+数据结构如下
+records.db 中 payments 是 root bucket 相当于table
+			"orderid"是子bucket
+				“state":key
+				orderentry ： value
+*/
+
+// SaveRequest to save the data in payment
 func SavePaymentLog(log *PaymentLog) bool {
 
 	log.RequestTime = time.Now().Unix()
@@ -29,14 +96,14 @@ func SavePaymentLog(log *PaymentLog) bool {
 
 	ID := log.OrderID // TODO: need find better id
 
-	tx, err := PaymentDBHandler.Begin(true)
+	tx, err := PaymentLogHandler.Begin(true)
 	if err != nil {
 		logger.Error(err)
 		return false
 	}
 	defer tx.Rollback()
 
-	root := tx.Bucket([]byte(DBName))
+	root := tx.Bucket([]byte(DBLogName))
 	// Setup the order bucket.
 	bkt, err := root.CreateBucketIfNotExists([]byte(ID))
 	if err != nil {
@@ -67,9 +134,9 @@ func SavePaymentLog(log *PaymentLog) bool {
 func GetLog(orderid string) ([]string, error) {
 	///ID := orderid + IDMaker + vendor
 	ret := make([]string, 0)
-	err := PaymentDBHandler.View(func(tx *bolt.Tx) error {
+	err := PaymentLogHandler.View(func(tx *bolt.Tx) error {
 
-		b := tx.Bucket([]byte(DBName)).Bucket([]byte(orderid))
+		b := tx.Bucket([]byte(DBLogName)).Bucket([]byte(orderid))
 
 		c := b.Cursor()
 
@@ -89,9 +156,9 @@ func GetLog(orderid string) ([]string, error) {
 // return a id's status content
 func GetLogContent(id string, status string) ([]byte, error) {
 	val := &bytes.Buffer{}
-	err := PaymentDBHandler.View(func(tx *bolt.Tx) error {
+	err := PaymentLogHandler.View(func(tx *bolt.Tx) error {
 
-		b := tx.Bucket([]byte(DBName)).Bucket([]byte(id))
+		b := tx.Bucket([]byte(DBLogName)).Bucket([]byte(id))
 
 		c := b.Cursor()
 
@@ -115,9 +182,9 @@ func GetRequestByState(orderid string, state string) (*PaymentLog, error) {
 	///ID := orderid + IDMaker + vendor
 	ret := &PaymentLog{}
 	logger.Debugf("Get Request log with data orderid %s and state %s", orderid, state)
-	err := PaymentDBHandler.View(func(tx *bolt.Tx) error {
+	err := PaymentLogHandler.View(func(tx *bolt.Tx) error {
 
-		b := tx.Bucket([]byte(DBName)).Bucket([]byte(orderid))
+		b := tx.Bucket([]byte(DBLogName)).Bucket([]byte(orderid))
 		if b == nil {
 			return errors.New("No such bucket/data!")
 		}
@@ -145,13 +212,13 @@ func CreateOrderComplete(order *Order) bool {
 	order.RequestTime = fmt.Sprintf(time.Now().Format(time.RFC1123))
 	ID := order.OrderID
 
-	err := PaymentDBHandler.Update(func(tx *bolt.Tx) error {
+	err := PaymentLogHandler.Update(func(tx *bolt.Tx) error {
 		encoded, err := json.Marshal(order)
 		if err != nil {
 			return err
 		}
 
-		err = tx.Bucket([]byte(DBName)).Bucket([]byte(Complete)).Put([]byte(ID), encoded)
+		err = tx.Bucket([]byte(DBLogName)).Bucket([]byte(Complete)).Put([]byte(ID), encoded)
 
 		return err
 	})
@@ -166,9 +233,9 @@ func CreateOrderComplete(order *Order) bool {
 func GetOrder(vendor string, orderid string) (*Order, error) {
 	ID := orderid
 	ret := &Order{}
-	err := PaymentDBHandler.View(func(tx *bolt.Tx) error {
+	err := PaymentLogHandler.View(func(tx *bolt.Tx) error {
 
-		data := tx.Bucket([]byte(DBName)).Bucket([]byte(Complete)).Get([]byte(ID))
+		data := tx.Bucket([]byte(DBLogName)).Bucket([]byte(Complete)).Get([]byte(ID))
 
 		if data != nil {
 			_ = json.Unmarshal(data, ret)

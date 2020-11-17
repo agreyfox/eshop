@@ -55,7 +55,7 @@ func Start(mainMux *bone.Mux) {
 	}))
 
 	boltMux.HandleFunc("/", Index)
-
+	boltMux.PostFunc("/dopay", userSubmit)
 	boltMux.PostFunc("/pay", createPayment)
 	boltMux.HandleFunc("/notify", http.HandlerFunc(Notify))
 

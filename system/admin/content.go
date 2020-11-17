@@ -109,7 +109,7 @@ func FindContentID(t string, searchTxt string, searchKey string) string {
 	}
 	qo := db.QueryOptions{
 		Count:  1,
-		Offset: 1,
+		Offset: 0, //找第一个页
 		Order:  "desc",
 	}
 	logger.Debugf("get type id with search critirial key:%s,value:%s", searchKey, searchTxt)

@@ -22,7 +22,9 @@ import (
 	"github.com/gorilla/schema"
 )
 
+var RemoveString = "--remove--" // 用于删除字段内容
 var ErrBucketInfoNotCompatible = errors.New("Bucket Info is not correct")
+var ErrBucketNoSuchRecord = errors.New("query no data")
 
 // IsValidID checks that an ID from a DB target is valid.
 // ID should be an integer greater than 0.
@@ -123,6 +125,7 @@ func UpdateContent(target string, data url.Values) (int, error) {
 // update can support merge or replace behavior depending on existingContent.
 // if existingContent is non-nil, we merge field values. empty/missing fields are ignored.
 // if existingContent is nil, we replace field values. empty/missing fields are reset.
+// if data has --remove-- 字串，表示该内容删除，
 func update(ns, id string, data url.Values, existingContent *[]byte) (int, error) {
 	var specifier string // i.e. __pending, __sorted, etc.
 	if strings.Contains(ns, "__") {
@@ -223,6 +226,9 @@ func mergeData(ns string, data url.Values, existingContent []byte) ([]byte, erro
 		return j, err
 	}
 
+	//fmt.Println(string(j))
+	j = bytes.Replace(j, []byte(RemoveString), []byte(""), -1)
+	//fmt.Println(string(j))
 	return j, nil
 }
 
@@ -710,7 +716,8 @@ func Query(namespace string, opts QueryOptions) (int, [][]byte) {
 // Query retrieves a set of content from the db based on options and email = owner
 // and returns the total number of content in the namespace and the content
 func QueryByFieldValue(namespace string, field, value string, opts QueryOptions) (int, [][]byte) {
-	var posts [][]byte
+	var posts = [][]byte{}
+	//posts = make([][]byte, 0)
 	var total int
 	//logger.Debugf("query with fields [%s] and value [%s]", field, value)
 	// correct bad input rather than return nil or error
@@ -763,6 +770,7 @@ func QueryByFieldValue(namespace string, field, value string, opts QueryOptions)
 		case "desc", "":
 			for k, v := c.Last(); k != nil; k, v = c.Prev() {
 				//logger.Debug(string(v))
+				//logger.Debug(bytes.Contains(v, []byte(fmt.Sprintf(`"%s":"%s"`, field, value))))
 				if !bytes.Contains(v, []byte(fmt.Sprintf(`"%s":"%s"`, field, value))) {
 					continue
 				}
@@ -777,6 +785,7 @@ func QueryByFieldValue(namespace string, field, value string, opts QueryOptions)
 				}
 
 				posts = append(posts, v)
+				//logger.Debug("============================")
 				i++
 				cur++
 			}
@@ -823,8 +832,33 @@ func QueryByFieldValue(namespace string, field, value string, opts QueryOptions)
 
 		return nil
 	})
-	//logger.Debug(total, posts)
+	//fmt.Print(total, posts)
 	return total, posts
+}
+
+//获取指定 bucket 下 指定字串下指定field 的值
+// 空表示没有
+func GetParameterFromConfig(dbname string, key, keydata, valuefield string) (string, error) {
+	qo := QueryOptions{
+		Count:  1,
+		Offset: 0,
+		Order:  "desc",
+	}
+	//fmt.Println(dbname, key, keydata, valuefield)
+	_, data := QueryByFieldValue(dbname, key, keydata, qo)
+	//fmt.Println(i, len(data))
+	if len(data) > 0 {
+		mm := map[string]interface{}{}
+		err := json.Unmarshal(data[0], &mm)
+		if err != nil {
+			logger.Error("Error in reading parameter:", err)
+			return "", fmt.Errorf("query internal error")
+		}
+		d := fmt.Sprint(mm[valuefield])
+		logger.Infof("get payment config %s:%s", keydata, d)
+		return d, nil
+	}
+	return "", ErrBucketNoSuchRecord
 }
 
 var sortContentCalls = make(map[string]time.Time)

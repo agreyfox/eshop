@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/agreyfox/eshop/system/db"
 )
 
 /*
@@ -18,7 +20,7 @@ import (
 8. Skrill displays the Quick Checkout confirmation page, containing the transaction result.
 9. Skrill provides you with an asynchronous notification, sent to your status URL or IPN (instant Payment Notification), confirming the transaction details and status
 */
-const (
+var (
 	defaultURL     = "https://pay.skrill.com/"
 	payURL         = "https://www.skrill.com/app/pay.pl"
 	PrepareAction  = "action=prepare"
@@ -27,7 +29,45 @@ const (
 	Password       = "tqxy0605"
 	MerchantID     = "138853317"
 	Subject        = "Egpal game shop"
+	NotifyURL      = "https://support.bk.cloudns.cc:8081/payment/skrill/notify"
+	ReturnURL      = "https://support.bk.cloudns.cc:8081/payment/skrill/return"
+	CancelURL      = "https://support.bk.cloudns.cc:8081/payment/skrill/cancel"
 )
+
+func initSkrill() {
+
+	key, err := db.GetParameterFromConfig("PaymentSetting", "name", "skrill_merchantEmail", "valueString")
+	if err == nil {
+		MerchantEmail = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "skrill_password", "valueString")
+	if err == nil {
+		Password = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "skrill_merchantID", "valueString")
+	if err == nil {
+		MerchantID = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "skrill_subject", "valueString")
+	if err == nil {
+		Subject = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "skrill_NotifyURL", "valueString")
+	if err == nil {
+		NotifyURL = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "skrill_ReturnURL", "valueString")
+	if err == nil {
+		ReturnURL = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "skrill_CancelURL", "valueString")
+	if err == nil {
+		CancelURL = key
+	}
+
+	payClient = New() //create skrill instance
+	logger.Infof("Skrill backend service initialized! MerchantID is %s", MerchantID)
+}
 
 // Client is a Skrill client
 type Client struct {

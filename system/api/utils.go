@@ -29,6 +29,8 @@ type RetUser struct {
 	DefaultCountry string         `json:default_country,omitempty`
 	Country        []string       `json:"country,omitempty"`
 	Currency       []string       `json:"currency,omitempty"`
+	SocialType     string         `json:"social_type,omitempty"`
+	SocialLink     string         `json:"social_link,omitempty"`
 }
 
 type MetaData struct {

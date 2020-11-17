@@ -1,6 +1,8 @@
 package data
 
 import (
+	"errors"
+
 	"github.com/agreyfox/eshop/system/logs"
 	"github.com/boltdb/bolt"
 	"go.uber.org/zap"
@@ -22,24 +24,74 @@ const (
 )
 
 var (
-	DBName = "payments"
+	PaymentErrOpenDB    = errors.New("数据库错误")
+	PaymentErrInputData = errors.New("用户数据错误")
+	PaymentErrSave      = errors.New("保存数据失败")
+)
+
+var (
+	DBRequestFile = ".request.db"
+	DBRequest     = "requests" // save the order request table name
+
+	DBPaymentLog = ".logs.db" //save request to log
+	DBLogName    = "logs"     //log table name
 
 	UserRequest = "request"
 	Complete    = "order"
 	DbFile      = "records.db"
-	OrderName   = "Order" //in main system.db
+
+	OrderName = "Order" //in main system.db
 )
 
 var (
 	logger *zap.SugaredLogger = logs.Log.Sugar()
 
-	PaymentDBHandler *bolt.DB
+	PaymentDBHandler  *bolt.DB //order request db
+	PaymentLogHandler *bolt.DB // log db
 
-	SystemDBHandler *bolt.DB
+	SystemDBHandler *bolt.DB //system db
 	OnlineURL       = "https://support.bk.cloudns.cc/#/Result"
 )
 
 type (
+	Item struct {
+		Game      string  `json:"game"`
+		Server    string  `json:"server,omitempty"`
+		Category  string  `json:"category"`
+		Product   string  `json:"product"`
+		UnitPrice float64 `json:"unit_price"`
+		Quantity  int     `json:"quantity"`
+	}
+	// User submit same struct to system for order creation
+	UserSubmitOrderRequest struct {
+		OrderID        string  `json:"order_id,omitempty"`   // 订单号
+		OrderDate      int64   `json:"order_date,omitempty"` //订单日期 millionseconds
+		Payment        string  `json:"payment"`
+		PaymentChannel string  `json:"payment_channel"`
+		Country        string  `json:"county,omitempty"`
+		City           string  `json:"city,omitempty"`
+		Currency       string  `json:"currency"`
+		Language       string  `json:"language"`
+		Locale         string  `json:"locale"`
+		Email          string  `json:"email"`
+		FirstName      string  `json:"first_name"`
+		LastName       string  `json:"last_name"`
+		IPAddr         string  `json:"ip"`
+		ContactInfo    string  `json:"contact_info"`
+		Phone          string  `json:"phone,omitempty"`
+		Amount         float64 `json:"amount"`
+		SubTotal       float64 `json:"sub_total"`
+		ItemList       []Item  `json:"item_list"`
+		RequestInfo    string  `json:"request_info,omitempty"`
+		CouponCode     string  `json:"coupon_code,omitempty"`
+		CouponValue    float64 `json:"coupon_value,omitempty"`
+		PaymentFee     float64 `json:"payment_fee,omitempty"`
+		LogoURL        string  `json:"logo_url,omitempty"`
+		Address        string  `json:"address,omitempty"`
+		Status         string  `json:"status"`
+		Description    string  `json:"description"`
+		Respond        string  `json:"respond,omitempty"`
+	}
 
 	//save data to usrerequest
 	PaymentLog struct {

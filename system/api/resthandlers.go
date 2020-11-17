@@ -534,14 +534,20 @@ func getMedia(w http.ResponseWriter, r *http.Request) {
 	}
 
 	t := db.DB__uploads // upload db
-	//status := ""
+
 	contentbyte, err := db.Upload(t + ":" + id)
+	if err != nil {
+		logger.Errorf("The Media is is not found %s,error:%s", id, err.Error())
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
 	item := make(map[string]interface{})
 
 	err = json.Unmarshal(contentbyte, &item)
 	if err != nil {
-		logger.Error("Error unmarshal json into:%s", err.Error())
+		logger.Errorf("Error unmarshal json into:%s", err.Error())
 		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 	fff := item["path"].(string)
 	ctype := item["content_type"].(string)
@@ -557,7 +563,7 @@ func getMedia(w http.ResponseWriter, r *http.Request) {
 	//logger.Debugf(strings.TrimPrefix(fff, "/api/uploads"))
 	dat, err := ioutil.ReadFile(mediaFilename)
 	if err != nil {
-		logger.Error("Couldn't read file content .")
+		logger.Error("Couldn't read file content.")
 		w.WriteHeader(http.StatusNoContent)
 		return
 	}
@@ -582,7 +588,7 @@ func getMedia(w http.ResponseWriter, r *http.Request) {
 	if len(width_str) > 0 {
 
 		if width, err = strconv.ParseUint(width_str, 10, 32); nil != err {
-			logger.Error("input parameter w is error .", err.Error())
+			logger.Error("input parameter w is error:", err.Error())
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -599,7 +605,7 @@ func getMedia(w http.ResponseWriter, r *http.Request) {
 	if len(height_str) > 0 {
 
 		if height, err = strconv.ParseUint(height_str, 10, 32); nil != err {
-			logger.Error("input parameter h is error .", err.Error())
+			logger.Error("input parameter h is error :", err.Error())
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -614,14 +620,14 @@ func getMedia(w http.ResponseWriter, r *http.Request) {
 			new_image      image.Image
 		)
 		if original_image, _, err = image.Decode(bytes.NewReader(dat)); nil != err {
-			logger.Error("image decode error! %v", err)
+			logger.Errorf("image decode error! %v", err)
 			goto LABEL_IMAGE_HANDLE_FINISHED
 		}
 
 		new_image = resize.Resize(uint(width), uint(height), original_image, resize.Lanczos3)
 		buf := new(bytes.Buffer)
 		if err := jpeg.Encode(buf, new_image, nil); nil != err {
-			logger.Error("image encode error! %v", err)
+			logger.Errorf("image encode error! %v", err)
 			goto LABEL_IMAGE_HANDLE_FINISHED
 		}
 		dat = buf.Bytes()

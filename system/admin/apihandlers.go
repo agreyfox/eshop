@@ -138,6 +138,12 @@ func login(res http.ResponseWriter, req *http.Request) {
 		"Country":        country,
 		"Currency":       currency,
 		"contents":       string(contentStructData[:]),
+		"socialType":     "",
+		"socialLink":     "",
+	}
+	if len(usr.Meta) > 0 {
+		retdata["socialType"] = usr.Meta
+		retdata["sockialLink"] = usr.Social
 	}
 
 	renderJSON(res, req, retdata)
@@ -1876,7 +1882,7 @@ func getMedia(w http.ResponseWriter, r *http.Request) {
 		logger.Error("Error unmarshal json into", t, err)
 		w.WriteHeader(http.StatusInternalServerError)
 	}
-	logger.Debug("+++", item["path"], item["content_type"], "+++")
+	logger.Info("+++", item["path"], item["content_type"], "+++")
 	fff := item["path"].(string)
 	ctype := item["content_type"].(string)
 	pwd, err := os.Getwd()
@@ -1887,8 +1893,9 @@ func getMedia(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mediaFilename := filepath.Join(pwd, "uploads", strings.TrimPrefix(fff, "/api/uploads"))
-	logger.Debugf("The file  %s being read", mediaFilename)
-	logger.Debugf(strings.TrimPrefix(fff, "/api/uploads"))
+
+	logger.Infof("The file  %s being read", mediaFilename)
+	logger.Infof(strings.TrimPrefix(fff, "/api/uploads"))
 	dat, err := ioutil.ReadFile(mediaFilename)
 	if err != nil {
 		logger.Error("Couldn't read file content .")
@@ -1966,7 +1973,7 @@ func getMedia(w http.ResponseWriter, r *http.Request) {
 LABEL_IMAGE_HANDLE_FINISHED:
 
 	w.Write(dat)
-	logger.Debugf("send media with id %s", id)
+	logger.Infof("send media with id %s", id)
 
 	//http.Redirect(w, r, "/api/uploads"+fmt.Sprint(item["path"]), http.StatusFound)
 }
@@ -2160,7 +2167,7 @@ func getContents(w http.ResponseWriter, r *http.Request) {
 	//fmt.Println(meta)
 	returnStructData(w, r, retData, meta)
 
-	logger.Debugf("get content list ,total %d record", total)
+	logger.Infof("get content list ,total %d record", total)
 
 }
 
@@ -2271,7 +2278,7 @@ func updateContent(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-
+		PrettyPrint(updateData)
 		ts := fmt.Sprintf("%d", int64(time.Nanosecond)*time.Now().UTC().UnixNano()/int64(time.Millisecond))
 		//up := r.PostForm.Set("updated", ts)
 		updateData["updated"] = ts
@@ -2488,7 +2495,7 @@ func searchContent(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	t := q.Get("type")
 	search := q.Get("q")
-	logger.Debugf("Search content %s with %s from %s", t, search, GetIP(r))
+	logger.Infof("Search content %s with %s from %s", t, search, GetIP(r))
 	status := q.Get("status")
 	regexsearch := q.Get("r")
 	starttime := q.Get("start") // this is base on time query
@@ -2663,6 +2670,7 @@ func searchContent(w http.ResponseWriter, r *http.Request) {
 		PageSize:  len(retData), //-1 means all
 	}
 	returnStructData(w, r, retData, meta)
+	logger.Infof("Search content Finished")
 
 }
 

@@ -87,6 +87,30 @@ func NewCustomer(email, password string) (*User, error) {
 	return user, nil
 }
 
+// New creates a customer user from web and ready to push to db
+func NewCustomerWithSocial(email, password, social, value string) (*User, error) {
+	salt, err := randSalt()
+	if err != nil {
+		return nil, err
+	}
+
+	hash, err := hashPassword([]byte(password), salt)
+	if err != nil {
+		return nil, err
+	}
+
+	user := &User{
+		Email:  email,
+		Hash:   string(hash),
+		Salt:   base64.StdEncoding.EncodeToString(salt),
+		Perm:   CustomerPermission,
+		Meta:   social,
+		Social: value, // 保存用户的social内容
+	}
+
+	return user, nil
+}
+
 // Auth is HTTP middleware to ensure the request has proper token credentials
 func Auth(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {

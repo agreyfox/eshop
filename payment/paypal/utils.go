@@ -10,56 +10,85 @@ import (
 	"fmt"
 
 	"github.com/agreyfox/eshop/payment/data"
-	"github.com/agreyfox/eshop/payment/utils"
 
 	"github.com/agreyfox/eshop/system/admin"
 
-	"io/ioutil"
-	"net/http"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
 )
 
-func GetIP(r *http.Request) string {
-	forwarded := r.Header.Get("X-FORWARDED-FOR")
-	if forwarded != "" {
-		return forwarded
+// valid user request for payssion
+func validateRequest(req *data.UserSubmitOrderRequest) error {
+
+	if req.Amount <= 0 {
+		return fmt.Errorf("amount data error")
 	}
-	return r.RemoteAddr
+	if req.Amount < 0.0001 {
+		return fmt.Errorf("amount data too small")
+	}
+	if len(req.Email) == 0 {
+		return fmt.Errorf("no payer id")
+	}
+	if len(req.RequestInfo) == 0 {
+		return fmt.Errorf("no user request info")
+	}
+	if len(req.Currency) == 0 {
+		return fmt.Errorf("no user currency info")
+	}
+	return nil
 }
 
-func getBinaryDataFromBody(req *http.Request) []byte {
-	var bodyBytes []byte
-	if req.Body != nil {
-		bodyBytes, _ = ioutil.ReadAll(req.Body)
-	}
-	// Restore the io.ReadCloser to its original state
-	req.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
-	fmt.Println("User submit:", string(bodyBytes[:]))
-	return bodyBytes
-}
+// create skril
+func createOrder(r *data.UserSubmitOrderRequest) (*Order, error) {
+	logger.Debug("User create the paypal payment")
 
-func getJSONFromBody(req *http.Request) map[string]interface{} {
-	var body string
-	bodyBytes, err := ioutil.ReadAll(req.Body)
-	defer req.Body.Close()
-	if err != nil {
-		body = fmt.Sprintf("failed read Read response body: %v", err)
-		logger.Debug(body)
-		return nil
+	invoiceID := data.GetShortOrderID()
+	order := OrderRequest{
+		Payer:    r.Payment,
+		Email:    r.Email,
+		Method:   r.PaymentChannel,
+		Locale:   r.Locale,
+		Comments: r.RequestInfo,
 	}
-	var t map[string]interface{}
-
-	//fmt.Println("User submit:", string(bodyBytes[:]))
-
-	if err = json.Unmarshal(bodyBytes, &t); err != nil {
-		logger.Debug("Data looks like bad, Maybe it is not json data")
-		//		logger.Debugf("%+v", err)
-		return nil
+	order.ItemList = []PurchaseUnitRequest{}
+	pu := PurchaseUnitRequest{
+		Amount: &PurchaseUnitAmount{
+			Currency: r.Currency,
+			Value:    fmt.Sprint(r.Amount),
+		},
+		InvoiceID:   invoiceID,
+		Description: r.ContactInfo,
 	}
-	return t
+	order.ItemList = append(order.ItemList, pu)
+
+	orderPayer := &CreateOrderPayer{
+		EmailAddress: order.Email,
+	}
+
+	//paymentList
+	intent := OrderIntentCapture
+	lo := order.Locale
+	if len(lo) == 0 {
+		lo = "en-US"
+	}
+	context := &ApplicationContext{
+		ReturnURL:   returnURL,
+		CancelURL:   cancelURL,
+		BrandName:   brand_name,
+		UserAction:  "PAY_NOW",
+		LandingPage: LandingPageTypeLogin,
+		Locale:      lo,
+	}
+	if order.Method == LandingPageTypeBilling {
+		context.LandingPage = LandingPageTypeBilling // support credit card payment.
+	}
+	logger.Debugf("Request struct:%v", r)
+	logger.Debug("Ready to create a order,Data Save to tempdb!")
+
+	orderrespond, err := payClient.CreateOrder(intent, order.ItemList, orderPayer, context)
+	return orderrespond, err
+
 }
 
 // to save a record
@@ -84,7 +113,7 @@ func saveOrderRequest(order Order, request *OrderRequest, ip string) error {
 	record.PaymentState = order.Status
 	da, _ := json.Marshal(request)
 	record.Info = string(da)
-	record.Description = GetPurchaseContentFromRequest(request)
+	record.Description = getPurchaseContentFromRequest(request)
 	record.Comments = comments
 	var tt float64
 	currency := ""
@@ -147,18 +176,6 @@ func saveCapture(order CaptureOrderResponse) bool {
 	return s
 }
 
-func getOrderID() string {
-	return utils.RandomString(10)
-	/* 	uid, err := uuid.NewV1()
-	   	if err != nil {
-	   		return ""
-	   	}
-	   	hash := md5.Sum([]byte(uid.String()))
-
-	   	return hex.EncodeToString(hash[:]) */
-	//return uid.String()
-}
-
 // to save a record
 func saveNotify(t WebHookNotifiedEvent) bool {
 	// Store the user model in the user bucket using the username as the key.
@@ -186,46 +203,6 @@ func saveNotify(t WebHookNotifiedEvent) bool {
 
 }
 
-//将interface 简单传回
-func renderJSON(w http.ResponseWriter, r *http.Request, data interface{}) (int, error) {
-
-	marsh, err := json.Marshal(data)
-	if err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	if _, err := w.Write(marsh); err != nil {
-		return http.StatusInternalServerError, err
-	}
-
-	return 0, nil
-}
-
-// print pretty map[string]internface output
-func PrettyPrint(obj interface{}) string {
-
-	prettyJSON, err := json.MarshalIndent(obj, "", "    ")
-	if err != nil {
-		logger.Fatal("Failed to generate json", err)
-	}
-	fmt.Println("===================================================================")
-	fmt.Printf("%s\n", string(prettyJSON))
-	fmt.Println("===================================================================")
-	return string(prettyJSON)
-}
-
-func isNil(i interface{}) bool {
-	if i == nil {
-		return true
-	}
-	switch reflect.TypeOf(i).Kind() {
-	case reflect.Ptr, reflect.Map, reflect.Array, reflect.Chan, reflect.Slice:
-		return reflect.ValueOf(i).IsNil()
-	}
-	return false
-}
-
 // get orderid from link
 func getOrderIDFromUrl(link []Link) string {
 	if len(link) >= 1 {
@@ -243,24 +220,25 @@ func getOrderIDFromUrl(link []Link) string {
 	return ""
 }
 
+// create order by notification data and history data
 func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap CaptureResource) (int, data.Order, bool) {
-	if cap.Status != PaypalCompleted {
-		logger.Warn("Paypal Notified message is not completed.")
-		return 0, data.Order{}, false
+	var status string
+	if cap.Status == PaypalPending {
+		status = data.OrderCreated
 	}
-
+	if cap.Status == PaypalCompleted {
+		status = data.OrderCompleted
+	}
 	ID := cap.InvoiceID
 
-	//val := &bytes.Buffer{}
-	//states, err := data.GetLog(ID)
-	//logger.Info(states)
 	paymentid := getOrderIDFromUrl(cap.Links)
-	detail := PrettyPrint(cap)
-	//logger.Debugf("Invoice id is %s, order id is %s,paymentID is %s ", ID, ID, paymentid)
+	capdetail, _ := json.Marshal(cap)
+	detail := string(capdetail)
+
 	databin, _ := json.Marshal(notifyData)
 	order := data.Order{
 
-		Status: data.OrderPaid,
+		Status: status,
 		//OrderRequest:  record.Request,
 		OrderDetail:   detail,
 		OrderID:       ID,
@@ -270,32 +248,61 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap CaptureResource) (
 		PaymentMethod: notifyData.ResourceType,
 		PaymentNote:   brand_name,
 		NotifyInfo:    string(databin[:]),
-		Description:   notifyData.Summary + "," + ID, // just for flil up incase no item list
+		Description:   detail, //notifyData.Summary + "," + ID, // just for flil up incase no item list
 		Currency:      cap.Amount.Currency,
 		Total:         cap.Amount.Value,
-		Paid:          "", //cap.SellerPayableBreakdown.PayPalFee.Value,
-		Net:           "", //cap.SellerPayableBreakdown.NetAmount.Value,
+		Paid:          cap.SellerPayableBreakdown.PayPalFee.Value,
+		Net:           cap.SellerPayableBreakdown.NetAmount.Value,
 		AdminNote:     "",
 		UpdateTime:    fmt.Sprint(time.Now().Format(time.RFC1123)),
 		Paytime:       fmt.Sprint(time.Now().Format(time.RFC1123)),
 		IsRefund:      false,
 		IsChargeBack:  false,
 	}
-	//logger.Debug(time.Now())
-	originReq, err := data.GetRequestByState(ID, PaypalCreated)
-	//logger.Debug(time.Now())
-	if err == nil {
-		order.Payer = originReq.BuyerEmail
-		order.PayerIP = originReq.IP
-		order.Comments = originReq.Comments
-		order.RequestTime = fmt.Sprint(time.Unix(originReq.RequestTime, 0).Format(time.RFC1123))
-		order.Description = originReq.Description
+
+	if cap.Status == PaypalCompleted {
+		logger.Warn("Paypal Notified message is completed. checking exsiting order with order_id")
+		// validreturn 0, data.Order{}, false
+		oid, err := GetOrderByID(ID)
+		id, err := strconv.ParseInt(oid, 10, 0)
+		if err == nil {
+			logger.Info("Found order with id:", id)
+			ok := UpdateOrderStatusByID(oid, status)
+			if ok {
+				logger.Info("Update the existing order status to ", status)
+
+			} else {
+				logger.Error("Update the existing order status error,order_id is ", oid)
+
+			}
+			return int(id), order, ok
+		}
 	}
+	//logger.Debug(time.Now())
+	/* 	originReq, err := data.GetRequestByState(ID, PaypalCreated)
+	   	//logger.Debug(time.Now())
+	   	if err == nil {
+	   		order.Payer = originReq.BuyerEmail
+	   		order.PayerIP = originReq.IP
+	   		order.Comments = originReq.Comments
+	   		order.RequestTime = fmt.Sprint(time.Unix(originReq.RequestTime, 0).Format(time.RFC1123))
+	   		order.Description = originReq.Description
+		   } */
+	request, err := data.GetRequestByID(ID)
+
+	if err == nil {
+		order.Payer = request.Email //.BuyerEmail
+		order.PayerIP = request.IPAddr
+		order.Comments = request.RequestInfo
+		order.RequestTime = fmt.Sprint(time.Unix(request.OrderDate, 0).Format(time.RFC1123))
+		purchaselist, _ := json.MarshalIndent(request.ItemList, "", "  ")
+		order.Description = string(purchaselist)
+	}
+	order.Status = data.OrderPaid //标识已付
 	mm, _ := json.Marshal(order)
 
 	retcode, ok := admin.CreateContent("Order", mm)
 
-	//logger.Debugf("Find orderid by payment id is %s", admin.FindContentID("Order", cap.ID, "payment_id"))
 	if ok {
 		logger.Debug("Order created!", retcode)
 		return retcode, order, true
@@ -303,6 +310,33 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap CaptureResource) (
 		return 0, data.Order{}, false
 	}
 
+}
+
+func GetOrderByID(id string) (string, error) {
+
+	oid := admin.FindContentID("Order", id, "order_id")
+	// update the record
+	if len(oid) > 0 {
+		return oid, nil
+	}
+	return "", fmt.Errorf("not found")
+}
+
+// update order with order_id = id
+func UpdateOrderStatusByID(id, state string) bool {
+
+	oid := admin.FindContentID("Order", id, "order_id")
+	// update the record
+	if data.IsValidStatus(state) && len(oid) > 0 {
+		_, err := admin.UpdateContent("Order", fmt.Sprintf("%s", oid), "state", []byte(state))
+		if err != nil {
+			logger.Error("update status error:", err)
+			return false
+		}
+		return true
+	}
+	logger.Error("Not valid status!")
+	return false
 }
 
 // update order with payment_id = id
@@ -341,6 +375,7 @@ func UpdateOrderStatusByOrderID(id, state string) bool {
 	return false
 }
 
+// 获得interface 对象中的bytes
 func GetBytes(key interface{}) ([]byte, error) {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
@@ -353,38 +388,20 @@ func GetBytes(key interface{}) ([]byte, error) {
 
 // GetPurchaseContent via invoice id
 func GetPurchaseContent(id string) string {
-	ret := "Digital GOODS"
-	record, err := data.GetLogContent(id, PaypalCreated)
-	if err == nil {
-		paymentlog := data.PaymentLog{}
-
-		err := json.Unmarshal(record, &paymentlog)
-		if err == nil {
-			ret = paymentlog.Description
-		}
-		/*if err == nil {
-			req := []byte(PrettyPrint(paymentlog.RequestData))
-			sd := OrderRequest{}
-			err = json.Unmarshal(req, &sd)
-			if err == nil && len(sd.ItemList) > 0 {
-				if len(sd.ItemList[0].Items) != 0 {
-					ret = ""
-					for _, item := range sd.ItemList[0].Items {
-						ret = ret + item.Name + ":" + item.Description + "<br>"
-					}
-				}
-			}
-		} */
+	request, err := data.GetRequestByID(id)
+	if err != nil {
+		logger.Error("can not find order request id  ")
+		return ""
 	}
-	//logger.Debug(ret)
-	return ret
+	purchaselist, _ := json.MarshalIndent(request.ItemList, "", "  ")
+	return string(purchaselist)
 }
 
 // 生成购买物品的简单内容
-func GetPurchaseContentFromOrder(order Order) string {
+func getPurchaseContentFromOrder(order Order) string {
 	ret := ""
 	logger.Debug("Order infor:========================")
-	PrettyPrint(order)
+	data.PrettyPrint(order)
 	for i, ordeEntry := range order.PurchaseUnits {
 
 		ret = ret + fmt.Sprintf("%d", i+1) + ":"
@@ -399,7 +416,7 @@ func GetPurchaseContentFromOrder(order Order) string {
 }
 
 // 生成购买物品的简单内容
-func GetPurchaseContentFromRequest(request *OrderRequest) string {
+func getPurchaseContentFromRequest(request *OrderRequest) string {
 	ret := ""
 	logger.Debug("Request infor:========================")
 	//PrettyPrint(request)
@@ -430,8 +447,7 @@ func GetPurchaseContentFromRequest(request *OrderRequest) string {
 func GeneratePurchaseContentFromRequest(request *PurchaseUnitRequest) string {
 	ret := ""
 	logger.Debug("Request infor:========================")
-	PrettyPrint(request)
-	PrettyPrint(*request)
+	data.PrettyPrint(request)
 	for j, item := range request.Items {
 		logger.Debug("found item name ", item.Name)
 		if len(item.Name) > 0 {
@@ -478,7 +494,7 @@ func GetTransationDetail(id string) (SearchTransactionDetails, bool) {
 		if len(result.TransactionDetails) > 0 {
 			return result.TransactionDetails[0], true
 		}
-		//PrettyPrint(result)
+
 		return SearchTransactionDetails{}, false
 	} else {
 		logger.Debug(err)

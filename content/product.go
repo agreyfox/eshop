@@ -21,8 +21,8 @@ type Product struct {
 	Price           float32 `json:"price"`                     //单价
 	MN              uint    `json:"miniNumber"`                //最小购买数
 	Unit            string  `json:"Unit"`                      //购买数量的单位
-	HintImage       string  `json:"hintImage,omitempty"`       //提示图片
-	HintText        string  `json:"hintText,omitempty"`        //提示文字
+	HintImage       string  `json:"hintImage"`                 //提示图片
+	HintText        string  `json:"hintText"`                  //提示文字
 	PurchaseLabel   string  `json:"customerLabel"`             //用户输入提示内容
 	PurchaseCaution string  `json:"customerCaution,omitempty"` //用户输入要求购买内容
 	Discount        string  `json:"discount,omitempty"`        //使用discount模板
@@ -33,7 +33,7 @@ type Product struct {
 // and implements editor.Editable
 func (p *Product) MarshalEditor() ([]byte, error) {
 	view, err := editor.Form(p,
-		// Take note that the first argument to these Input-like functions
+		// Take note that the first argument to these Input-like functionsstring(existingCongtent)
 		// is the string version of each Product field, and must follow
 		// this pattern for auto-decoding and auto-encoding reasons:
 		editor.Field{
@@ -198,7 +198,7 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			Type:       "file",
 			DataType:   "field",
 			DataSource: []string{},
-			Required:   true,
+			Required:   false,
 			Help:       "用户鼠标移动到本产品图片上方时，显示改产品的详细说明，也是一张图片",
 			Order:      110,
 		},

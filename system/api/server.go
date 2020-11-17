@@ -36,8 +36,8 @@ func Run(mainMux *bone.Mux) {
 	//apiv1Mux.HandleFunc("/search", Record(CustomerAuth(CORS(Gzip(searchContentHandler)))))
 
 	//apiv1Mux.HandleFunc("/uploads", Record(CustomerAuth(CORS(Gzip(uploadsHandler)))))
-	apiv1Mux.Get("/files", Record(CORS(Gzip(uploads))))
-	apiv1Mux.Get("/pics", Record(CORS(Gzip(getMedia))))
+	apiv1Mux.Get("/files", CORS(Gzip(uploads)))
+	apiv1Mux.Get("/pics", CORS(Gzip(getMedia)))
 
 	//apiv1Mux.HandleFunc("/user/register", CORS(user.RegisterUsersHandler))
 	apiv1Mux.Post("/register", Record(CORS(RegisterUser)))

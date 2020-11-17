@@ -1,30 +1,22 @@
 package skrill
 
 import (
-	"errors"
+	"encoding/json"
 	"fmt"
+	"time"
 
 	"net/http"
-	"net/url"
 	"strconv"
 
 	"github.com/agreyfox/eshop/payment/data"
 )
 
 var (
-	NotifyURL      = "https://support.bk.cloudns.cc:8081/payment/skrill/notify"
-	ReturnURL      = "https://support.bk.cloudns.cc:8081/payment/skrill/return"
-	CancelURL      = "https://support.bk.cloudns.cc:8081/payment/skrill/cancel"
 	TransactionID  = ""
 	MerchanAccount = ""
 	payClient      *Client
 	payMethod      string
 )
-
-func initSkrill() {
-	logger.Debug("Skrill backend service initialized!")
-	payClient = New()
-}
 
 func CreateTest() {
 	payClient = New()
@@ -34,6 +26,62 @@ func CreateTest() {
 		StatusURL: ReturnURL,
 	}
 	payClient.Prepare(&para)
+}
+
+func userSubmit(w http.ResponseWriter, r *http.Request) {
+	logger.Debug("User submit a  payssion  payment")
+	//ip := GetIP(r)
+	//try to get user post information about the payment
+
+	payload := new(data.UserSubmitOrderRequest)
+	if err := json.NewDecoder(r.Body).Decode(payload); err != nil {
+		//RespondError(w, err, http.StatusBadRequest, GetReqID(r))
+		logger.Errorf("user submit error", err)
+		data.RenderJSON(w, r, map[string]interface{}{
+			"retCode": -1,
+			"msg":     "input data parse error",
+		})
+		return
+	}
+	//reqJSON := getJSONFromBody(r)
+	payload.IPAddr = data.GetIP(r)
+	if validateRequest(payload) != nil {
+		data.RenderJSON(w, r, map[string]interface{}{
+			"retCode": -1,
+			"msg":     "input data parse error",
+		})
+		return
+	}
+	payload.OrderID = data.GetShortOrderID()
+	payload.OrderDate = time.Now().Unix()
+	respond, err := createOrder(payload) //create payssion call
+
+	payload.Respond = respond
+
+	errsave := data.SaveOrderRequest(payload) //finished save request,
+	logger.Debug(errsave)
+	if err == nil {
+
+		retData := map[string]interface{}{
+			"transaction":  payload,
+			"redirect_url": respond,
+		}
+		data.RenderJSON(w, r, map[string]interface{}{
+			"retCode": 0,
+			"msg":     "ok",
+			"data":    retData,
+		})
+
+	} else {
+		data.RenderJSON(w, r, map[string]interface{}{
+			"retCode": -10,
+			"msg":     "Something error",
+			"data":    fmt.Sprint(err),
+		})
+	}
+	w.WriteHeader(http.StatusLocked)
+	return
+
 }
 
 // When user to checkout "Pay Now" button ,It will send the request to beckend system and beckend system will
@@ -55,11 +103,11 @@ payer_name	string	Optional	The customer’s name
 */
 func createPayment(w http.ResponseWriter, r *http.Request) {
 
-	ip := GetIP(r)
+	ip := data.GetIP(r)
 	//try to get user post information about the payment
 	logger.Debugf("User create the paypal payment from %s", ip)
-	reqJSON := getJSONFromBody(r)
-	reqJSON["ip"] = GetIP(r)
+	reqJSON := data.GetJSONFromBody(r)
+	reqJSON["ip"] = ip
 	logger.Debug("User request is %s", reqJSON)
 
 	s, err := strconv.ParseFloat(fmt.Sprintf("%s", reqJSON["amount"]), 64)
@@ -79,7 +127,7 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 		LogoURL:            fmt.Sprintf("%s", reqJSON["logo_url"]),
 		PayFromEmail:       fmt.Sprintf("%s", reqJSON["payer_email"]),
 		MerchantFields:     "order_id",
-		OrderID:            getOrderID(),
+		OrderID:            data.GetShortOrderID(),
 		Address:            fmt.Sprintf("%s", reqJSON["address"]),
 		PhoneNumber:        fmt.Sprintf("%s", reqJSON["phone_number"]),
 		City:               fmt.Sprintf("%s", reqJSON["city"]),
@@ -98,13 +146,13 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 			"redirect_url": ll,
 		}
 		go saveRequest(&para, reqJSON)
-		renderJSON(w, r, map[string]interface{}{
+		data.RenderJSON(w, r, map[string]interface{}{
 			"retCode": 0,
 			"msg":     "ok",
 			"data":    retData,
 		})
 	} else {
-		renderJSON(w, r, map[string]interface{}{
+		data.RenderJSON(w, r, map[string]interface{}{
 			"retCode": -10,
 			"msg":     "Something error",
 			"data":    fmt.Sprint(err),
@@ -118,17 +166,14 @@ func excutePayment(w http.ResponseWriter, r *http.Request) {
 }
 
 func Succeed(w http.ResponseWriter, r *http.Request) {
-	logger.Debug("Skrill return  data from payment")
-	q := r.URL.Query()
-	logger.Debugf("return data transaction_id is %s , msid is %s\n", q.Get("transaction_id"), q.Get("msid"))
-	//data := getJSONFromBody(r)
-	//bodybytes := getBinaryDataFromBody(r)
-	logger.Debugf("Notify from skril with request:%v\n%v", r, r.URL)
-	//logger.Debugf("User finished payment with data %s,", string(bodybytes[:]))
-	url := data.OnlineURL
-	//target := map[string]interface{}{}
 
-	//err := json.Unmarshal(bodybytes, &target)
+	q := r.URL.Query()
+	logger.Infof("Skrill return data transaction_id is %s , msid is %s\n", q.Get("transaction_id"), q.Get("msid"))
+
+	logger.Debugf("Notify from skril with request:%v\n%v", r, r.URL)
+
+	url := data.OnlineURL
+
 	tid := q.Get("transaction_id")
 	if len(tid) == 0 {
 		logger.Error("skrill system return strange data, please check skrill account for transaction ")
@@ -144,74 +189,9 @@ func Succeed(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, url, http.StatusFound)
 }
 
-func SaveNotify(Notifydata []byte) error {
-	values, err := url.ParseQuery(string(Notifydata))
-	logger.Debug(values)
-	if err == nil {
-		amm, err := strconv.ParseFloat(values.Get("amount"), 64)
-		if err != nil {
-			logger.Error("amount parse error ")
-			return errors.New("amount parse error ")
-		}
-		mbmm, err := strconv.ParseFloat(values.Get("mb_amount"), 64)
-		if err != nil {
-			logger.Warn("mb amount parse error ")
-		}
-		statusvalue, err := strconv.ParseInt(values.Get("status"), 10, 0)
-		if err != nil {
-			logger.Error("Status parse error ")
-			return errors.New("State parse  error ")
-		}
-		failedReasonCode, err := strconv.ParseInt(values.Get("failed_reason_code"), 10, 0)
-		if err != nil {
-			logger.Warn("FailedReasonCode parse error ")
-		}
-		retData := StatusResponse{
-			PayToEmail: values.Get("pay_to_email"),
-
-			PayFromEmail: values.Get("pay_from_email"),
-
-			MerchantID:       values.Get("merchant_id"),
-			CustomerID:       values.Get("customer_id"),
-			TransactionID:    values.Get("transaction_id"),
-			MbTransactionID:  values.Get("mb_transaction_id"),
-			MbAmount:         mbmm,
-			MbCurrency:       GetCurrencyCode(values.Get("mb_currency")),
-			Status:           Status(statusvalue),
-			FailedReasonCode: Code(failedReasonCode),
-			Md5Sig:           values.Get("md5sig"),
-			Sha2Sig:          values.Get("sha2sig"),
-			Amount:           amm,
-			Currency:         Currency(values.Get("currency")),
-			NetellerID:       values.Get("neteller_id"),
-			PaymentType:      values.Get("payment_type"),
-			OrderID:          values.Get("order_id"),
-		}
-
-		if retData.Status == SkrillProcessed { // create ok
-			oid, oo, ok := CreateNewOrderInDB(&retData)
-			if ok {
-				if len(oo.Payer) > 0 {
-					go data.SendConfirmEmail(oo.OrderID, "Game item", values.Get("amount"), values.Get("currency"), oo.Payer)
-				}
-			}
-			logger.Debugf("Skrill Order created with id:%d, OrderID is %s", oid, oo.OrderID)
-			return nil
-		} else {
-			logger.Debugf("Notify data with status %s", Status(statusvalue))
-			return errors.New("Notify result is not OK:" + Status(statusvalue).String())
-		}
-	} else {
-		logger.Error("Parse Body data error ", err)
-		return errors.New("Wrong input data")
-	}
-
-	return nil
-}
-
 func Notify(w http.ResponseWriter, r *http.Request) {
-	logger.Debug("Get Notify data from Skrill:", GetIP(r))
-	bodybytes := getBinaryDataFromBody(r)
+	logger.Debug("Get Notify data from Skrill:", data.GetIP(r))
+	bodybytes := data.GetBinaryDataFromBody(r)
 	logger.Debug(string(bodybytes[:]))
 	/*
 		transaction_id=3195856960
@@ -229,7 +209,7 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 		&status=2
 
 	*/
-	err := SaveNotify(bodybytes)
+	err := CreateOrderByNotify(bodybytes)
 	if err != nil {
 		logger.Error("Process data error ", err)
 		w.WriteHeader(http.StatusBadRequest)
@@ -242,7 +222,7 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 func Failed(w http.ResponseWriter, r *http.Request) {
 	logger.Debug("User Cancel the payment")
 	logger.Debug(r)
-	bbb := getBinaryDataFromBody(r)
+	bbb := data.GetBinaryDataFromBody(r)
 	logger.Debug(string(bbb[:]))
 
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/agreyfox/eshop/payment/data"
+	"github.com/agreyfox/eshop/system/db"
 	"github.com/go-zoo/bone"
 
 	"net/http"
@@ -14,11 +15,11 @@ import (
 )
 
 const (
-	brand_name string = "EGpal Game Center"
-	prefer     string = "return=representation"
+	prefer string = "return=representation"
 )
 
 var (
+	brand_name string = "EGpal Game Center"
 	// paypal ClientID
 	ClientID = "AbOMcM4iaf0PYKGgOFCktDD-Rqzpn7R_r2yPfwbopgCLYkBLXkD45c1qejwVX2BrBSxVQgz3_QlU7iFn"
 	//ClientID = "AQETpIU9UXmAro-k0aN6EZHHG-iGvbVdXQH4ywhrOmd8UiVWZF6YBvUkzR2MVJuoxFr2T6Q7kXTUVpEQ"
@@ -28,7 +29,7 @@ var (
 	//Secret      = "EHrup4KHaN2QCa59_oIdaH4cl2u5fYMW5b-g5h99T9YOsyq4mRldit8cztRJ-N1xzMcQ_oBoCdTOSp33"
 	accessToken *TokenResponse
 	returnURL   = "https://support.bk.cloudns.cc:8081/payment/paypal/return"
-	cancelURL   = "https://support.bk.cloudns.cc:8081/payment/paypal/cancle"
+	cancelURL   = "https://support.bk.cloudns.cc:8081/payment/paypal/cancel"
 	thanksURL   = "https://support.bk.cloudns.cc:8081/thanks"
 	webHookID   = "3S402195M8327334K"
 	//webHookHD   = "30G82858PK903472T"
@@ -39,14 +40,53 @@ var (
 
 func initpaypal() {
 
-	client, err := NewClient(ClientID, Secret, APIBaseSandBox)
+	key, err := db.GetParameterFromConfig("PaymentSetting", "name", "company_name", "valueString")
+	if err == nil {
+		brand_name = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "paypal_ClientID", "valueString")
+	if err == nil {
+		ClientID = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "paypal_Secret", "valueString")
+	if err == nil {
+		Secret = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "paypal_webHookID", "valueString")
+	if err == nil {
+		webHookID = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "paypal_NotifyURL", "valueString")
+	if err == nil {
+		hookURL = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "paypal_returnURL", "valueString")
+	if err == nil {
+		returnURL = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "paypal_cancelURL", "valueString")
+	if err == nil {
+		cancelURL = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "paypal_ProgramMode", "valueString")
+	if err == nil {
+		ProgramMode = key
+	}
+	apibase := APIBaseSandBox
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "paypal_ApiBase", "valueString")
+	if err == nil {
+		apibase = key
+	}
+
+	client, err := NewClient(ClientID, Secret, apibase)
 	client.SetLog(logger) // Set log to terminal stdout
 	payClient = client
+
 	logger.Debug("Paypal get access token result:", err)
 	accessToken, err = payClient.GetAccessToken()
-	logger.Debug(accessToken)
+	//logger.Debug(accessToken)
 
-	logger.Info("Start Paypal access token refresh ")
+	logger.Info("Start Paypal access token refresh job ")
 	backendjob := cron.New()
 
 	backendjob.AddFunc("@every 8h30m", func() {
@@ -63,6 +103,79 @@ func Refresh() {
 		logger.Debug("Update paypal accessToken ....")
 		payClient.GetAccessToken()
 		logger.Debugf("Update job done! Next will be:%s", payClient.tokenExpiresAt.Format(time.RFC3339))
+	}
+
+}
+
+func userSubmit(w http.ResponseWriter, r *http.Request) {
+	logger.Debug("User submit a  paypal  payment")
+	//ip := GetIP(r)
+	//try to get user post information about the payment
+
+	payload := new(data.UserSubmitOrderRequest)
+	if err := json.NewDecoder(r.Body).Decode(payload); err != nil {
+
+		logger.Errorf("user submit error", err)
+		data.RenderJSON(w, r, map[string]interface{}{
+			"retCode": -1,
+			"msg":     err,
+		})
+		return
+	}
+	//reqJSON := getJSONFromBody(r)
+	payload.IPAddr = data.GetIP(r)
+	if err := validateRequest(payload); err != nil {
+		data.RenderJSON(w, r, map[string]interface{}{
+			"retCode": -1,
+			"msg":     err,
+		})
+		return
+	}
+	payload.OrderID = data.GetShortOrderID()
+	payload.OrderDate = time.Now().Unix()
+	respond, err := createOrder(payload) //create payssion call
+
+	rettxt, _ := json.MarshalIndent(respond, "", "  ")
+	payload.Respond = string(rettxt)
+
+	errcreateorder := data.SaveOrderRequest(payload) //finished save request,
+	logger.Infof("Create paypal request in db with err:", errcreateorder)
+	if err != nil {
+		logger.Error("create paypal order error:", err)
+		data.RenderJSON(w, r, map[string]interface{}{
+			"retCode": -2,
+			"msg":     err,
+		})
+		return
+	}
+
+	if respond.Status == PaypalCreated {
+		logger.Info("Pay Payment Step 1 done")
+		//go saveOrderRequest(*order, orderReq, IP)
+		lk := respond.Links
+		rd := ""
+		for _, item := range lk { //get the approve link for customer approve
+			if item.Rel == "approve" {
+				rd = item.Href
+				break
+			}
+		}
+		retData := map[string]interface{}{
+			"transaction":  respond,
+			"redirect_url": rd,
+		}
+		data.RenderJSON(w, r, map[string]interface{}{
+			"retCode": 0,
+			"msg":     "ok",
+			"data":    retData,
+		})
+	} else {
+		logger.Error(respond)
+		data.RenderJSON(w, r, map[string]interface{}{
+			"retCode": -10,
+			"msg":     "Something error,Please retry later",
+			"data":    respond.Status,
+		})
 	}
 
 }
@@ -122,191 +235,14 @@ func Refresh() {
 func createPayment(w http.ResponseWriter, r *http.Request) {
 	logger.Debug("User create the paypal payment")
 	//try to get user post information about the payment
-	IP := GetIP(r)
+	IP := data.GetIP(r)
 	//reqJSON := getJSONFromBody(r)
-	rawData := getBinaryDataFromBody(r)
-	logger.Info(string(rawData[:]))
-	//reqJSON := getJSONFromBody(r)
-	/* payer := fmt.Sprint(reqJSON["payer"])
-	if len(payer) == 0 || payer != "paypal" {
-		renderJSON(w, r, map[string]interface{}{
-			"retCode": -1,
-			"msg":     "参数错误：payer ",
-		})
-		return
-	}
-
-	items, ok := reqJSON["item_list"].([]interface{})
-	//fmt.Println(items)
-	if !ok {
-		renderJSON(w, r, map[string]interface{}{
-			"retCode": -1,
-			"msg":     "参数错误，没有设定item_list",
-		})
-		return
-	}
-	email, _ := reqJSON["email"].(string)
-	if len(email) == 0 {
-		renderJSON(w, r, map[string]interface{}{
-			"retCode": -1,
-			"msg":     "参数错误，没有设定email",
-		})
-		return
-	}
-	purchaseReqArray := make([]PurchaseUnitRequest, 0)
-	// 循环处理item 内容
-	for _, item := range items {
-		citem, ok := item.(map[string]interface{})
-		if !ok {
-			renderJSON(w, r, map[string]interface{}{
-				"retCode": -1,
-				"msg":     "参数错误，item_list 结构错误",
-			})
-			return
-		}
-		invoiceID := getOrderID()
-		customerID, _ := citem["customer_id"].(string)
-
-		description, ok := citem["description"].(string)
-		if !ok {
-			description = ""
-		}
-		refID, ok := citem["reference_id"].(string)
-		if !ok {
-			refID = ""
-		}
-		softDescriptor, ok := citem["soft_descriptor"].(string)
-		if !ok {
-			softDescriptor = ""
-		}
-		amountraw, ok := citem["amount"] //.(paypal.PurchaseUnitAmount)
-		if !ok {
-			renderJSON(w, r, map[string]interface{}{
-				"retCode": -1,
-				"msg":     "参数错误，没有设定amount",
-			})
-			return
-		}
-		amounttran, ok := amountraw.(map[string]interface{})
-
-		currency, ok := amounttran["currency_code"].(string)
-		if !ok {
-			renderJSON(w, r, map[string]interface{}{
-				"retCode": -1,
-				"msg":     "参数错误，amount 参数错误",
-			})
-			return
-		}
-		value, ok := amounttran["value"].(string)
-		if !ok {
-			renderJSON(w, r, map[string]interface{}{
-				"retCode": -1,
-				"msg":     "参数错误，amount 参数错误",
-			})
-			return
-		}
-
-		amount := PurchaseUnitAmount{
-			Currency: currency,
-			Value:    value,
-		}
-
-		breakdown := amounttran["breakdown"] //.(paypal.PurchaseUnitAmountBreakdown)
-		if !isNil(breakdown) {
-			mm, err := json.Marshal(breakdown)
-			if err != nil {
-				logger.Warn("no breakdown ")
-			} else {
-				amount.Breakdown = &PurchaseUnitAmountBreakdown{}
-				err = json.Unmarshal(mm, amount.Breakdown)
-			}
-		}
-		//fmt.Println("========>", amount)
-
-		sp, ok := citem["shipping"].(map[string]interface{})
-
-		if !ok {
-			renderJSON(w, r, map[string]interface{}{
-				"retCode": -1,
-				"msg":     "参数错误，没有设定shipping",
-			})
-			return
-		}
-		m, err := json.Marshal(sp)
-		if err != nil {
-			logger.Error(err)
-			renderJSON(w, r, map[string]interface{}{
-				"retCode": -1,
-				"msg":     "参数错误，shipping 错误",
-			})
-			return
-		}
-		shipping := ShippingDetail{}
-		err = json.Unmarshal(m, &shipping)
-		if err != nil {
-			logger.Error(err)
-			renderJSON(w, r, map[string]interface{}{
-				"retCode": -1,
-				"msg":     "参数错误，shipping 错误",
-			})
-			return
-		}
-
-		onePurchaseReq := PurchaseUnitRequest{
-			Amount: &amount,
-		}
-
-		if !isNil(invoiceID) {
-			onePurchaseReq.InvoiceID = invoiceID
-		}
-		if !isNil(shipping) {
-			onePurchaseReq.Shipping = &shipping
-		}
-		if !isNil(customerID) {
-			onePurchaseReq.CustomID = customerID
-		}
-		if !isNil(description) {
-			onePurchaseReq.Description = description
-		}
-		if !isNil(refID) {
-			onePurchaseReq.ReferenceID = refID
-		}
-		if !isNil(softDescriptor) {
-			onePurchaseReq.SoftDescriptor = softDescriptor
-		}
-
-		itemArray := make([]Item, 0)
-		purchaseUnits := citem["items"].([]interface{})
-		for _, ite := range purchaseUnits {
-
-			//	m, ok := ite.(map[string]interface{})
-
-			m, err := json.Marshal(ite)
-			if err != nil {
-				logger.Warn("item convert error")
-				continue
-			}
-			realitem := Item{}
-			ok := json.Unmarshal(m, &realitem)
-			if ok == nil {
-				itemArray = append(itemArray, realitem)
-			} else {
-				logger.Warn("item convert error")
-				fmt.Println(ok)
-				continue
-			}
-
-		}
-		if len(itemArray) > 0 {
-			onePurchaseReq.Items = itemArray
-		}
-		purchaseReqArray = append(purchaseReqArray, onePurchaseReq)
-	} */
+	rawData := data.GetBinaryDataFromBody(r)
 
 	orderReq, err := getOrderRequestFromUserSubmit(rawData)
 	if err != nil {
 		logger.Error(err)
-		renderJSON(w, r, map[string]interface{}{
+		data.RenderJSON(w, r, map[string]interface{}{
 			"retCode": -1,
 			"msg":     err.Error(),
 		})
@@ -314,12 +250,12 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 	}
 	//fmt.Println(or, err)
 	//orderReq := *or
-	invoiceID := getOrderID()
+	invoiceID := data.GetShortOrderID()
 
 	err = json.Unmarshal(rawData, &orderReq)
 	if err != nil {
 		logger.Error(err)
-		renderJSON(w, r, map[string]interface{}{
+		data.RenderJSON(w, r, map[string]interface{}{
 			"retCode": -1,
 			"msg":     "参数错误:" + err.Error(),
 		})
@@ -361,7 +297,7 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 	//	client.Unlock()
 	if err != nil {
 		logger.Debug("create paypal order error:", err)
-		renderJSON(w, r, map[string]interface{}{
+		data.RenderJSON(w, r, map[string]interface{}{
 			"retCode": -2,
 			"msg":     "创建订单失败",
 		})
@@ -384,14 +320,14 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 			"transaction":  order,
 			"redirect_url": rd,
 		}
-		renderJSON(w, r, map[string]interface{}{
+		data.RenderJSON(w, r, map[string]interface{}{
 			"retCode": 0,
 			"msg":     "ok",
 			"data":    retData,
 		})
 	} else {
 		logger.Error(order)
-		renderJSON(w, r, map[string]interface{}{
+		data.RenderJSON(w, r, map[string]interface{}{
 			"retCode": -10,
 			"msg":     "Something error,Please retry later  ",
 			"data":    order.Status,
@@ -413,11 +349,11 @@ to capture result is like
 */
 
 func Succeed(w http.ResponseWriter, r *http.Request) {
-	logger.Info("Paypal return from order creation,Step 2 done!")
+
 	q := r.URL.Query()
 	payID := q.Get("PayerID")
 	token := q.Get("token")
-	logger.Debugf("User %s finished payment , the token is %s,", payID, token)
+	logger.Infof("Paypal return from order creation,Step 2 done\n User %s finished payment , the token is %s,", payID, token)
 	tok := PaymentSourceToken{
 		ID:   token,
 		Type: "BILLING_AGREEMENT",
@@ -432,11 +368,10 @@ func Succeed(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, url, http.StatusFound)
 	}
 	if captureRes.Status == PaypalCompleted {
-		logger.Info("Step 3 to send capture payment is done!", captureRes.ID)
+		logger.Info("Paypal payment Step 3 to send capture payment is done!", captureRes.ID)
 		logger.Debug("The Capture Result:", captureRes)
 		go saveCapture(*captureRes) //to save capture
-		// now to forward to succssful url
-		//w.Write([]byte(fmt.Sprintf("订单号 ：%s,Thanks！", captureRes.ID)))
+
 		url := data.OnlineURL
 		if len(captureRes.ID) > 0 {
 			url += fmt.Sprintf("?status=1&orderno=%s", captureRes.PurchaseUnits[0].InvoiceID)
@@ -445,8 +380,7 @@ func Succeed(w http.ResponseWriter, r *http.Request) {
 		}
 		http.Redirect(w, r, url, http.StatusFound)
 	} else {
-		logger.Debug("Step 3 send capture  return with error:", captureRes.Status)
-		//w.Write([]byte(fmt.Sprintf("可能有点问题，回到购物车！")))
+		logger.Debug("Paypal Step 3 send capture order   return with error:", captureRes.Status)
 		url := data.OnlineURL
 		url += fmt.Sprintf("status=0&msg=%s", captureRes.Status)
 		http.Redirect(w, r, url, http.StatusFound)
@@ -460,7 +394,7 @@ func Failed(w http.ResponseWriter, r *http.Request) {
 }
 
 func Test(w http.ResponseWriter, r *http.Request) {
-	ree := getJSONFromBody(r)
+	ree := data.GetJSONFromBody(r)
 	//id, _ := ree["id"].(string)
 	//data, _ := ree["status"].(string)
 	//UpdateOrderStatus(id, data)
@@ -475,42 +409,37 @@ func Index(w http.ResponseWriter, r *http.Request) {
 // Notify accept all the notification from paypal
 func Notify(w http.ResponseWriter, r *http.Request) {
 
-	bodybytes := getBinaryDataFromBody(r)
+	bodybytes := data.GetBinaryDataFromBody(r)
 	logger.Debug("Notification from Paypal:", string(bodybytes[:]))
-	/* verifyResp, _ := payClient.VerifyWebhookSignature(r, webHookID)
 
-	if verifyResp.VerificationStatus != PaypalVerified || ProgramMode != "DEBUG" {
-		logger.Errorf("failed to decode request body: %s", verifyResp)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	logger.Debugf("Verification pass") */
+	ree := data.GetJSONFromBody(r)
 
-	ree := getJSONFromBody(r)
-
-	byarry, _ := json.Marshal(ree)
-
-	//logger.Debug("Notification body:", string(bodybytes))
-	//logger.Debug("map string ", string(byarry))
-
-	var notification WebHookNotifiedEvent
-	err := json.Unmarshal(byarry, &notification)
+	byarry, err := json.Marshal(ree)
 	if err != nil {
-		logger.Errorf("failed to decode request body: %s", err)
+		data.RenderJSON(w, r, map[string]interface{}{
+			"retCode": -88,
+			"msg":     "error when reterive notify data",
+		})
+		return
+	}
+	var notification WebHookNotifiedEvent
+	err = json.Unmarshal(byarry, &notification)
+	if err != nil {
+		logger.Errorf("failed to decode notify body: %s", err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	//logger.Debug(PrettyPrint(notification))
+
 	go saveNotify(notification) // Save the notification
 
-	logger.Debugf("paypal notification %s arrival with resource %v", notification.ID, notification.EventType)
+	logger.Infof("paypal notification %s arrival with resource %v", notification.ID, notification.EventType)
 	switch {
-	case notification.EventType == EventPaymentCaptureCompleted:
+	case notification.EventType == EventPaymentCaptureCompleted || notification.EventType == EventPaymentCapturePending:
 		logger.Infof("Step 4 Capture after customer approve,The resource is :%s", fmt.Sprint(notification.Resource))
-		//verifyResp, _ := payClient.VerifyWebhookSignatureWithData(r, webHookID, bodybytes)
-		//logger.Debug(PrettyPrint(verifyResp))
-		//if verifyResp.VerificationStatus == PaypalVerified || ProgramMode == "DEBUG" {
-		if ProgramMode == "DEBUG" {
+		verifyResp, _ := payClient.VerifyWebhookSignatureWithData(r, webHookID, bodybytes)
+		logger.Debug(verifyResp)
+		if verifyResp.VerificationStatus == PaypalVerified || ProgramMode == "DEBUG" {
+			//if ProgramMode == "DEBUG" {
 			resource := CaptureResource{}
 			rr, _ := json.Marshal(notification.Resource)
 			err := json.Unmarshal(rr, &resource)
@@ -523,18 +452,17 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 			oid, oo, ok := CreateNewOrderInDB(&notification, resource)
 			if ok {
 				if len(oo.Payer) > 0 {
-					//logger.Debug(oo)
+					logger.Debug("paypal send eamil for order accept %s,%s", oo.Payer, GetPurchaseContent(resource.InvoiceID))
 					go data.SendConfirmEmail(resource.InvoiceID, GetPurchaseContent(resource.InvoiceID), resource.Amount.Value, resource.Amount.Currency, oo.Payer)
 				}
-				logger.Infof("New order %d Created!", oid)
-				//go data.UpdateOrderByID(fmt.Sprint("%d", oid), data.OrderInValidate)
-				//UpdateOrderStatusByOrderID(fmt.Sprint("%d", oid), data.OrderInValidate)
+				logger.Infof("New paypal order %d Created!", oid)
+
 			} else {
 				logger.Info("New order Created Error!")
 			}
 			//go SaveTransationDetail(resource.ID)
 		} else {
-			logger.Warn("The verification failed!")
+			logger.Warn("The paypal webhook  verification failed!")
 		}
 		w.WriteHeader(http.StatusOK)
 
@@ -591,16 +519,16 @@ func TransactionInfo(w http.ResponseWriter, r *http.Request) {
 	logger.Infof("Search transactions id :%s", tid)
 	result, ok := GetTransationDetail(tid)
 	if ok {
-		renderJSON(w, r, map[string]interface{}{
+		data.RenderJSON(w, r, map[string]interface{}{
 			"retCode": 0,
 			"msg":     "ok",
 			"data":    result,
 		})
 	} else {
-		logger.Error("Search error,Request from :", GetIP(r))
-		renderJSON(w, r, map[string]interface{}{
+		logger.Error("Search error,Request from :", data.GetIP(r))
+		data.RenderJSON(w, r, map[string]interface{}{
 			"retCode": -10,
-			"msg":     "Internal error ",
+			"msg":     "internal error",
 			"data":    "",
 		})
 	}

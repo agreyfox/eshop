@@ -85,9 +85,9 @@ func RegisterUser(res http.ResponseWriter, req *http.Request) {
 	social := ""
 	phone := ""
 	meta := ""
-	social = fmt.Sprintf("%s", reqJSON["social"])
-	phone = fmt.Sprintf("%s", reqJSON["phone"])
-	meta = fmt.Sprintf("%s", reqJSON["metadata"])
+	social = reqJSON["social_link"].(string)
+	phone = reqJSON["phone"].(string)
+	meta = reqJSON["social_type"].(string)
 
 	if email == "" || password == "" {
 		logger.Error("Insufficient user register information")
@@ -97,7 +97,7 @@ func RegisterUser(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	usr, err := user.NewCustomer(email, password)
+	usr, err := user.NewCustomerWithSocial(email, password, meta, social)
 	if err != nil {
 		logger.Error(err)
 		RenderJSON(res, req,
@@ -109,8 +109,8 @@ func RegisterUser(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	usr.Phone = phone
-	usr.Social = social
-	usr.Meta = meta
+	//usr.Social = social
+	//usr.Meta = meta
 	_, err = db.SetUser(usr)
 	if err != nil {
 		logger.Error(err)
@@ -246,6 +246,8 @@ func Login(res http.ResponseWriter, req *http.Request) {
 		DefaultCountry: countryInfor,
 		Country:        country,
 		Currency:       currency,
+		SocialType:     usr.Meta,
+		SocialLink:     usr.Social,
 	})
 
 	return
@@ -270,6 +272,8 @@ func Config(res http.ResponseWriter, req *http.Request) {
 		DefaultCountry: countryInfor,
 		Country:        country,
 		Currency:       currency,
+		SocialType:     "",
+		SocialLink:     "",
 	})
 	return
 }

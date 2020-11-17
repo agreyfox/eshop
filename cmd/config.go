@@ -80,6 +80,9 @@ func DistplayAllConfig() {
 	if err != nil {
 		logger.Fatal("DB open error,", err)
 	}
+	//s, e := db.GetParameterFromConfig("PaymentSetting", "name", "company_name", "valueString")
+	//fmt.Println(s)
+	//fmt.Println(e)
 	var ma map[string]interface{}
 	err = json.Unmarshal(config, &ma)
 	PrettyPrint(ma)
