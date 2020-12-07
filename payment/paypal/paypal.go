@@ -79,5 +79,6 @@ func Start(mainMux *bone.Mux) {
 		w.Write([]byte("Thanks! WelCome "))
 	}))
 	mainMux.SubRoute("/payment/paypal", boltMux)
+	//mainMux.SubRoute("/payment/paypal,paypal", boltMux)
 
 }

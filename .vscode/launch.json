@@ -10,7 +10,7 @@
       "request": "launch",
       "mode": "debug",
       "program": "/home/lq/ifb/src/eshop/cli.go",
-      "args": ["serve", "admin,db,paypal,payssion,skrill,monitor,api"]
+      "args": ["serve", "admin,db,paypal,payssion,skrill,static,monitor,api"]
     },
     {
       "name": "Launch",

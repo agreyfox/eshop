@@ -59,7 +59,7 @@ var serveCmd = &cobra.Command{
 				admin.Run(mainMux)
 			} else if service == "db" {
 				boltdbweb.Run(db.Store(), mainMux) //run bolt db instance
-			} else if service == "paypal" || service == "payssion" || service == "skrill" {
+			} else if service == "static" || service == "paypal" || service == "payssion" || service == "skrill" {
 				payment.Run(service)
 			} else if service == "monitor" {
 				go prometheus.Run(":9001", mainMux)

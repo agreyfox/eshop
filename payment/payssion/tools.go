@@ -59,13 +59,13 @@ func createOrder(r *data.UserSubmitOrderRequest) (*PaymentResponse, error) {
 	}
 
 	logger.Debug("Ready to create a payssion order,Data Save to tempdb!")
-
+	//logger.Debug(purchaseReq)
 	//	client.Lock()
 	order, err := payClient.CreateOrder(&purchaseReq)
 	//	client.Unlock()
 	if err != nil {
 		logger.Errorf("create payssion order error:%s", err)
-		return nil, fmt.Errorf("创建订单失败%s", err.Error())
+		return nil, fmt.Errorf("创建订单失败:%s", err.Error())
 	}
 	//go saveRequest(order, reqJSON)
 
@@ -133,7 +133,7 @@ func saveNotify(t *NotifyResponse) bool {
 	record := data.PaymentLog{
 		ReturnData: t,
 	}
-	record.OrderID = t.OrderID
+	record.OrderID = t.OrderID + "-" + t.State // log id format
 	record.PaymentMethod = "payssion"
 	record.PaymentID = t.PMID
 	record.Total = t.Amount
@@ -176,16 +176,16 @@ func CreateNewOrderInDB(notifyData *NotifyResponse) (int, data.Order, bool) {
 		PaymentNote:   notifyData.AppName,
 		NotifyInfo:    string(buff[:]),
 		Description:   notifyData.Description,
-		Comments:      notifyData.Description,
-		Currency:      notifyData.Currency,
-		Total:         notifyData.Amount,
-		Paid:          notifyData.Paid,
-		Net:           notifyData.Net,
-		AdminNote:     oid,
-		UpdateTime:    fmt.Sprint(time.Now().Format(time.RFC1123)),
-		Paytime:       fmt.Sprint(time.Now().Format(time.RFC1123)),
-		IsRefund:      false,
-		IsChargeBack:  false,
+		//Comments:      notifyData.Description,
+		Currency:     notifyData.Currency,
+		Total:        notifyData.Amount,
+		Paid:         notifyData.Paid,
+		Net:          notifyData.Net,
+		AdminNote:    oid,
+		UpdateTime:   fmt.Sprint(time.Now().Format(time.RFC1123)),
+		Paytime:      fmt.Sprint(time.Now().Format(time.RFC1123)),
+		IsRefund:     false,
+		IsChargeBack: false,
 	}
 	// now to get some data from payment request
 
@@ -202,9 +202,14 @@ func CreateNewOrderInDB(notifyData *NotifyResponse) (int, data.Order, bool) {
 	if err == nil {
 		databuff, _ := json.MarshalIndent(request.ItemList, "", "  ")
 		order.OrderDetail = string(databuff[:])
-		order.Payer = request.Email
+		order.User = request.Email
+		order.PayerLink = request.ContactInfo
 		order.PayerIP = request.IPAddr
+		order.Payer = ""
+		order.Comments = request.RequestInfo
 		order.RequestTime = fmt.Sprint(time.Unix(request.OrderDate, 0).Format(time.RFC1123))
+	} else {
+		logger.Errorf("The request is not found, This is wired!,ID is %f", ID)
 	}
 	order.Status = data.OrderPaid // create a order start from order paid
 	mm, _ := json.Marshal(order)

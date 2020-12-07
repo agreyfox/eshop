@@ -49,23 +49,46 @@ func init() {
 	//logger.Info("init Payssion beckend  web interface")
 }
 
-// Start to mdb, rdb *bolt.DB, mainMux *bone.Mux
-func Start(mainMux *bone.Mux) {
-
-	logger.Info("starting payssion beckend service...")
-	initPayssion() // repalce to not use default initial
-
-	pwd, erro := os.Getwd()
-	if erro != nil {
-		logger.Error("Couldn't find current directory for file server.")
+/*
+	key, err := db.GetParameterFromConfig("PaymentSetting", "name", "payssion_returnURL", "valueString")
+	if err == nil {
+		returnURL = key
 	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "payssion_cancelURL", "valueString")
+	if err == nil {
+		cancelURL = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "notify_email", "valueString")
+	if err == nil {
+		emailURL = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "payssion_apikey", "valueString")
+	if err == nil {
+		APIKey = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "payssion_SecretKey", "valueString")
+	if err == nil {
+		SecretKey = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "payssion_notifyURL", "valueString")
+	if err == nil {
+		notifyURL = key
+	}
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "paysession_apibase", "valueString")
+	if err == nil {
+		apibase = key
+	}
+
+*/
+
+func Start(mainMux *bone.Mux) {
 
 	logger.Info("Initial payssion payment environment")
 
 	//dbHandler = mdb // keep main db
 
 	//tempDBHandler = rdb
-
+	initPayssion()
 	boltMux := bone.New() //.Prefix("admin")
 	boltMux.Get("/ping", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Welcome payssion"))
@@ -80,13 +103,18 @@ func Start(mainMux *bone.Mux) {
 	boltMux.HandleFunc("/return", http.HandlerFunc(Succeed))
 	boltMux.HandleFunc("/cancel", Failed)
 
+	pwd, erro := os.Getwd()
+	if erro != nil {
+		logger.Error("Couldn't find current directory for file server.")
+	}
+
 	//boltMux.Handle("/web/", http.StripPrefix("/static/", db.CacheControl(http.FileServer(restrict(http.Dir(staticDir))))))
 	pageDir := filepath.Join(pwd, "payment/payssion", "web")
 
 	mainMux.Get("/payssion/*", http.StripPrefix("/payssion/", http.FileServer(http.Dir(pageDir))))
 	mainMux.Get("/thanks", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Thanks! WelCome"))
+		w.Write([]byte("Thanks! Welcome"))
 	}))
 	mainMux.SubRoute("/payment/payssion", boltMux)
-
+	//mainMux.SubRoute("/payment/payssion,payssion", boltMux)
 }

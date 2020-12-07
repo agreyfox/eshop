@@ -67,6 +67,33 @@ func saveRequest(t *PrepareParam, request map[string]interface{}) bool {
 
 }
 
+// to save a record
+func saveNotify(t *StatusResponse) bool {
+	// Store the user model in the user bucket using the username as the key.
+
+	record := data.PaymentLog{
+		ReturnData: t,
+	}
+	record.OrderID = t.OrderID + "-" + t.Status.String() // log id format
+	record.PaymentMethod = "payssion"
+	record.PaymentID = t.MbTransactionID
+	record.Total = fmt.Sprint(t.MbAmount)
+	record.Currency = fmt.Sprint(t.MbCurrency)
+	record.PaymentState = t.Status.String()
+
+	record.RequestTime = time.Now().Unix()
+	record.Info = t.PaymentType
+
+	ok := data.SavePaymentLog(&record)
+	if ok {
+		logger.Info("Save skrill payment log done!")
+	} else {
+		logger.Info("Save skrill payment log error!")
+	}
+	return ok
+
+}
+
 // create skril
 func createOrder(r *data.UserSubmitOrderRequest) (string, error) {
 
@@ -94,11 +121,13 @@ func createOrder(r *data.UserSubmitOrderRequest) (string, error) {
 		LastName:           r.LastName,       //fmt.Sprintf("%s", reqJSON["lastname"]),
 		PaymentMethods:     r.PaymentChannel, //fmt.Sprintf("%s", reqJSON["payment_methods"]),
 	}
+	//logger.Debug(para)
 	ll, err := payClient.Prepare(&para)
 	return ll, err
 
 }
 
+// save notity to log, create order in dv
 func CreateOrderByNotify(Notifydata []byte) error {
 	values, err := url.ParseQuery(string(Notifydata))
 	logger.Debugf("Get skril notify data :%v\n ready to create order", values)
@@ -142,7 +171,7 @@ func CreateOrderByNotify(Notifydata []byte) error {
 			PaymentType:      values.Get("payment_type"),
 			OrderID:          values.Get("order_id"),
 		}
-
+		go saveNotify(&retData)                //add 2020/11/25
 		if retData.Status == SkrillProcessed { // create ok
 			oid, oo, ok := CreateNewOrderInDB(&retData)
 			if ok {
@@ -158,7 +187,7 @@ func CreateOrderByNotify(Notifydata []byte) error {
 		}
 	} else {
 		logger.Error("Parse Body data error ", err)
-		return errors.New("Wrong input data")
+		return errors.New("wrong input data")
 	}
 
 	return nil
@@ -183,37 +212,31 @@ func CreateNewOrderInDB(notifyData *StatusResponse) (int, data.Order, bool) {
 		PaymentMethod: notifyData.PaymentType,
 		PaymentNote:   notifyData.NetellerID,
 		NotifyInfo:    string(buff[:]),
-		Description:   "",
-		Comments:      "",
 		Currency:      string(notifyData.Currency),
 		Total:         fmt.Sprintf("%.2f", notifyData.Amount),
 		Paid:          "",
 		Net:           "",
-		AdminNote:     oid + fmt.Sprintf("Return code is %s", notifyData.FailedReasonCode),
+		AdminNote:     "",
 		UpdateTime:    fmt.Sprint(time.Now().Format(time.RFC1123)),
 		Paytime:       fmt.Sprint(time.Now().Format(time.RFC1123)),
 		IsRefund:      false,
 		IsChargeBack:  false,
+		Payer:         notifyData.PayFromEmail,
 	}
-	// get order request fill data
-	/* originReq, err := data.GetRequestByState(ID, SkrillCreated.String())
 
-	if err == nil {
-		databuff, _ := json.Marshal(originReq.ReturnData)
-		order.OrderDetail = string(databuff[:])
-		order.Payer = originReq.BuyerEmail
-		order.PayerIP = originReq.IP
-		order.RequestTime = fmt.Sprint(time.Unix(originReq.RequestTime, 0).Format(time.RFC1123))
-	}
-	*/
 	request, err := data.GetRequestByID(ID)
 
 	if err == nil {
 		databuff, _ := json.Marshal(request.ItemList)
 		order.OrderDetail = string(databuff[:])
-		order.Payer = request.Email
+		order.Description = string(databuff[:])
+		order.User = request.Email
+		order.PayerLink = request.ContactInfo
 		order.PayerIP = request.IPAddr
+		order.Comments = request.RequestInfo
 		order.RequestTime = fmt.Sprint(time.Unix(request.OrderDate, 0).Format(time.RFC1123))
+	} else {
+		logger.Errorf("The request is not found, This is wired!,ID is %f", ID)
 	}
 	order.Status = data.OrderPaid // create a order start from order paid
 	mm, _ := json.Marshal(order)

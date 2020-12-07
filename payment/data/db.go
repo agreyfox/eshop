@@ -16,9 +16,6 @@ import (
 /*
 数据结构如下
 records.db 中 payments 是 root bucket 相当于table
-			"orderid"是子bucket
-				“state":key
-				orderentry ： value
 */
 
 // SaveRequest to save the data in payment
@@ -83,18 +80,16 @@ func GetRequestByID(orderid string) (*UserSubmitOrderRequest, error) {
 /*
 数据结构如下
 records.db 中 payments 是 root bucket 相当于table
-			"orderid"是子bucket
-				“state":key
-				orderentry ： value
+		id 是order
 */
 
 // SaveRequest to save the data in payment
 func SavePaymentLog(log *PaymentLog) bool {
 
 	log.RequestTime = time.Now().Unix()
-	state := log.PaymentState
+	//state := log.PaymentState
 
-	ID := log.OrderID // TODO: need find better id
+	ID := log.OrderID // this is log id format {orderid}-CHECK.OUT
 
 	tx, err := PaymentLogHandler.Begin(true)
 	if err != nil {
@@ -105,16 +100,17 @@ func SavePaymentLog(log *PaymentLog) bool {
 
 	root := tx.Bucket([]byte(DBLogName))
 	// Setup the order bucket.
-	bkt, err := root.CreateBucketIfNotExists([]byte(ID))
+
+	/* bkt, err := root.CreateBucketIfNotExists([]byte(ID))
 	if err != nil {
 		logger.Error(err)
 		return false
 	}
-
+	*/
 	if buf, err := json.Marshal(log); err != nil {
 		logger.Error(err)
 		return false
-	} else if err := bkt.Put([]byte(state), buf); err != nil {
+	} else if err := root.Put([]byte(ID), buf); err != nil {
 		logger.Error(err)
 		return false
 	}

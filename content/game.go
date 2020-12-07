@@ -10,18 +10,21 @@ import (
 type Game struct {
 	item.Item
 
-	Name        string `json:"name"`
-	Sname       string `json:"sname,omitempty"`
-	Logo        string `json:"logo,omitempty"`
-	Image       string `json:"barImage,omitempty"`
-	Online      bool   `json:"online"`
-	Hotitem     bool   `json:"hotitem"`
-	CoinCode    string `json:"coinName"`
-	ItemCode    string `json:"itemName"`
-	ProductSell string `json:"productSell"` //  设定该游戏销售那些内容，coin,item，both
-	Desc        string `json:"description,omitempty"`
-	Coupon      string `json:"coupon,omitempty"` //使用那个coupon
-	Hot         bool   `json:"hot,omitempty"`    //是否在hotgame中显示
+	Name         string `json:"name"`
+	Sname        string `json:"sname,omitempty"`
+	Logo         string `json:"logo,omitempty"`
+	Image        string `json:"barImage,omitempty"`
+	Online       bool   `json:"online"`
+	Hotitem      bool   `json:"hotitem"`
+	CoinCode     string `json:"coinName"`
+	ItemCode     string `json:"itemName"`
+	ProductSell  string `json:"productSell"` //  设定该游戏销售那些内容，coin,item，both
+	Desc         string `json:"description,omitempty"`
+	CategoryHint string `json:"categoryHint,omitempty"`
+	ServerHint   string `json:"serverHint,omitempty"`
+	Coupon       string `json:"coupon,omitempty"`   //使用那个coupon
+	Hot          bool   `json:"hot,omitempty"`      //是否在hotgame中显示
+	BuyNotes     string `json:"buyNotes,omitempty"` //购买说明
 }
 
 // MarshalEditor writes a buffer of html to edit a Game within the CMS
@@ -99,6 +102,20 @@ func (o *Game) ContentStruct() map[string]interface{} {
 			Help:       "用户界面中的物品类型名称",
 			Required:   true,
 			Order:      11},
+		"categoryHint": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Help:       "用户界面中的category 的名称",
+			Required:   true,
+			Order:      12},
+		"serverHint": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Help:       "用户界面中的Server的名称",
+			Required:   true,
+			Order:      13},
 		"productSell": {
 			Type:       "select",
 			DataType:   "field",
@@ -145,6 +162,11 @@ func (o *Game) ContentStruct() map[string]interface{} {
 			Help:       "选择本游戏是否出现在hotitem列表中",
 			Order:      80,
 		},
+		"buyNotes": {
+			Type:       "textarea",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      85},
 		"description": {
 			Type:       "textarea",
 			DataType:   "field",

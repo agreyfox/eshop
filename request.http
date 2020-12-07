@@ -19,14 +19,19 @@ grant_type=client_credentials
 
 GET https://api.sandbox.paypal.com/v1/notifications/webhooks 
 Content-Type: application/json 
-Authorization: Bearer A21AAGGYeBxl1wCjR8XOGr9Z1xBfMj6UVFjUNCMZAPbWAUsZmWFQnQTocx30W_ipTewPjxpVY9VySYmOvgykRVcbxm0kGDqFA
+Authorization: Bearer A21AAKHo9PRmJmkTowrW67Q87XoauHbNv5VMyZ7pS53_y1ZtSoPa1yLKRDYh3m3uxa_oEdI8epm8xKeafyIGhkryNh6W3TqHQ
 
 ### 
 
-
-GET https://api.sandbox.paypal.com/v1/reporting/transactions?transactions_id=6PV87177YK9364734&start_date=2020-07-04T00:00:00-0700&end_date=2020-07-08T23:59:59-0700&fields=all&page_size=100&page=1 
+GET https://api.sandbox.paypal.com/v1/reporting/transactions?&start_date=2020-11-01T00:00:00-0700&end_date=2020-12-02T23:59:59-0700&page=1&transaction_id=4CE4044950003234R
 Content-Type: application/json
-Authorization: Bearer A21AAG4tOxgh9wz1Q44ieUZgPyI0YOAIv2qvFbS7KEe-swpq1dxS7boi18Fkd-Vl5cPnM0IYJue0tPp7a1PrkJW4o_UjazzSA
+Authorization: Bearer A21AAJp0dZ7s1fatFijU_e6ISJ2lRUvhJJNbayNW9WQTICLYxbAQDTqJs5ubcjCA2oyYWQz4T848NP7UfBTsppvWWkF3AUz-A
+
+###
+
+GET https://api.sandbox.paypal.com/v1/reporting/transactions?&start_date=2020-11-01T00:00:00-0700&end_date=2020-12-02T23:59:59-0700&page=1&transaction_amount=250247
+Content-Type: application/json
+Authorization: Bearer A21AAKHo9PRmJmkTowrW67Q87XoauHbNv5VMyZ7pS53_y1ZtSoPa1yLKRDYh3m3uxa_oEdI8epm8xKeafyIGhkryNh6W3TqHQ
 
 ###
 GET https://api.sandbox.paypal.com/v2/checkout/orders/8K9173018M398481Y
@@ -40,6 +45,10 @@ Content-Type: application/json
 Authorization: Bearer A21AAHhaJi5v-rs5F16L26I1xhelfJHr62BYPScnlwduSqm22n1tIvNfug0BdRgGLPzy-RNhBPUJHl5j39YXKByqVcNGTakyg
 
 ###
+https://api.sandbox.paypal.com/v1/reporting/transactions?end_date=2020-12-02T20%3A01%3A06%2B08%3A00&fields=all&page=1&page_size=5&start_date=2020-11-01T20%3A01%3A06%2B08%3A00&transaction_amount=129224
+Content-Type: application/json
+Authorization: Bearer A21AAJp0dZ7s1fatFijU_e6ISJ2lRUvhJJNbayNW9WQTICLYxbAQDTqJs5ubcjCA2oyYWQz4T848NP7UfBTsppvWWkF3AUz-A
+
 
 https://api.sandbox.paypal.com/v1/payments/payment?count=10&start_index=0&sort_by=create_time 
 Content-Type: application/json
@@ -229,7 +238,7 @@ Content-Type: application/json
               "full_name":"geRobinson"
             },
       "address":{
-              "address_line_1": "4th Floor",
+              "address_line_1": "4th Floor",139947674N552203W
               "address_line_2":"",
               "admin_area_2": "San Jose",
               "admin_area_1": "CA",
@@ -704,7 +713,41 @@ Content-Type: applications/json
 "status":""
 }
 
+###
 
+POST http://127.0.0.1:8080/payment/paypal/dopay
+Content-Type: applications/json
+
+{"payment":"paypal",
+"payment_channel":"BILLING",
+"amount":18,
+"currency":"USD",
+"language":"UK",
+"email":"408006570@qq.com",
+"request_info":"12",
+"contract_info":"whatsappcehi",
+"item_list":[
+  {
+    "game":"Neverwinter Online",  
+    "server":"PC",
+    "unit_price":8.99,
+    "product":"NWO AD*1",
+    "quantity":2}
+],
+"sub_total":17.98,
+"city":"",
+"country":"",
+"first_name":"",
+"last_name":"",
+"phone":"18352862123",
+"coupon_code":"",
+"coupon_value":0,
+"payment_fee":0.02,
+"logo_url":"",
+"address":"",
+"description":"",
+"status":""
+}
 
 ###
 
@@ -758,3 +801,378 @@ Content-Type: applications/json
   "updated":1605588332310,
   "uuid":"734d6c32-d940-4fd6-a3c1-fea2adafa35d"
   }
+
+###
+
+POST https://support.bk.cloudns.cc:8081/payment/static/dopay
+Content-Type: applications/json
+
+{"payment":"static",
+"payment_channel":"Wechat",
+"amount":1,
+"currency":"USD",
+"language":"UK",
+"email":"408006570@qq.com",
+"request_info":"12",
+"contract_info":"saiQidunasm",
+"item_list":[
+  {
+    "game":"Neverwinter Online",  
+    "server":"PC",
+    "unit_price":0.5,
+    "product":"dmcmd",
+    "quantity":2}
+],
+"sub_total":1,
+"city":"",
+"country":"",
+"first_name":"",
+"last_name":"",
+"phone":"18352862123",
+"coupon_code":"",
+"coupon_value":0,
+"payment_fee":0.02,
+"logo_url":"",
+"address":"",
+"description":"",
+"status":""
+}
+
+###
+
+POST http://127.0.0.1:8080/payment/static/dopay
+Content-Type: applications/json
+
+{"payment":"static",
+"payment_channel":"Wechat",
+"amount":18,
+"currency":"USD",
+"language":"UK",
+"email":"408006570@qq.com",
+"request_info":"12",
+"contract_info":"whatsappcehi",
+"item_list":[
+  {
+    "game":"Neverwinter Online",  
+    "server":"PC",
+    "unit_price":8.99,
+    "product":"NWO AD*1",
+    "quantity":2
+  }
+],
+"sub_total":17.98,
+"city":"",
+"country":"",
+"first_name":"",
+"last_name":"",
+"phone":"18352862123",
+"coupon_code":"",
+"coupon_value":0,
+"payment_fee":0.02,
+"logo_url":"",
+"address":"",
+"description":"",
+"status":""
+}
+###
+
+POST http://127.0.0.1:8080/payment/payssion/dopay
+Content-Type: applications/json
+
+{"payment":"payssion",
+"payment_channel":"dotpay_pl",
+"amount":18,
+"currency":"USD",
+"language":"UK",
+"email":"408006570@qq.com",
+"request_info":"12",
+"contract_info":"whatsappcehi",
+"item_list":[
+  {
+    "game":"Neverwinter Online",  
+    "server":"PC",
+    "unit_price":8.99,
+    "product":"NWO AD*1",
+    "quantity":2
+  }
+],
+"sub_total":17.98,
+"city":"",
+"country":"",
+"first_name":"",
+"last_name":"",
+"phone":"18352862123",
+"coupon_code":"",
+"coupon_value":0,
+"payment_fee":0.02,
+"logo_url":"",
+"address":"",
+"description":"",
+"status":""
+}
+###
+
+POST https://support.bk.cloudns.cc/payment/payssion/dopay
+Content-Type: applications/json
+
+{"payment":"payssion",
+"payment_channel":"paysafecard",
+"amount":18,
+"currency":"USD",
+"language":"UK",
+"email":"408006570@qq.com",
+"request_info":"12",
+"contract_info":"whatsappcehi",
+"item_list":[
+  {
+    "game":"Neverwinter Online",  
+    "server":"PC",
+    "unit_price":8.99,
+    "product":"NWO AD*1",
+    "quantity":2
+  }
+],
+"sub_total":17.98,
+"city":"",
+"country":"",
+"first_name":"",
+"last_name":"",
+"phone":"18352862123",
+"coupon_code":"",
+"coupon_value":0,
+"payment_fee":0.02,
+"logo_url":"",
+"address":"",
+"description":"",
+"status":""
+}
+POST http://127.0.0.1:8080/payment/static/return
+
+###
+
+
+POST http://127.0.0.1:8080/payment/paypal/notify
+Content-Type: applications/json
+
+{
+  "id": "WH-0H899151972497740-0A372964B8753370B",
+  "event_version": "1.0",
+  "create_time": "2020-11-27T11:43:33.731Z",
+  "resource_type": "checkout-order",
+  "resource_version": "2.0",
+  "event_type": "CHECKOUT.ORDER.APPROVED",
+  "summary": "An order has been approved by buyer",
+  "resource": {
+    "update_time": "2020-11-27T11:43:22Z",
+    "create_time": "2020-11-27T11:37:07Z",
+    "purchase_units": [
+      {
+        "reference_id": "default",
+        "amount": {
+          "currency_code": "USD",
+          "value": "1501.49"
+        },
+        "payee": {
+          "email_address": "sb-opduc1687278@business.example.com",
+          "merchant_id": "VRS5GBP9ETXXU",
+          "display_data": {
+            "brand_name": "EGPAL Game"
+          }
+        },
+        "invoice_id": "20201263800",
+        "shipping": {
+          "name": {
+            "full_name": "gao jihua"
+          },
+          "address": {
+            "address_line_1": "23 Zhongshan East 1 Road",
+            "admin_area_2": "Shanghai",
+            "admin_area_1": "Shanghai",
+            "postal_code": "200002",
+            "country_code": "C2"
+          }
+        },
+        "payments": {
+          "captures": [
+            {
+              "id": "6UG29005VY542582H",
+              "status": "COMPLETED",
+              "amount": {
+                "currency_code": "USD",
+                "value": "1501.49"
+              },
+              "final_capture": true,
+              "seller_protection": {
+                "status": "ELIGIBLE",
+                "dispute_categories": [
+                  "ITEM_NOT_RECEIVED",
+                  "UNAUTHORIZED_TRANSACTION"
+                ]
+              },
+              "seller_receivable_breakdown": {
+                "gross_amount": {
+                  "currency_code": "USD",
+                  "value": "1501.49"
+                },
+                "paypal_fee": {
+                  "currency_code": "USD",
+                  "value": "58.86"
+                },
+                "net_amount": {
+                  "currency_code": "USD",
+                  "value": "1442.63"
+                }
+              },
+              "invoice_id": "20201102654",
+              "links": [
+                {
+                  "href": "https://api.sandbox.paypal.com/v2/payments/captures/6UG29005VY542582H",
+                  "rel": "self",
+                  "method": "GET"
+                },
+                {
+                  "href": "https://api.sandbox.paypal.com/v2/payments/captures/6UG29005VY542582H/refund",
+                  "rel": "refund",
+                  "method": "POST"
+                },
+                {
+                  "href": "https://api.sandbox.paypal.com/v2/checkout/orders/3L413397YW525633X",
+                  "rel": "up",
+                  "method": "GET"
+                }
+              ],
+              "create_time": "2020-11-27T11:43:22Z",
+              "update_time": "2020-11-27T11:43:22Z"
+            }
+          ]
+        }
+      }
+    ],
+    "links": [
+      {
+        "href": "https://api.sandbox.paypal.com/v2/checkout/orders/3L413397YW525633X",
+        "rel": "self",
+        "method": "GET"
+      }
+    ],
+    "id": "3L413397YW525633X",
+    "intent": "CAPTURE",
+    "payer": {
+      "name": {
+        "given_name": "jihua",
+        "surname": "gao"
+      },
+      "email_address": "biz1@china.com",
+      "payer_id": "4TQJ57BB6MXBA",
+      "address": {
+        "country_code": "C2"
+      }
+    },
+    "status": "COMPLETED"
+  },
+  "links": [
+    {
+      "href": "https://api.sandbox.paypal.com/v1/notifications/webhooks-events/WH-0H899151972497740-0A372964B8753370B",
+      "rel": "self",
+      "method": "GET"
+    },
+    {
+      "href": "https://api.sandbox.paypal.com/v1/notifications/webhooks-events/WH-0H899151972497740-0A372964B8753370B/resend",
+      "rel": "resend",
+      "method": "POST"
+    }
+  ]
+}
+
+###
+
+POST http://127.0.0.1:8080/payment/paypal/notify
+Content-Type: applications/json
+
+{
+  "id": "WH-9T01149574387741W-8HS93032RC216262D",
+  "event_version": "1.0",
+  "create_time": "2020-12-02T11:00:38.101Z",
+  "resource_type": "capture",
+  "resource_version": "2.0",
+  "event_type": "PAYMENT.CAPTURE.PENDING",
+  "summary": "Payment pending for EUR 4804.74 EUR",
+  "resource": {
+    "amount": {
+      "value": "4804.74",
+      "currency_code": "EUR"
+    },
+    "seller_protection": {
+      "dispute_categories": [
+        "ITEM_NOT_RECEIVED",
+        "UNAUTHORIZED_TRANSACTION"
+      ],
+      "status": "ELIGIBLE"
+    },
+    "update_time": "2020-12-02T11:00:18Z",
+    "create_time": "2020-12-02T11:00:18Z",
+    "final_capture": true,
+    "invoice_id": "20201263800",
+    "links": [
+      {
+        "method": "GET",
+        "rel": "self",
+        "href": "https://api.sandbox.paypal.com/v2/payments/captures/3LD69008R86142613"
+      },
+      {
+        "method": "POST",
+        "rel": "refund",
+        "href": "https://api.sandbox.paypal.com/v2/payments/captures/3LD69008R86142613/refund"
+      },
+      {
+        "method": "GET",
+        "rel": "up",
+        "href": "https://api.sandbox.paypal.com/v2/checkout/orders/15A2920554687094S"
+      }
+    ],
+    "id": "3LD69008R86142613",
+    "status_details": {
+      "reason": "RECEIVING_PREFERENCE_MANDATES_MANUAL_ACTION"
+    },
+    "status": "PENDING"
+  },
+  "links": [
+    {
+      "href": "https://api.sandbox.paypal.com/v1/notifications/webhooks-events/WH-9T01149574387741W-8HS93032RC216262D",
+      "rel": "self",
+      "method": "GET"
+    },
+    {
+      "href": "https://api.sandbox.paypal.com/v1/notifications/webhooks-events/WH-9T01149574387741W-8HS93032RC216262D/resend",
+      "rel": "resend",
+      "method": "POST"
+    }
+  ]
+}
+
+###
+POST http://127.0.0.1:8080/api/v1/login 
+Content-Type: applications/json
+
+{"email":"lq@163.com","password":"123456"}
+
+###
+
+
+POST http://127.0.0.1:8080/api/v1/user/update
+Content-Type: applications/json
+Set-Cookie: lqcms_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImNvdW50cnkiOiIiLCJleHAiOiIyMDIwLTEyLTAxVDEzOjI5OjM5LjQ2NDUyODE2MSswODowMCIsImlhdCI6bnVsbCwiaXNzIjpudWxsLCJqdGkiOm51bGwsIm5iZiI6bnVsbCwic3ViIjpudWxsLCJ1c2VyIjoibHFAMTYzLmNvbSJ9.UX7uGXv3hgkpAGNJ8gC5yl1XhkAxrLLftP6GjlDpCXI
+
+{"email":"lq@163.com","new_password":"1","social_link":"ab@cd.om","social_type":"twitter"}
+
+###
+
+POST http://127.0.0.1:8080/api/v1/logout 
+Content-Type: applications/json
+Set-Cookie: lqcms_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImNvdW50cnkiOiIiLCJleHAiOiIyMDIwLTEyLTAxVDEzOjA0OjMyLjgzNDgwODYxNSswODowMCIsImlhdCI6bnVsbCwiaXNzIjpudWxsLCJqdGkiOm51bGwsIm5iZiI6bnVsbCwic3ViIjpudWxsLCJ1c2VyIjoibHFAMTYzLmNvbSJ9.d_TPWHHmU2AkfILpxue9zPGpO2BFmmC93FpP5fhkQsg
+
+###
+
+
+GET http://127.0.0.1:8080/payment/paypal/info/27
+Content-Type: applications/json

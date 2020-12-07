@@ -17,7 +17,7 @@ type Discount struct {
 	Starttime string `json:"starttime"`
 	Endtime   string `json:"endtime"`
 	Online    bool   `json:"online"`
-	Desc      string `json:"desc,,omitempty"`
+	Desc      string `json:"desc,omitempty"`
 }
 
 // MarshalEditor writes a buffer of html to edit a Discount within the CMS

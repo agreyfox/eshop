@@ -10,8 +10,9 @@ import (
 type Site struct {
 	item.Item
 
-	Name  string `json:"name"`
-	Owner string `json:"owner"`
+	Name        string `json:"name"`
+	DisplayName string `json:"display_name,omitempty"`
+	Desc        string `json:"desc"`
 }
 
 // MarshalEditor writes a buffer of html to edit a Site within the CMS
@@ -57,4 +58,42 @@ func (s *Site) String() string {
 
 func (s *Site) IndexContent() bool {
 	return true
+}
+
+func (o *Site) ContentStruct() map[string]interface{} {
+	dd := map[string]item.FieldDescription{
+		"name": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Required:   true,
+			Order:      1,
+		},
+		"display_name": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Required:   true,
+			Help:       "direct link显示出来的名称",
+			Order:      5,
+		},
+		"order": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Required:   false,
+			Order:      40,
+		},
+		"desc": {
+			Type:       "textarea",
+			DataType:   "field",
+			DataSource: []string{""},
+			Order:      90,
+		},
+	}
+	//retStr, _ := json.Marshal(dd)
+	return map[string]interface{}{
+		"data": dd,
+		"no":   230,
+	}
 }

@@ -7,7 +7,6 @@ import (
 
 	"github.com/agreyfox/eshop/payment/data"
 	"github.com/agreyfox/eshop/payment/paypal"
-	"github.com/agreyfox/eshop/payment/payssion"
 	"github.com/agreyfox/eshop/payment/skrill"
 	"github.com/agreyfox/eshop/system/db"
 	"github.com/go-zoo/bone"
@@ -27,8 +26,8 @@ func TestSaveNotify(t *testing.T) {
 	mainMux := bone.New()
 	InitialPayment(db.Store(), mainMux)
 	skrill.Start(mainMux)
-	data := "order_id=2323mm3k4n&transaction_id=3195856960&mb_amount=1.3&amount=1.3&md5sig=B23743880D2FAE5D02F0205ABBF9B6FA&merchant_id=138853317&payment_type=WLT&mb_transaction_id=3195856960&mb_currency=USD&pay_from_email=18901882538%40189.cn&pay_to_email=e_raeb%40163.com&currency=USD&customer_id=139601073&status=2"
-	skrill.SaveNotify([]byte(data))
+	//	data := "order_id=2323mm3k4n&transaction_id=3195856960&mb_amount=1.3&amount=1.3&md5sig=B23743880D2FAE5D02F0205ABBF9B6FA&merchant_id=138853317&payment_type=WLT&mb_transaction_id=3195856960&mb_currency=USD&pay_from_email=18901882538%40189.cn&pay_to_email=e_raeb%40163.com&currency=USD&customer_id=139601073&status=2"
+	//	skrill.SaveNotify([]byte(data))
 
 }
 
@@ -40,16 +39,23 @@ func TestGetLogContent(t *testing.T) {
 	fmt.Println(data, err)
 }
 
-func TestGetShortOrderID(t *testing.T) {
+func TestGetTransationDetail(t *testing.T) {
 	db.Init()
 	mainMux := bone.New()
 	InitialPayment(db.Store(), mainMux)
 	//data, err := data.GetLogContent("55065193b261eb7da0c16c92d3dbbd3a", paypal.PaypalCreated)
-	payssion.Start(mainMux)
-
-	fmt.Println(payssion.GetShortOrderID())
+	paypal.Start(mainMux)
+	paypal.GetTransationDetail("31")
 }
 
+func TestUpdateOrderStatusByID(t *testing.T) {
+	db.Init()
+	mainMux := bone.New()
+	InitialPayment(db.Store(), mainMux)
+	//data, err := data.GetLogContent("55065193b261eb7da0c16c92d3dbbd3a", paypal.PaypalCreated)
+	paypal.Start(mainMux)
+	paypal.UpdateOrderStatusByID("31", "mmm")
+}
 func TestSaveOrderRequest(t *testing.T) {
 	db.Init()
 	mainMux := bone.New()

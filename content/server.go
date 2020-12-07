@@ -10,18 +10,20 @@ import (
 type Server struct {
 	item.Item
 
-	Name      string  `json:"name"`
-	ShortName string  `json:"sName,omitempty"`    //长名
-	LongName  string  `json:"longName,omitempty"` //长名
-	Game      string  `json:"game"`
-	Online    bool    `json:"online"`
-	Category  string  `json:"category,omitempty"`
-	Tags      string  `json:"tags,omitempty"`
-	Coins     string  `json:"coins,omitempty"` //服务器上所有在卖的coin
-	Items     string  `json:"items,omitempty"` //服务器上的所有在卖的item
-	UnitPrice float32 `json:"price"`           // 金币单价
-	UnitName  string  `json:"unitName"`
-	desc      string  `json:"description,omitempty`
+	Name        string  `json:"name"`
+	ShortName   string  `json:"sName,omitempty"`    //长名
+	LongName    string  `json:"longName,omitempty"` //长名
+	Game        string  `json:"game"`
+	Online      bool    `json:"online"`
+	Category    string  `json:"category,omitempty"`
+	Tags        string  `json:"tags,omitempty"`
+	Coins       string  `json:"coins,omitempty"` //服务器上所有在卖的coin
+	Items       string  `json:"items,omitempty"` //服务器上的所有在卖的item
+	UnitPrice   float32 `json:"price"`           // 金币单价
+	UnitName    string  `json:"unitName"`        // 单位的名字
+	Hint        string  `json:"hint,omitempty"`  //替代server名字
+	Order       int     `json:"order,omitempty"`
+	Description string  `json:"description,omitempty`
 }
 
 // MarshalEditor writes a buffer of html to edit a Server within the CMS
@@ -169,6 +171,21 @@ func (o *Server) ContentStruct() map[string]interface{} {
 			Help:       "本服务器在销售的道具，多选",
 			Order:      70,
 		},
+		"order": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{""},
+			Help:       "填入数字，表示在服务器列表中所处的位置，1表示排第一个，不填按照名字顺序排列",
+			Order:      74,
+		},
+		/* "hint": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{""},
+			Required:   true,
+			Help:       "",
+			Order:      75,
+		}, */
 		"online": {
 			Type:       "bool",
 			DataType:   "field",

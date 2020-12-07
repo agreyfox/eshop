@@ -1,5 +1,5 @@
 // Package user contains the basic admin user creation and authentication code,
-// specific to Ponzu systems.
+// specific to eshop
 package user
 
 import (
@@ -9,6 +9,7 @@ import (
 	"fmt"
 	mrand "math/rand"
 	"net/http"
+
 	"strings"
 	"time"
 
@@ -61,7 +62,6 @@ func New(email, password string) (*User, error) {
 		Salt:  base64.StdEncoding.EncodeToString(salt),
 		Perm:  AdminPermmission,
 	}
-
 	return user, nil
 }
 
@@ -78,10 +78,12 @@ func NewCustomer(email, password string) (*User, error) {
 	}
 
 	user := &User{
-		Email: email,
-		Hash:  string(hash),
-		Salt:  base64.StdEncoding.EncodeToString(salt),
-		Perm:  CustomerPermission,
+		Email:  email,
+		Hash:   string(hash),
+		Salt:   base64.StdEncoding.EncodeToString(salt),
+		Perm:   CustomerPermission,
+		Social: "",
+		Meta:   "",
 	}
 
 	return user, nil

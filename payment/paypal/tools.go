@@ -3,6 +3,7 @@ package paypal
 import (
 	"bytes"
 	"errors"
+	"net/url"
 
 	"encoding/gob"
 
@@ -10,8 +11,8 @@ import (
 	"fmt"
 
 	"github.com/agreyfox/eshop/payment/data"
-
 	"github.com/agreyfox/eshop/system/admin"
+	"github.com/agreyfox/eshop/system/db"
 
 	"strconv"
 	"strings"
@@ -91,7 +92,7 @@ func createOrder(r *data.UserSubmitOrderRequest) (*Order, error) {
 
 }
 
-// to save a record
+// to save a record   , obsleted !
 func saveOrderRequest(order Order, request *OrderRequest, ip string) error {
 	//logger.Debug(order)
 	record := data.PaymentLog{
@@ -184,7 +185,7 @@ func saveNotify(t WebHookNotifiedEvent) bool {
 		ReturnData: t,
 	}
 
-	record.OrderID = t.ID
+	record.OrderID = t.ID + "-" + t.EventType // this is log id format
 	record.PaymentMethod = "paypal"
 	record.PaymentID = t.EventType
 	record.Total = ""
@@ -221,7 +222,7 @@ func getOrderIDFromUrl(link []Link) string {
 }
 
 // create order by notification data and history data
-func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap CaptureResource) (int, data.Order, bool) {
+func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap Resource) (int, data.Order, bool) {
 	var status string
 	if cap.Status == PaypalPending {
 		status = data.OrderCreated
@@ -229,13 +230,16 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap CaptureResource) (
 	if cap.Status == PaypalCompleted {
 		status = data.OrderCompleted
 	}
-	ID := cap.InvoiceID
+	ID := cap.PurchaseUnits[0].InvoiceID // our order id
+	logger.Debugf("notified result is %v", cap)
 
 	paymentid := getOrderIDFromUrl(cap.Links)
-	capdetail, _ := json.Marshal(cap)
+	capdetail, _ := json.Marshal(cap.PurchaseUnits)
 	detail := string(capdetail)
 
 	databin, _ := json.Marshal(notifyData)
+	TransactionId := cap.PurchaseUnits[0].Payments.Captures[0].ID
+	logger.Warnf("Transaction id is %s", TransactionId)
 	order := data.Order{
 
 		Status: status,
@@ -243,31 +247,55 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap CaptureResource) (
 		OrderDetail:   detail,
 		OrderID:       ID,
 		PaymentID:     paymentid,
-		TransactionID: cap.ID,
+		TransactionID: TransactionId,
 		PaymentVendor: "paypal",
 		PaymentMethod: notifyData.ResourceType,
 		PaymentNote:   brand_name,
 		NotifyInfo:    string(databin[:]),
 		Description:   detail, //notifyData.Summary + "," + ID, // just for flil up incase no item list
-		Currency:      cap.Amount.Currency,
-		Total:         cap.Amount.Value,
-		Paid:          cap.SellerPayableBreakdown.PayPalFee.Value,
-		Net:           cap.SellerPayableBreakdown.NetAmount.Value,
+		Currency:      cap.PurchaseUnits[0].Amount.Currency,
+		Total:         cap.PurchaseUnits[0].Amount.Value,
+		Paid:          cap.PurchaseUnits[0].Payments.Captures[0].SellerPayableBreakdown.PayPalFee.Value,
+		Net:           cap.PurchaseUnits[0].Payments.Captures[0].SellerPayableBreakdown.NetAmount.Value,
 		AdminNote:     "",
 		UpdateTime:    fmt.Sprint(time.Now().Format(time.RFC1123)),
 		Paytime:       fmt.Sprint(time.Now().Format(time.RFC1123)),
 		IsRefund:      false,
 		IsChargeBack:  false,
+		Payer:         cap.Payer.EmailAddress, // add 2020/11/25
+	}
+
+	request, err := data.GetRequestByID(ID)
+
+	if err == nil {
+		order.User = request.Email //.BuyerEmail
+		order.PayerIP = request.IPAddr
+		order.PayerLink = request.ContactInfo
+		order.Comments = request.RequestInfo
+		order.RequestTime = fmt.Sprint(time.Unix(request.OrderDate, 0).Format(time.RFC1123))
+		purchaselist, _ := json.MarshalIndent(request.ItemList, "", "  ")
+		order.Description = string(purchaselist)
+	} else {
+		logger.Errorf("The request is not found, This is wired!,ID is %f", ID)
 	}
 
 	if cap.Status == PaypalCompleted {
 		logger.Warn("Paypal Notified message is completed. checking exsiting order with order_id")
 		// validreturn 0, data.Order{}, false
-		oid, err := GetOrderByID(ID)
+		oid, err := GetIdByOrderID(ID)
+
 		id, err := strconv.ParseInt(oid, 10, 0)
 		if err == nil {
-			logger.Info("Found order with id:", id)
-			ok := UpdateOrderStatusByID(oid, status)
+			logger.Infof("Found order with id %s need to update status:", oid)
+			ok := UpdateOrderByOrderID(ID, &order)
+			/* ok := UpdateOrderStatusByID(oid, status)
+			aa, err := admin.UpdateContent("Order", oid, "transaction_id", []byte(order.TransactionID))
+			aa, err = admin.UpdateContent("Order", oid, "payer_link", []byte(order.PayerLink))
+			aa, err = admin.UpdateContent("Order", oid, "notify_info", []byte(order.NotifyInfo))
+			//net
+			//Paid
+			//paytime */
+			logger.Debug("Update order with muilti Field:", oid, order.TransactionID, order.PayerLink)
 			if ok {
 				logger.Info("Update the existing order status to ", status)
 
@@ -276,27 +304,9 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap CaptureResource) (
 
 			}
 			return int(id), order, ok
+		} else {
+			logger.Warn("the previous order is not found , will continue to create new order.", ID)
 		}
-	}
-	//logger.Debug(time.Now())
-	/* 	originReq, err := data.GetRequestByState(ID, PaypalCreated)
-	   	//logger.Debug(time.Now())
-	   	if err == nil {
-	   		order.Payer = originReq.BuyerEmail
-	   		order.PayerIP = originReq.IP
-	   		order.Comments = originReq.Comments
-	   		order.RequestTime = fmt.Sprint(time.Unix(originReq.RequestTime, 0).Format(time.RFC1123))
-	   		order.Description = originReq.Description
-		   } */
-	request, err := data.GetRequestByID(ID)
-
-	if err == nil {
-		order.Payer = request.Email //.BuyerEmail
-		order.PayerIP = request.IPAddr
-		order.Comments = request.RequestInfo
-		order.RequestTime = fmt.Sprint(time.Unix(request.OrderDate, 0).Format(time.RFC1123))
-		purchaselist, _ := json.MarshalIndent(request.ItemList, "", "  ")
-		order.Description = string(purchaselist)
 	}
 	order.Status = data.OrderPaid //标识已付
 	mm, _ := json.Marshal(order)
@@ -312,7 +322,80 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap CaptureResource) (
 
 }
 
-func GetOrderByID(id string) (string, error) {
+// create pending order by notification data and history data
+func CreateNewPendingOrderInDB(notifyData *WebHookNotifiedEvent, cap Resource) (int, data.Order, bool) {
+	var status string
+	if cap.Status != PaypalPending {
+		fmt.Errorf("not payapl pending order")
+		return 0, data.Order{}, false
+	}
+
+	ID := cap.InvoiceID // our order id
+	logger.Debugf("notified pending result is %v", cap)
+
+	paymentid := getOrderIDFromUrl(cap.Links)
+
+	databin, _ := json.Marshal(notifyData)
+	pendingdetail, _ := json.Marshal(cap)
+
+	TransactionId := cap.ID // pending order id is transaction id
+	logger.Warnf("Transaction id is %s", TransactionId)
+	order := data.Order{
+
+		Status: status,
+		//OrderRequest:  record.Request,
+		PendingInfo:   string(pendingdetail),
+		OrderID:       ID,
+		PaymentID:     paymentid,
+		TransactionID: TransactionId,
+		PaymentVendor: "paypal",
+		PaymentMethod: notifyData.ResourceType,
+		PaymentNote:   brand_name,
+		NotifyInfo:    string(databin[:]),
+		//Description:   detail, //notifyData.Summary + "," + ID, // just for flil up incase no item list
+		Currency:     cap.Amount.Currency,
+		Total:        cap.Amount.Value,
+		AdminNote:    "",
+		UpdateTime:   fmt.Sprint(time.Now().Format(time.RFC1123)),
+		Paytime:      fmt.Sprint(time.Now().Format(time.RFC1123)),
+		IsRefund:     false,
+		IsChargeBack: false,
+	}
+
+	request, err := data.GetRequestByID(ID)
+
+	if err == nil {
+		order.User = request.Email //.BuyerEmail
+		order.PayerIP = request.IPAddr
+		order.PayerLink = request.ContactInfo
+		order.Comments = request.RequestInfo
+		order.RequestTime = fmt.Sprint(time.Unix(request.OrderDate, 0).Format(time.RFC1123))
+		purchaselist, _ := json.MarshalIndent(request.ItemList, "", "  ")
+		order.Description = string(purchaselist)
+		order.OrderDetail = order.Description
+	} else {
+		logger.Errorf("The request is not found, This is unusual,ID is %f", ID)
+	}
+
+	logger.Warn("Paypal Notified message is completed. checking exsiting order with order_id")
+	// validreturn 0, data.Order{}, false
+
+	order.Status = data.OrderPending //标识已付
+	mm, _ := json.Marshal(order)
+
+	retcode, ok := admin.CreateContent("Order", mm)
+
+	if ok {
+		logger.Debug("Pending Order created!", retcode)
+		return retcode, order, true
+	} else {
+		return 0, data.Order{}, false
+	}
+
+}
+
+// get order index id base on order_id
+func GetIdByOrderID(id string) (string, error) {
 
 	oid := admin.FindContentID("Order", id, "order_id")
 	// update the record
@@ -320,6 +403,20 @@ func GetOrderByID(id string) (string, error) {
 		return oid, nil
 	}
 	return "", fmt.Errorf("not found")
+}
+
+//get the order content return the data.Order structure data
+func GetOrder(id string) (*data.Order, error) {
+	orderbytes, err := db.Content("Order:" + id)
+	if err != nil {
+		return &data.Order{}, err
+	}
+	var order data.Order
+	err = json.Unmarshal(orderbytes, &order)
+	if err != nil {
+		return &order, err
+	}
+	return &order, nil
 }
 
 // update order with order_id = id
@@ -333,6 +430,7 @@ func UpdateOrderStatusByID(id, state string) bool {
 			logger.Error("update status error:", err)
 			return false
 		}
+		logger.Infof("Update Order %s status to %s is done !", id, state)
 		return true
 	}
 	logger.Error("Not valid status!")
@@ -372,6 +470,38 @@ func UpdateOrderStatusByOrderID(id, state string) bool {
 		return true
 	}
 	logger.Error("Not valid status!")
+	return false
+}
+
+// update order with payment_id = id
+func UpdateOrderByOrderID(id string, newOrder *data.Order) bool {
+	// find paymenid is id record
+
+	oid := admin.FindContentID("Order", id, "order_id")
+	toUpdateData := url.Values{}
+	/*
+		ok := UpdateOrderStatusByID(oid, status)
+				aa, err := admin.UpdateContent("Order", oid, "transaction_id", []byte(order.TransactionID))
+				aa, err = admin.UpdateContent("Order", oid, "payer_link", []byte(order.PayerLink))
+				aa, err = admin.UpdateContent("Order", oid, "notify_info", []byte(order.NotifyInfo))
+				//net
+				//Paid
+				//paytime
+	*/
+	toUpdateData.Add("status", newOrder.Status)
+	toUpdateData.Add("transaction_id", newOrder.TransactionID)
+	toUpdateData.Add("payer_link", newOrder.PayerLink)
+	toUpdateData.Add("payer", newOrder.Payer)
+	toUpdateData.Add("notify_info", newOrder.NotifyInfo)
+	toUpdateData.Add("net", newOrder.Net)
+	toUpdateData.Add("paid", newOrder.Paid)
+	toUpdateData.Add("pay_time", newOrder.Paytime)
+	toUpdateData.Add("description", newOrder.Description)
+	keys := []string{"status", "transaction_id", "payer_link", "payer", "notify_info", "net", "paid", "pay_time", "description"}
+	_, err := admin.UpdateContents("Order", oid, keys, &toUpdateData)
+	if err == nil {
+		return true
+	}
 	return false
 }
 
@@ -466,14 +596,24 @@ func GeneratePurchaseContentFromRequest(request *PurchaseUnitRequest) string {
 	return ret
 }
 
-func GetTransationDetail(id string) (SearchTransactionDetails, bool) {
+// The parameter id is order index id, so we need find the transactionID to search result
+
+func GetTransationDetail(id string) (SearchTransactionDetails, error) {
 	logger.Debug("==================search for id :", id)
 	now := time.Now()
-	last := now.AddDate(0, 0, -30) //两年内的单子
+	last := now.AddDate(0, 0, -30) //30天的单子
 	//fmt.Print(now, last)
 	page := 1
 	pageSize := 5
 	allField := "all"
+	order, err := GetOrder(id)
+	logger.Debug(order.OrderID, order.TransactionID)
+	if err != nil {
+		return SearchTransactionDetails{}, fmt.Errorf("order id %s is not found", id)
+	}
+
+	//iid := order.TransactionID
+
 	req := TransactionSearchRequest{
 		//	TransactionID: &tid,
 		EndDate:   now,
@@ -482,23 +622,28 @@ func GetTransationDetail(id string) (SearchTransactionDetails, bool) {
 		PageSize:  &pageSize,
 		Fields:    &allField,
 	}
-	if id == "" || id == "nil" {
-		logger.Debug("Search Transaction without transactions id ")
-	} else {
-		req.TransactionID = &id
+	if order.PaymentVendor != "paypal" {
+		return SearchTransactionDetails{}, fmt.Errorf("it is not paypal order, payment vendor is %s", order.PaymentVendor)
 	}
+
+	req.TransactionID = &order.TransactionID
 
 	result, err := payClient.ListTransactions(&req)
 	if err == nil {
-		logger.Debug(result)
-		if len(result.TransactionDetails) > 0 {
-			return result.TransactionDetails[0], true
-		}
+		//logger.Debug(result)
 
-		return SearchTransactionDetails{}, false
+		if len(result.TransactionDetails) > 0 {
+			//for index, item := range result.TransactionDetails {
+			//	fmt.Printf("%d:%v", index, item.TransactionInfo)
+			//if item.TransactionInfo.InvoiceID == order.OrderID {
+			return result.TransactionDetails[0], nil
+			//}
+			//}
+		}
+		return SearchTransactionDetails{}, fmt.Errorf("no data from paypal")
 	} else {
 		logger.Debug(err)
-		return SearchTransactionDetails{}, false
+		return SearchTransactionDetails{}, err
 	}
 
 }

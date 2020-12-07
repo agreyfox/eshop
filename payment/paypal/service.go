@@ -237,7 +237,7 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 	//try to get user post information about the payment
 	IP := data.GetIP(r)
 	//reqJSON := getJSONFromBody(r)
-	rawData := data.GetBinaryDataFromBody(r)
+	rawData := data.GetBinaryDataFromBody(r) //support.bk.cloudns.cc:8081/paypment/static/return
 
 	orderReq, err := getOrderRequestFromUserSubmit(rawData)
 	if err != nil {
@@ -434,26 +434,68 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 
 	logger.Infof("paypal notification %s arrival with resource %v", notification.ID, notification.EventType)
 	switch {
-	case notification.EventType == EventPaymentCaptureCompleted || notification.EventType == EventPaymentCapturePending:
+	case notification.EventType == EventPaymentCapturePending:
 		logger.Infof("Step 4 Capture after customer approve,The resource is :%s", fmt.Sprint(notification.Resource))
-		verifyResp, _ := payClient.VerifyWebhookSignatureWithData(r, webHookID, bodybytes)
-		logger.Debug(verifyResp)
-		if verifyResp.VerificationStatus == PaypalVerified || ProgramMode == "DEBUG" {
-			//if ProgramMode == "DEBUG" {
-			resource := CaptureResource{}
+		//verifyResp, _ := payClient.VerifyWebhookSignatureWithData(r, webHookID, bodybytes)
+		//logger.Debug(verifyResp)
+		//	ProgramMode = "DEBUG"
+		//if verifyResp.VerificationStatus == PaypalVerified || ProgramMode == "DEBUG" {
+		if ProgramMode == "DEBUG" {
+			resource := Resource{}
 			rr, _ := json.Marshal(notification.Resource)
 			err := json.Unmarshal(rr, &resource)
 			if err != nil {
-				logger.Debug("Capture completed resource unmarshal failed", err)
+				logger.Debug("Notification checkout resource unmarshal failed", err)
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
 			//logger.Debug("capture resource is ", resource)
+			if len(resource.Amount.Value) == 0 || len(resource.InvoiceID) == 0 {
+				logger.Debug("The return checkout resource has no valid data ", err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			oid, _, ok := CreateNewPendingOrderInDB(&notification, resource)
+
+			if ok {
+				logger.Infof("New paypal Pending order %d Created!", oid)
+
+			} else {
+				logger.Info("New order Created Error!")
+			}
+
+		} else {
+			logger.Warn("The paypal webhook  verification failed!")
+		}
+		w.WriteHeader(http.StatusOK)
+	case notification.EventType == EventCheckOrderApproved:
+		logger.Infof("Step 4 Capture after customer approve,The resource is :%s", fmt.Sprint(notification.Resource))
+		//verifyResp, _ := payClient.VerifyWebhookSignatureWithData(r, webHookID, bodybytes)
+		//logger.Debug(verifyResp)
+		if ProgramMode == "DEBUG" {
+			//if verifyResp.VerificationStatus == PaypalVerified || ProgramMode == "DEBUG" {
+			//if ProgramMode == "DEBUG" {
+			//resource := CaptureResource{}
+			resource := Resource{}
+			rr, _ := json.Marshal(notification.Resource)
+			err := json.Unmarshal(rr, &resource)
+			if err != nil {
+				logger.Debug("Notification checkout resource unmarshal failed", err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			//logger.Debug("capture resource is ", resource)
+			if len(resource.PurchaseUnits) == 0 {
+				logger.Debug("The return checkout resource has no valid data ", err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
 			oid, oo, ok := CreateNewOrderInDB(&notification, resource)
 			if ok {
 				if len(oo.Payer) > 0 {
-					logger.Debug("paypal send eamil for order accept %s,%s", oo.Payer, GetPurchaseContent(resource.InvoiceID))
-					go data.SendConfirmEmail(resource.InvoiceID, GetPurchaseContent(resource.InvoiceID), resource.Amount.Value, resource.Amount.Currency, oo.Payer)
+					orderid := oo.OrderID
+					logger.Debugf("paypal send eamil for order accept %s,%s", oo.Payer, GetPurchaseContent(orderid))
+					go data.SendConfirmEmail(orderid, GetPurchaseContent(orderid), resource.PurchaseUnits[0].Amount.Value, resource.PurchaseUnits[0].Amount.Currency, oo.Payer)
 				}
 				logger.Infof("New paypal order %d Created!", oid)
 
@@ -466,8 +508,8 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 		}
 		w.WriteHeader(http.StatusOK)
 
-	case notification.EventType == EventCheckOrderApproved:
-		logger.Debug("The new payment order approved", notification.ID)
+	case notification.EventType == EventPaymentCaptureCompleted:
+		logger.Debug("The new payment order capture approved", notification.ID)
 
 	case notification.EventType == EventPaymentOrderCreated:
 		logger.Debug("The new payment order created", notification.ID)
@@ -517,8 +559,9 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 func TransactionInfo(w http.ResponseWriter, r *http.Request) {
 	tid := bone.GetValue(r, "id")
 	logger.Infof("Search transactions id :%s", tid)
+
 	result, ok := GetTransationDetail(tid)
-	if ok {
+	if ok == nil {
 		data.RenderJSON(w, r, map[string]interface{}{
 			"retCode": 0,
 			"msg":     "ok",
@@ -527,9 +570,9 @@ func TransactionInfo(w http.ResponseWriter, r *http.Request) {
 	} else {
 		logger.Error("Search error,Request from :", data.GetIP(r))
 		data.RenderJSON(w, r, map[string]interface{}{
-			"retCode": -10,
-			"msg":     "internal error",
-			"data":    "",
+			"retCode": 0,
+			"msg":     "internal error:" + ok.Error(),
+			"data":    result,
 		})
 	}
 }

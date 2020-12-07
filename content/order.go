@@ -18,10 +18,12 @@ type Order struct {
 	Total          string `json:"total"`
 	Currency       string `json:"currency"`
 	OrderID        string `json:"order_id"`
-	PaymentID      string `json:"payment_id,omitempty"`
+	TransactionID  string `json:"transaction_id,omitempty"`
 	PaymentVendor  string `json:"vendor"`
 	PaymentMethod  string `json:"method"`
+	PaymentID      string `json:"payment_id"` //add 2020/12/03
 	PaymentNote    string `json:"payment_note,omitempty"`
+	User           string `json:"user,omitempty"`
 	Payer          string `json:"payer"`
 	PayerLink      string `json:"payer_link"`
 	PayerIP        string `json:"ip,omitempty"`
@@ -29,6 +31,7 @@ type Order struct {
 	Net            string `json:"net,omitempty"`
 	Description    string `json:"description,omitempty"`
 	NotifyInfo     string `json:"notify_info"`
+	PendingInfo    string `json:"pending_info,omitempty"`
 	Paytime        string `json:"pay_time,omitempty"`
 	DeliveryTime   string `json:"delivery_time,omitempty"`
 	DeliveryUserID string `json:"worker,omitempty"`

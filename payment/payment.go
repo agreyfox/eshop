@@ -19,6 +19,7 @@ import (
 	"github.com/agreyfox/eshop/payment/paypal"
 	"github.com/agreyfox/eshop/payment/payssion"
 	"github.com/agreyfox/eshop/payment/skrill"
+	"github.com/agreyfox/eshop/payment/static"
 	"github.com/agreyfox/eshop/system/logs"
 	"github.com/go-zoo/bone"
 	"go.uber.org/zap"
@@ -26,7 +27,7 @@ import (
 	"github.com/boltdb/bolt"
 )
 
-const version = "v0.1.0"
+const version = "v0.5.0"
 
 var (
 	logger   *zap.SugaredLogger = logs.Log.Sugar()
@@ -134,6 +135,8 @@ func Run(serviceName string) {
 		payssion.Start(mainMux)
 	case "skrill":
 		skrill.Start(mainMux)
+	case "static":
+		static.Start(mainMux)
 	default:
 		logger.Fatal(" Wrong payment service name!")
 	}

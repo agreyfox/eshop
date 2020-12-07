@@ -446,12 +446,13 @@ type (
 		Value    string `json:"value"`
 	}
 
-	// PurchaseUnit struct
+	// PurchaseUnit struct  for notification checkout order resource
 	PurchaseUnit struct {
 		ReferenceID string              `json:"reference_id"`
 		Amount      *PurchaseUnitAmount `json:"amount,omitempty"`
-	}
 
+		Payments *CapturedPayments `json:"payments,omitempty"`
+	}
 	// TaxInfo used for orders.
 	TaxInfo struct {
 		TaxID     string `json:"tax_id,omitempty"`
@@ -967,6 +968,7 @@ type (
 		EventVersion    string    `json:"event_version,omitempty"`
 		ResourceVersion string    `json:"resource_version,omitempty"`
 	}
+	// Resource Paypal Notified result struct
 
 	// WebhookEventType struct
 	WebhookEventType struct {
@@ -990,7 +992,7 @@ type (
 		Value     interface{} `json:"value"`
 	}
 
-	Resource struct {
+	/* Resource struct {
 		// Payment Resource type
 		ID                     string                  `json:"id,omitempty"`
 		Status                 string                  `json:"status,omitempty"`
@@ -1009,6 +1011,85 @@ type (
 		MerchantID      string `json:"merchant_id,omitempty"`
 		// Common
 		Links []Link `json:"links,omitempty"`
+	} */
+	Resource struct {
+		// Payment Resource type
+		ID                        string                     `json:"id,omitempty"`
+		Status                    string                     `json:"status,omitempty"`
+		StatusDetails             *CaptureStatusDetails      `json:"status_details,omitempty"`
+		Amount                    *PurchaseUnitAmount        `json:"amount,omitempty"`
+		UpdateTime                string                     `json:"update_time,omitempty"`
+		CreateTime                string                     `json:"create_time,omitempty"`
+		ExpirationTime            string                     `json:"expiration_time,omitempty"`
+		SellerProtection          *SellerProtection          `json:"seller_protection,omitempty"`
+		FinalCapture              bool                       `json:"final_capture,omitempty"`
+		SellerPayableBreakdown    *CaptureSellerBreakdown    `json:"seller_payable_breakdown,omitempty"`
+		SellerReceivableBreakdown *SellerReceivableBreakdown `json:"seller_receivable_breakdown,omitempty"`
+		NoteToPayer               string                     `json:"note_to_payer,omitempty"`
+		CustomID                  string                     `json:"custom_id,omitempty"`
+		InvoiceID                 string                     `json:"invoice_id,omitempty"`
+		// merchant-onboarding Resource type
+		PartnerClientID string `json:"partner_client_id,omitempty"`
+		MerchantID      string `json:"merchant_id,omitempty"`
+		// Checkout Resource type
+		Intent        string                     `json:"intent,omitempty"`
+		PurchaseUnits []*PurchaseUnitInRessource `json:"purchase_units,omitempty"`
+		Payer         *PayerWithNameAndPhone     `json:"payer,omitempty"`
+		// Common
+		Links []Link `json:"links,omitempty"`
+	}
+
+	PurchaseUnitInRessource struct {
+		ReferenceID string                  `json:"reference_id"`
+		Amount      *PurchaseUnitAmount     `json:"amount,omitempty"`
+		Payee       *PayeeForResource       `json:payee,omitempty"`
+		InvoiceID   string                  `json:"invoice_id,omitempty"`
+		Shipping    *ShippingInfoInResource `json:"shipping,omitempty"`
+		Payments    *PaymentInResource      `json:"payments,omitempty"`
+	}
+
+	PayeeForResource struct {
+		PayeeForOrders
+		Presentation Presentation `json:"display_data"`
+	}
+	ShippingInfoInResource struct {
+		Name    *Name   `json:"name"`
+		Method  string  `json:"method,omitempty"`
+		Address Address `json:"address"`
+	}
+	PaymentInResource struct {
+		Captures []CaptureInResult `json:"captures,omitempty"`
+	}
+	CaptureInResult struct {
+		ID                     string                  `json:"id,omitempty"`
+		Status                 string                  `json:"status,omitempty"`
+		Amount                 *Money                  `json:"amount,omitempty"`
+		InvoiceID              string                  `json:"invoice_id,omitempty"`
+		FinalCapture           bool                    `json:"final_capture,omitempty"`
+		SellerProtection       *SellerProtection       `json:"sale_protection,omitempty"`
+		SellerPayableBreakdown *CaptureSellerBreakdown `json:"seller_receivable_breakdown,omitempty"`
+		SharedResponse
+	}
+
+	// SellerReceivableBreakdown has the detailed breakdown of the capture activity.
+	SellerReceivableBreakdown struct {
+		GrossAmount                   *Money        `json:"gross_amount,omitempty"`
+		PaypalFee                     *Money        `json:"paypal_fee,omitempty"`
+		PaypalFeeInReceivableCurrency *Money        `json:"paypal_fee_in_receivable_currency,omitempty"`
+		NetAmount                     *Money        `json:"net_amount,omitempty"`
+		ReceivableAmount              *Money        `json:"receivable_amount,omitempty"`
+		ExchangeRate                  *ExchangeRate `json:"exchange_rate,omitempty"`
+		PlatformFees                  []PlatformFee `json:"platform_fees,omitempty"`
+	}
+	// https://developer.paypal.com/docs/api/orders/v2/#definition-exchange_rate
+	ExchangeRate struct {
+		SourceCurrency string `json:"source_currency"`
+		TargetCurrency string `json:"target_currency"`
+		Value          string `json:"value"`
+	}
+	PlatformFee struct {
+		Amount *Money          `json:"amount,omitempty"`
+		Payee  *PayeeForOrders `json:"payee,omitempty"`
 	}
 
 	CaptureSellerBreakdown struct {
@@ -1277,3 +1358,66 @@ func (e *expirationTime) UnmarshalJSON(b []byte) error {
 	*e = expirationTime(i)
 	return nil
 }
+
+/*
+{
+  "id": "WH-9T01149574387741W-8HS93032RC216262D",
+  "event_version": "1.0",
+  "create_time": "2020-12-02T11:00:38.101Z",
+  "resource_type": "capture",
+  "resource_version": "2.0",
+  "event_type": "PAYMENT.CAPTURE.PENDING",
+  "summary": "Payment pending for EUR 4804.74 EUR",
+  "resource": {
+    "amount": {
+      "value": "4804.74",
+      "currency_code": "EUR"
+    },
+    "seller_protection": {
+      "dispute_categories": [
+        "ITEM_NOT_RECEIVED",
+        "UNAUTHORIZED_TRANSACTION"
+      ],
+      "status": "ELIGIBLE"
+    },
+    "update_time": "2020-12-02T11:00:18Z",
+    "create_time": "2020-12-02T11:00:18Z",
+    "final_capture": true,
+    "invoice_id": "20201263800",
+    "links": [
+      {
+        "method": "GET",
+        "rel": "self",
+        "href": "https://api.sandbox.paypal.com/v2/payments/captures/3LD69008R86142613"
+      },
+      {
+        "method": "POST",
+        "rel": "refund",
+        "href": "https://api.sandbox.paypal.com/v2/payments/captures/3LD69008R86142613/refund"
+      },
+      {
+        "method": "GET",
+        "rel": "up",
+        "href": "https://api.sandbox.paypal.com/v2/checkout/orders/15A2920554687094S"
+      }
+    ],
+    "id": "3LD69008R86142613",
+    "status_details": {
+      "reason": "RECEIVING_PREFERENCE_MANDATES_MANUAL_ACTION"
+    },
+    "status": "PENDING"
+  },
+  "links": [
+    {
+      "href": "https://api.sandbox.paypal.com/v1/notifications/webhooks-events/WH-9T01149574387741W-8HS93032RC216262D",
+      "rel": "self",
+      "method": "GET"
+    },
+    {
+      "href": "https://api.sandbox.paypal.com/v1/notifications/webhooks-events/WH-9T01149574387741W-8HS93032RC216262D/resend",
+      "rel": "resend",
+      "method": "POST"
+    }
+  ]
+}
+*/

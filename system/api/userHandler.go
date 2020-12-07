@@ -83,10 +83,10 @@ func RegisterUser(res http.ResponseWriter, req *http.Request) {
 	email := strings.ToLower(reqJSON["email"].(string))
 	password := reqJSON["password"].(string)
 	social := ""
-	phone := ""
+	//phone := ""
 	meta := ""
 	social = reqJSON["social_link"].(string)
-	phone = reqJSON["phone"].(string)
+	//phone = reqJSON["phone"].(string)
 	meta = reqJSON["social_type"].(string)
 
 	if email == "" || password == "" {
@@ -108,9 +108,9 @@ func RegisterUser(res http.ResponseWriter, req *http.Request) {
 			})
 		return
 	}
-	usr.Phone = phone
-	//usr.Social = social
-	//usr.Meta = meta
+	//usr.Phone = phone
+	usr.Social = social
+	usr.Meta = meta
 	_, err = db.SetUser(usr)
 	if err != nil {
 		logger.Error(err)
@@ -127,6 +127,140 @@ func RegisterUser(res http.ResponseWriter, req *http.Request) {
 		Data:    usr.ID, // return user id
 	})
 
+}
+
+// for user register , and return new user id
+/*
+update for user profile,
+	request like:
+	{
+		"email":"abc@mail.com",
+		"newPassword:"sadfas",
+		"social_link":"ssdmaasfd",
+		"social_type":"phone"
+	}
+*/
+func UpdateUser(res http.ResponseWriter, req *http.Request) {
+	ipAddr := GetIP(req)
+	logger.Debugf("User try to update user account , from:", ipAddr)
+	//reqJSON := GetJsonFromBody(req)
+	if !user.IsValid(req) {
+		logger.Error("invalid user update profile")
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	userReq := new(UpdateUserRequest)
+	err := json.NewDecoder(req.Body).Decode(userReq)
+	if err != nil {
+		logger.Error("invalid user request data")
+		res.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	email := strings.ToLower(userReq.Email)
+	password := strings.Trim(userReq.NewPassword, " ,")
+	social := ""
+	meta := ""
+	social = strings.Trim(userReq.Social, " ,")
+	meta = strings.Trim(userReq.Type, " ,")
+
+	if email == "" || (password == "" && (len(social) == 0 || len(meta) == 0)) {
+		logger.Error("lack of user  information for update ")
+		RenderJSON(res, req, RetUser{
+			RetCode: -21,
+			Msg:     "update error with no data"})
+		return
+	}
+
+	olderuserbytes, err := db.User(email)
+	if err != nil {
+		logger.Error("Update not exists user")
+		RenderJSON(res, req, RetUser{
+			RetCode: -1,
+			Msg:     "update non-exsit user"})
+		return
+	}
+	ouser := user.User{}
+	json.Unmarshal(olderuserbytes, &ouser)
+
+	var updatedUser *user.User
+	if len(password) > 0 {
+		updatedUser, err = user.New(email, password)
+		if err != nil {
+			logger.Error("password error")
+			RenderJSON(res, req, RetUser{
+				RetCode: -1,
+				Msg:     "update "})
+			return
+		}
+	} else {
+		updatedUser = new(user.User)
+		logger.Debug("password no to change")
+	}
+	updatedUser.ID = ouser.ID
+	updatedUser.Email = email
+	if len(social) > 0 {
+		updatedUser.Meta = meta
+		updatedUser.Social = social
+	}
+	err = db.UpdateUser(&ouser, updatedUser)
+
+	if err != nil {
+		logger.Error(err)
+		res.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	ipSearchHandler := ip.NewClient("", true)
+
+	countryInfor, _ := ipSearchHandler.QueryIPByDB(ipAddr)
+	week := time.Now().Add(time.Hour * 24 * 7)
+	claims := map[string]interface{}{
+		"exp":     week,
+		"user":    updatedUser.Email,
+		"country": countryInfor,
+	}
+	token, err := jwt.New(claims)
+
+	if err != nil {
+		logger.Debug(err)
+		RenderJSON(res, req, RetUser{
+			RetCode: -1,
+			Msg:     "Internal Error",
+			Data:    "",
+		})
+		return
+	}
+
+	// add it to cookie +1 week expiration
+	http.SetCookie(res, &http.Cookie{
+		Name:    user.Lqcmstoken,
+		Value:   token,
+		Expires: week,
+		Path:    "/",
+	})
+
+	currency := getContentList("Currency")
+	country := getContentList("Country")
+	button := getContentList("PaymentButton")
+	RenderJSON(res, req, RetUser{
+		RetCode:        0,
+		Msg:            "Done",
+		Data:           token,
+		DefaultCountry: countryInfor,
+		Country:        country,
+		Currency:       currency,
+		SocialType:     updatedUser.Meta,
+		SocialLink:     updatedUser.Social,
+		Buttons:        button,
+	})
+	/*
+		RenderJSON(res, req, RetUser{
+			RetCode: 0,
+			Msg:     "Done",
+			Data:    updatedUser.ID, // return user id
+		}) */
+	return
 }
 
 // customer login function , check login credential and return data
@@ -239,6 +373,7 @@ func Login(res http.ResponseWriter, req *http.Request) {
 	logger.Debugf("User %s logged in !", usr)
 	currency := getContentList("Currency")
 	country := getContentList("Country")
+	button := getContentList("PaymentButton")
 	RenderJSON(res, req, RetUser{
 		RetCode:        0,
 		Msg:            "Done",
@@ -248,6 +383,7 @@ func Login(res http.ResponseWriter, req *http.Request) {
 		Currency:       currency,
 		SocialType:     usr.Meta,
 		SocialLink:     usr.Social,
+		Buttons:        button,
 	})
 
 	return
@@ -257,7 +393,7 @@ func Login(res http.ResponseWriter, req *http.Request) {
 // customer login function , check login credential and return data
 func Config(res http.ResponseWriter, req *http.Request) {
 	ipAddr := GetIP(req)
-	logger.Debugf("User access web site , from:", ipAddr)
+	logger.Debugf("User access web site , from:%s", ipAddr)
 
 	ipSearchHandler := ip.NewClient("", true)
 

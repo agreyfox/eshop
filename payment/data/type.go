@@ -21,6 +21,7 @@ const (
 	OrderCancel     = "用户取消"
 	OrderRefunded   = "已退款"
 	OrderDisputed   = "用户欺诈"
+	OrderPending    = "等待付款"
 )
 
 var (
@@ -64,33 +65,34 @@ type (
 	}
 	// User submit same struct to system for order creation
 	UserSubmitOrderRequest struct {
-		OrderID        string  `json:"order_id,omitempty"`   // 订单号
-		OrderDate      int64   `json:"order_date,omitempty"` //订单日期 millionseconds
-		Payment        string  `json:"payment"`
-		PaymentChannel string  `json:"payment_channel"`
-		Country        string  `json:"county,omitempty"`
-		City           string  `json:"city,omitempty"`
-		Currency       string  `json:"currency"`
-		Language       string  `json:"language"`
-		Locale         string  `json:"locale"`
-		Email          string  `json:"email"`
-		FirstName      string  `json:"first_name"`
-		LastName       string  `json:"last_name"`
-		IPAddr         string  `json:"ip"`
-		ContactInfo    string  `json:"contact_info"`
-		Phone          string  `json:"phone,omitempty"`
-		Amount         float64 `json:"amount"`
-		SubTotal       float64 `json:"sub_total"`
-		ItemList       []Item  `json:"item_list"`
-		RequestInfo    string  `json:"request_info,omitempty"`
-		CouponCode     string  `json:"coupon_code,omitempty"`
-		CouponValue    float64 `json:"coupon_value,omitempty"`
-		PaymentFee     float64 `json:"payment_fee,omitempty"`
-		LogoURL        string  `json:"logo_url,omitempty"`
-		Address        string  `json:"address,omitempty"`
-		Status         string  `json:"status"`
-		Description    string  `json:"description"`
-		Respond        string  `json:"respond,omitempty"`
+		OrderID        string `json:"order_id,omitempty"`   // 订单号
+		OrderDate      int64  `json:"order_date,omitempty"` //订单日期 millionseconds
+		Payment        string `json:"payment"`
+		PaymentChannel string `json:"payment_channel"`
+		Country        string `json:"county,omitempty"`
+		City           string `json:"city,omitempty"`
+		Currency       string `json:"currency"`
+		Language       string `json:"language"`
+		Locale         string `json:"locale"`
+		Email          string `json:"email"` // this is user account in the system
+		//User           string  `json:"user"`  //this is account in system
+		FirstName   string  `json:"first_name"`
+		LastName    string  `json:"last_name"`
+		IPAddr      string  `json:"ip"`
+		ContactInfo string  `json:"contact_info"`
+		Phone       string  `json:"phone,omitempty"`
+		Amount      float64 `json:"amount"`
+		SubTotal    float64 `json:"sub_total"`
+		ItemList    []Item  `json:"item_list"`
+		RequestInfo string  `json:"request_info,omitempty"`
+		CouponCode  string  `json:"coupon_code,omitempty"`
+		CouponValue float64 `json:"coupon_value,omitempty"`
+		PaymentFee  float64 `json:"payment_fee,omitempty"`
+		LogoURL     string  `json:"logo_url,omitempty"`
+		Address     string  `json:"address,omitempty"`
+		Status      string  `json:"status"`
+		Description string  `json:"description"`
+		Respond     string  `json:"respond,omitempty"`
 	}
 
 	//save data to usrerequest
@@ -146,7 +148,8 @@ type (
 		PaymentVendor  string `json:"vendor"`
 		PaymentMethod  string `json:"method"`
 		PaymentNote    string `json:"payment_note,omitempty"`
-		Payer          string `json:"payer"`
+		Payer          string `json:"payer"` // store payer id from pay company
+		User           string `json:"user"`  //store user id
 		PayerLink      string `json:"payer_link"`
 		PayerIP        string `json:"ip,omitempty"`
 		Currency       string `json:"currency"`
@@ -155,6 +158,7 @@ type (
 		Net            string `json:"net,omitempty"`
 		Description    string `json:"description,omitempty"`
 		NotifyInfo     string `json:"notify_info"`
+		PendingInfo    string `json:"pending_info,omitempty"`
 		Paytime        string `json:"pay_time,omitempty"`
 		DeliveryTime   string `json:"delivery_time,omitempty"`
 		DeliveryUserID string `json:"worker,omitempty"`

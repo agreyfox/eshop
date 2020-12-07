@@ -85,12 +85,12 @@ func copyFilesWarnConflicts(srcDir, dstDir string, conflicts []string) error {
 
 		for _, conflict := range conflicts {
 			if info.Name() == conflict {
-				fmt.Println("dms couldn't fully build your project:")
+				fmt.Println("eshop couldn't fully build your project:")
 				fmt.Println("You must rename the following file, as it conflicts with dms core:")
 				fmt.Println(path)
 				fmt.Println("")
 				fmt.Println("Once the files above have been renamed, run '$ dms build' to retry.")
-				return errors.New("dms has very few internal conflicts, sorry for the inconvenience.")
+				return errors.New("eshop has very few internal conflicts, sorry for the inconvenience.")
 			}
 		}
 

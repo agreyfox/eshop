@@ -104,7 +104,13 @@ func userSubmit(w http.ResponseWriter, r *http.Request) {
 	payload.OrderDate = time.Now().Unix()
 	respond, err := createOrder(payload) //create payssion call
 	//payload.Respond = fmt.Sprint(respond)
-
+	if err != nil {
+		data.RenderJSON(w, r, map[string]interface{}{
+			"retCode": -1,
+			"msg":     err.Error(),
+		})
+		return
+	}
 	rettxt, _ := json.MarshalIndent(respond, "", "  ")
 	payload.Respond = string(rettxt)
 
@@ -301,7 +307,7 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 				case PayssionCompleted:
 					logger.Infof("Order Completed! App is %s,Transactions id:%s,Total:%s ", orderState.AppName, orderState.TransactionID, orderState.Amount)
 					// notification verify string: api_key|pm_id|amount|currency|order_id|state|sercret_key
-					logger.Debug("Signature is %s", verify)
+					logger.Debugf("Signature is %s", verify)
 
 					oid, oo, ok := CreateNewOrderInDB(orderState)
 					if ok {

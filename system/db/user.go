@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/agreyfox/eshop/system/admin/user"
-
 	"github.com/boltdb/bolt"
 	"github.com/nilslice/jwt"
 )

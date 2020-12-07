@@ -70,5 +70,5 @@ func Start(mainMux *bone.Mux) {
 		w.Write([]byte("Thanks! WelCome skrill"))
 	}))
 	mainMux.SubRoute("/payment/skrill", boltMux)
-
+	//mainMux.SubRoute("/payment/skrill,skrill", boltMux)
 }

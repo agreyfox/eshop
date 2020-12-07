@@ -64,7 +64,10 @@ func initSkrill() {
 	if err == nil {
 		CancelURL = key
 	}
-
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "skrill_Server", "valueString")
+	if err == nil {
+		defaultURL = key
+	}
 	payClient = New() //create skrill instance
 	logger.Infof("Skrill backend service initialized! MerchantID is %s", MerchantID)
 }

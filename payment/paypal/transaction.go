@@ -7,7 +7,7 @@ import (
 )
 
 type TransactionSearchRequest struct {
-	TransactionID               *string `json:"transactions_id,omitempty"`
+	TransactionID               *string `json:"transaction_id,omitempty"`
 	TransactionType             *string
 	TransactionStatus           *string
 	TransactionAmount           *string
@@ -51,7 +51,7 @@ func (c *Client) ListTransactions(req *TransactionSearchRequest) (*TransactionSe
 	q.Add("end_date", req.EndDate.Format(time.RFC3339))
 
 	if req.TransactionID != nil {
-		q.Add("transactions_id", *req.TransactionID)
+		q.Add("transaction_id", *req.TransactionID)
 	}
 	if req.TransactionType != nil {
 		q.Add("transaction_type", *req.TransactionType)

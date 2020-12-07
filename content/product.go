@@ -19,13 +19,15 @@ type Product struct {
 	Game            string  `json:"game"`
 	Online          bool    `json:"online"`
 	Price           float32 `json:"price"`                     //单价
+	Order           int     `json:"order,omitempty"`           //表示item在物品列表中的显示位置
 	MN              uint    `json:"miniNumber"`                //最小购买数
 	Unit            string  `json:"Unit"`                      //购买数量的单位
 	HintImage       string  `json:"hintImage"`                 //提示图片
 	HintText        string  `json:"hintText"`                  //提示文字
 	PurchaseLabel   string  `json:"customerLabel"`             //用户输入提示内容
 	PurchaseCaution string  `json:"customerCaution,omitempty"` //用户输入要求购买内容
-	Discount        string  `json:"discount,omitempty"`        //使用discount模板
+	//	Notes           string  `json:notes,omitempty`             //mobile 上的产品第二行
+	Discount string `json:"discount,omitempty"` //使用discount模板
 
 }
 
@@ -180,6 +182,13 @@ func (p *Product) ContentStruct() map[string]interface{} {
 			DataSource: []string{},
 			Required:   true,
 			Order:      80,
+		},
+		"order": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Required:   false,
+			Order:      85,
 		},
 		"description": {
 			Type:       "textarea",

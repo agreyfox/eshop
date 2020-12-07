@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 
 	"github.com/agreyfox/eshop/system/db"
 	"github.com/agreyfox/eshop/system/item"
@@ -57,6 +58,51 @@ func CreateContent(ctype string, content []byte) (int, bool) {
 	return id, true
 }
 
+// update ad content by muilt filed
+func UpdateContents(t string, cid string, key []string, updateValue *url.Values) (int, error) {
+
+	logger.Debugf("Admin Update content %s! with multfeild %v", t, key)
+
+	pt := t
+
+	p, ok := item.Types[pt]
+	if !ok {
+		logger.Debugf("Type", t, "is not a content type. Cannot edit or save.")
+
+		return 0, errors.New("Wrong type")
+	}
+	ts := fmt.Sprintf("%d", int64(time.Nanosecond)*time.Now().UTC().UnixNano()/int64(time.Millisecond))
+
+	//updatecontent["updated"] = ts
+
+	value := map[string]interface{}{}
+	for _, item := range key {
+		value[item] = string(updateValue.Get(item))
+	}
+
+	value["updated"] = ts
+	post := p()
+
+	upp := formatData(value)
+
+	dec := schema.NewDecoder()
+	dec.IgnoreUnknownKeys(true)
+	dec.SetAliasTag("json")
+	err = dec.Decode(post, upp)
+	if err != nil {
+		logger.Debug("Error decoding post form for edit handler:", t, err)
+		return 0, fmt.Errorf("data format issues")
+	}
+
+	id, err := db.UpdateContent(t+":"+cid, upp)
+	if err != nil {
+		logger.Error(err.Error())
+
+		return -1, err
+	}
+	return id, nil
+}
+
 // UpdateContent api for update a content with key and value
 func UpdateContent(t string, cid, key string, content []byte) (int, error) {
 
@@ -86,8 +132,7 @@ func UpdateContent(t string, cid, key string, content []byte) (int, error) {
 	err = dec.Decode(post, upp)
 	if err != nil {
 		logger.Debug("Error decoding post form for edit handler:", t, err)
-
-		return 0, errors.New("Data format issues")
+		return 0, fmt.Errorf("Data format issues:%s", err.Error())
 	}
 
 	id, err := db.UpdateContent(t+":"+cid, upp)

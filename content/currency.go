@@ -17,6 +17,7 @@ type Currency struct {
 	Paypal   string  `json:"paypal,omitempty"`
 	SkrilL   string  `json:"skrill,omitempty"`
 	Payssion string  `json:"payssion,omitempty"`
+	Static   string  `json:"static,omitempty"`
 	Desc     string  `json:"desc,omitempty"`
 }
 
@@ -111,16 +112,25 @@ func (o *Currency) ContentStruct() map[string]interface{} {
 			Type:       "input",
 			DataType:   "field",
 			DataSource: []string{},
+			Help:       "此货币在paypal中的表示方法",
 			Order:      7},
 		"payssion": {
 			Type:       "input",
 			DataType:   "field",
 			DataSource: []string{},
+			Help:       "此货币在payssion中的表示方法",
 			Order:      8},
 		"skrill": {
 			Type:       "input",
 			DataType:   "field",
 			DataSource: []string{},
+			Help:       "此货币在skrill中的表示方法",
+			Order:      9},
+		"static": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Help:       "此货币在static中的表示方法",
 			Order:      9},
 		"description": {
 			Type:       "textarea",
