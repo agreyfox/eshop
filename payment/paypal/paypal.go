@@ -62,6 +62,7 @@ func Start(mainMux *bone.Mux) {
 	boltMux.HandleFunc("/return", Succeed)
 	boltMux.PostFunc("/Failed", Failed)
 	boltMux.HandleFunc("/notify", Notify)
+	boltMux.HandleFunc("/shancai", IPNListener)
 	boltMux.HandleFunc("/cancel", Failed)
 	boltMux.HandleFunc("/test", Test)
 	boltMux.Get("/info/:id", http.HandlerFunc(TransactionInfo))

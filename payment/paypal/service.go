@@ -1,14 +1,17 @@
 package paypal
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 
 	"github.com/agreyfox/eshop/payment/data"
 	"github.com/agreyfox/eshop/system/db"
 	"github.com/go-zoo/bone"
 
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/robfig/cron"
@@ -77,7 +80,10 @@ func initpaypal() {
 	if err == nil {
 		apibase = key
 	}
-
+	key, err = db.GetParameterFromConfig("PaymentSetting", "name", "paypal_IPNServiceEndPoint", "valueString")
+	if err == nil {
+		IPNEndpoint = key
+	}
 	client, err := NewClient(ClientID, Secret, apibase)
 	client.SetLog(logger) // Set log to terminal stdout
 	payClient = client
@@ -575,4 +581,57 @@ func TransactionInfo(w http.ResponseWriter, r *http.Request) {
 			"data":    result,
 		})
 	}
+}
+
+//Listener creates a PayPal listener.
+//if err is set in cb, PayPal will resend the notification at some future point.
+func IPNListener(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		logger.Errorf("failed to read body:%s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	form, err := url.ParseQuery(string(body))
+	if err != nil {
+		logger.Errorf("failed to parse query:%s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	notification := ReadNotification(form)
+	logger.Debug(notification.CustomerInfo())
+	if ProgramMode == "DEBUG" {
+		logger.Debugf("paypal: form: %s, parsed: %+v\n", body, notification)
+	}
+
+	body = append([]byte("cmd=_notify-validate&"), body...)
+
+	resp, err := http.Post(getEndpoint(notification.TestIPN), r.Header.Get("Content-Type"), bytes.NewReader(body))
+	if err != nil {
+		logger.Errorf("failed to create post verification req %s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	defer resp.Body.Close()
+
+	verifyStatus, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		logger.Errorf("failed to read verification response:%s", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if string(verifyStatus) != "VERIFIED" {
+		logger.Errorf("unexpected verify status %q", verifyStatus)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	logger.Infof("IPN message verified, save to transations")
+	// notification confirmed here
+	err = SaveIPNData(notification)
+	// tell PayPal to not send more notificatins
+	w.WriteHeader(http.StatusOK)
+	//cb(nil, notification)
+
 }

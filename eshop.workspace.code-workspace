@@ -4,10 +4,10 @@
       "path": "."
     },
     {
-      "path": "../../UserManagerSystem"
+      "path": "../../egpalWeb/shoppingMall/shoppingMall1"
     },
     {
-      "path": "../../egpalWeb/shoppingMall/shoppingMall1"
+      "path": "../../egpalWeb/shoppingMall/UserManagerSystem"
     }
   ],
   "settings": {

@@ -15,6 +15,7 @@ type Carousel struct {
 	Game   string `json:"game,omitempty"`
 	Image  string `json:"image,omitempty"`
 	Desc   string `json:"description,omitempty"`
+	Link   string `json:"link,omitempty"`
 	Number int    `json:"number,omitempty"`
 }
 
@@ -95,23 +96,29 @@ func (o *Carousel) ContentStruct() map[string]interface{} {
 			Type:       "select",
 			DataType:   "content",
 			DataSource: []string{"/admin/v1/contents?type=Game"},
-			Required:   true,
+			Required:   false,
 			Order:      3},
+		"link": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Required:   false,
+			Order:      10},
 		"image": {
 			Type:       "file",
 			DataType:   "field",
 			DataSource: []string{},
-			Order:      4},
+			Order:      40},
 		"description": {
 			Type:       "textarea",
 			DataType:   "field",
 			DataSource: []string{},
-			Order:      20},
+			Order:      50},
 		"number": {
 			Type:       "input",
 			DataType:   "field",
 			DataSource: []string{},
-			Order:      5},
+			Order:      20},
 	}
 	//retStr, _ := json.Marshal(dd)
 	return map[string]interface{}{

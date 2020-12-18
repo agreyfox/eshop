@@ -82,6 +82,11 @@ func createOrder(r *data.UserSubmitOrderRequest) (string, error) {
 func CreateNewOrderByRequest(reqdata *data.UserSubmitOrderRequest) (int, data.Order, bool) {
 
 	oid := reqdata.OrderID
+	eid, err := GetIdByOrderID(oid)
+	if err == nil {
+		logger.Warn("Order id %s duplication,check id %s in db, create order exit", oid, eid)
+		return -1, data.Order{}, false
+	}
 	capdetail, _ := json.Marshal(reqdata.ItemList)
 	detail := string(capdetail)
 
@@ -126,4 +131,15 @@ func CreateNewOrderByRequest(reqdata *data.UserSubmitOrderRequest) (int, data.Or
 		return 0, order, false
 	}
 
+}
+
+// get order index id base on order_id
+func GetIdByOrderID(id string) (string, error) {
+
+	oid := admin.FindContentID("Order", id, "order_id")
+	// update the record
+	if len(oid) > 0 {
+		return oid, nil
+	}
+	return "", fmt.Errorf("not found")
 }

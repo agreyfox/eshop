@@ -13,6 +13,7 @@ import (
 	"github.com/agreyfox/eshop/payment/data"
 	"github.com/agreyfox/eshop/system/admin"
 	"github.com/agreyfox/eshop/system/db"
+	"github.com/boltdb/bolt"
 
 	"strconv"
 	"strings"
@@ -179,8 +180,7 @@ func saveCapture(order CaptureOrderResponse) bool {
 
 // to save a record
 func saveNotify(t WebHookNotifiedEvent) bool {
-	// Store the user model in the user bucket using the username as the key.
-
+	// Store the user model in the user bucket using the usernam89B6249286542084B
 	record := data.PaymentLog{
 		ReturnData: t,
 	}
@@ -255,16 +255,19 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap Resource) (int, da
 		Description:   detail, //notifyData.Summary + "," + ID, // just for flil up incase no item list
 		Currency:      cap.PurchaseUnits[0].Amount.Currency,
 		Total:         cap.PurchaseUnits[0].Amount.Value,
-		Paid:          cap.PurchaseUnits[0].Payments.Captures[0].SellerPayableBreakdown.PayPalFee.Value,
-		Net:           cap.PurchaseUnits[0].Payments.Captures[0].SellerPayableBreakdown.NetAmount.Value,
-		AdminNote:     "",
-		UpdateTime:    fmt.Sprint(time.Now().Format(time.RFC1123)),
-		Paytime:       fmt.Sprint(time.Now().Format(time.RFC1123)),
-		IsRefund:      false,
-		IsChargeBack:  false,
-		Payer:         cap.Payer.EmailAddress, // add 2020/11/25
+		//	Paid:          cap.PurchaseUnits[0].Payments.Captures[0].SellerPayableBreakdown.PayPalFee.Value,
+		//Net:          cap.PurchaseUnits[0].Payments.Captures[0].SellerPayableBreakdown.NetAmount.Value,
+		AdminNote:    "",
+		UpdateTime:   fmt.Sprint(time.Now().Format(time.RFC1123)),
+		Paytime:      fmt.Sprint(time.Now().Format(time.RFC1123)),
+		IsRefund:     false,
+		IsChargeBack: false,
+		Payer:        cap.Payer.EmailAddress, // add 2020/11/25
 	}
-
+	if len(cap.PurchaseUnits[0].Payments.Captures) > 0 && cap.PurchaseUnits[0].Payments.Captures[0].SellerPayableBreakdown != nil {
+		order.Paid = cap.PurchaseUnits[0].Payments.Captures[0].SellerPayableBreakdown.PayPalFee.Value
+		order.Net = cap.PurchaseUnits[0].Payments.Captures[0].SellerPayableBreakdown.NetAmount.Value
+	}
 	request, err := data.GetRequestByID(ID)
 
 	if err == nil {
@@ -598,19 +601,63 @@ func GeneratePurchaseContentFromRequest(request *PurchaseUnitRequest) string {
 
 // The parameter id is order index id, so we need find the transactionID to search result
 
-func GetTransationDetail(id string) (SearchTransactionDetails, error) {
-	logger.Debug("==================search for id :", id)
+func GetTransationDetail(id string) (*SearchTransactionDetails, error) {
+	logger.Debug("==================search transaction data  for id :", id)
+	order, err := GetOrder(id)
+
+	if err != nil { // no such order id
+		return &SearchTransactionDetails{}, fmt.Errorf("order id %s is not found", id)
+	}
+	logger.Debugf("try to get order id %s for search transaction order id %s", order.OrderID, order.TransactionID)
+	// first get data from ipn db
+	notification, err := GetIPNbyID(order.OrderID)
+	if err == nil { // have the ipn record
+		logger.Debugf("notification get %s", notification)
+		sdtail := SearchTransactionDetails{}
+		sdtail.PayerInfo = SearchPayerInfo{
+			PayerName: SearchPayerName{
+				GivenName: notification.FirstName,
+				Surname:   notification.LastName,
+			},
+			EmailAddress:  notification.PayerEmail,
+			PayerStatus:   notification.PayerStatus,
+			AddressStatus: notification.AddressStatus,
+		}
+		sdtail.ShippingInfo = SearchShippingInfo{
+			Name: notification.AddressName,
+			Address: Address{
+				Line1:       notification.AddressStreet,
+				City:        notification.AddressCity,
+				PostalCode:  notification.AddressZip,
+				CountryCode: notification.AddressCountryCode,
+			},
+		}
+		sdtail.TransactionInfo = SearchTransactionInfo{
+			PayPalAccountID:        notification.PayerID,
+			TransactionID:          notification.TxnID,
+			TransactionSubject:     notification.TxnType,
+			TransactionStatus:      string(notification.PaymentStatus),
+			TransactionUpdatedDate: notification.PaymentDate.Time.Local().Format("yyyy-MM-dd HH:mm:ss"),
+			PaymentMethodType:      string(notification.PaymentType),
+			TransactionAmount: Money{
+				Currency: notification.Currency,
+				Value:    fmt.Sprint("%.2f", notification.Gross),
+			},
+			FeeAmount: &Money{
+				Currency: notification.Currency,
+				Value:    fmt.Sprint("%.2f", notification.Fee),
+			},
+		}
+		return &sdtail, nil // fill enough data and return
+	}
+	// Following the get transacation data from paypal and transaction db
 	now := time.Now()
+	now = now.Add(10 * time.Hour)
 	last := now.AddDate(0, 0, -30) //30天的单子
 	//fmt.Print(now, last)
 	page := 1
 	pageSize := 5
 	allField := "all"
-	order, err := GetOrder(id)
-	logger.Debug(order.OrderID, order.TransactionID)
-	if err != nil {
-		return SearchTransactionDetails{}, fmt.Errorf("order id %s is not found", id)
-	}
 
 	//iid := order.TransactionID
 
@@ -623,7 +670,11 @@ func GetTransationDetail(id string) (SearchTransactionDetails, error) {
 		Fields:    &allField,
 	}
 	if order.PaymentVendor != "paypal" {
-		return SearchTransactionDetails{}, fmt.Errorf("it is not paypal order, payment vendor is %s", order.PaymentVendor)
+		return &SearchTransactionDetails{}, fmt.Errorf("it is not paypal order, payment vendor is %s", order.PaymentVendor)
+	}
+	historytx, err := GetTransactionByID(order.OrderID)
+	if err == nil {
+		return historytx, err
 	}
 
 	req.TransactionID = &order.TransactionID
@@ -633,17 +684,15 @@ func GetTransationDetail(id string) (SearchTransactionDetails, error) {
 		//logger.Debug(result)
 
 		if len(result.TransactionDetails) > 0 {
-			//for index, item := range result.TransactionDetails {
-			//	fmt.Printf("%d:%v", index, item.TransactionInfo)
-			//if item.TransactionInfo.InvoiceID == order.OrderID {
-			return result.TransactionDetails[0], nil
-			//}
-			//}
+
+			SaveTransactions(&result.TransactionDetails[0])
+			return &result.TransactionDetails[0], nil
+
 		}
-		return SearchTransactionDetails{}, fmt.Errorf("no data from paypal")
+		return &SearchTransactionDetails{}, fmt.Errorf("no data from paypal")
 	} else {
 		logger.Debug(err)
-		return SearchTransactionDetails{}, err
+		return &SearchTransactionDetails{}, err
 	}
 
 }
@@ -681,4 +730,127 @@ func getOrderRequestFromUserSubmit(userSubmit []byte) (*OrderRequest, error) {
 	}
 	fmt.Println(listview.List) */
 	return &order, nil
+}
+
+func GetTransactionByID(orderid string) (*SearchTransactionDetails, error) {
+
+	ret := make([]byte, 0)
+	err := data.PaymentDBHandler.View(func(tx *bolt.Tx) error {
+
+		b := tx.Bucket([]byte(data.DBPayPayTransaction))
+
+		ret = b.Get([]byte(orderid))
+
+		return nil
+	})
+	if err != nil {
+		logger.Error("Get order state error ", err)
+		return nil, err
+	}
+	rr := SearchTransactionDetails{}
+
+	datasrc := bytes.NewReader(ret)
+	err = json.NewDecoder(datasrc).Decode(&rr)
+	return &rr, err
+}
+
+// SaveRequest to save the data in payment
+func SaveTransactions(r *SearchTransactionDetails) error {
+
+	if r == nil {
+		return fmt.Errorf("No transaction info data,save transaction error")
+	}
+	ID := r.TransactionInfo.InvoiceID
+	_, err := GetTransactionByID(ID)
+	if err == nil {
+		return fmt.Errorf("the transcation exists")
+	}
+	tx, err := data.PaymentDBHandler.Begin(true)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+	defer tx.Rollback()
+
+	root := tx.Bucket([]byte(data.DBPayPayTransaction))
+
+	if buf, err := json.Marshal(r); err != nil {
+		logger.Error(err)
+		return data.PaymentErrInputData
+	} else if err := root.Put([]byte(ID), buf); err != nil {
+		logger.Error(err)
+		return data.PaymentErrSave
+	}
+
+	// Commit the transaction.
+	if err := tx.Commit(); err != nil {
+		logger.Error(err)
+		return data.PaymentErrSave
+	}
+
+	logger.Info("Save user transaction search result. ")
+
+	return nil
+}
+
+func GetIPNbyID(orderid string) (*IPNNotification, error) {
+
+	ret := make([]byte, 0)
+	err := data.PaymentDBHandler.View(func(tx *bolt.Tx) error {
+
+		b := tx.Bucket([]byte(data.DBPayPayIPN))
+
+		ret = b.Get([]byte(orderid))
+
+		return nil
+	})
+	if err != nil {
+		logger.Error("Get order state error ", err)
+		return nil, err
+	}
+	rr := IPNNotification{}
+
+	datasrc := bytes.NewReader(ret)
+	err = json.NewDecoder(datasrc).Decode(&rr)
+	return &rr, err
+}
+
+// here save the ipn data into db for later search
+func SaveIPNData(notification *IPNNotification) error {
+
+	if notification == nil {
+		return fmt.Errorf("No ipn info data,save error")
+	}
+	ID := notification.Invoice
+	_, err := GetTransactionByID(ID)
+	if err == nil {
+		logger.Warnf("the transcation exists:%v", ID)
+		return nil
+	}
+	tx, err := data.PaymentDBHandler.Begin(true)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+	defer tx.Rollback()
+
+	root := tx.Bucket([]byte(data.DBPayPayIPN))
+
+	if buf, err := json.Marshal(notification); err != nil {
+		logger.Error(err)
+		return data.PaymentErrInputData
+	} else if err := root.Put([]byte(ID), buf); err != nil {
+		logger.Error(err)
+		return data.PaymentErrIPNSave
+	}
+
+	// Commit the transaction.
+	if err := tx.Commit(); err != nil {
+		logger.Error(err)
+		return data.PaymentErrIPNSave
+	}
+
+	logger.Info("ipn data Saved.", ID)
+
+	return nil
 }

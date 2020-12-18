@@ -109,8 +109,8 @@ func RegisterUser(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 	//usr.Phone = phone
-	usr.Social = social
-	usr.Meta = meta
+	//usr.Social = social
+	//usr.Meta = meta
 	_, err = db.SetUser(usr)
 	if err != nil {
 		logger.Error(err)

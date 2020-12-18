@@ -27,19 +27,22 @@ const (
 var (
 	PaymentErrOpenDB    = errors.New("数据库错误")
 	PaymentErrInputData = errors.New("用户数据错误")
-	PaymentErrSave      = errors.New("保存数据失败")
+	PaymentErrSave      = errors.New("保存交易数据失败")
+	PaymentErrIPNSave   = errors.New("保存IPN数据失败")
 )
 
 var (
-	DBRequestFile = ".request.db"
-	DBRequest     = "requests" // save the order request table name
-
-	DBPaymentLog = ".logs.db" //save request to log
-	DBLogName    = "logs"     //log table name
+	DBRequestFile       = ".request.db"
+	DBRequest           = "requests"     // save the order request table name
+	DBPayPayTransaction = "transactions" //2020-12-14 record payapl transaction.
+	DBPayPayIPN         = "ipns"         // 2020-12/17 record ipn data
+	DBPaymentLog        = ".logs.db"     //save request to log
+	DBLogName           = "logs"         //log table name
 
 	UserRequest = "request"
-	Complete    = "order"
-	DbFile      = "records.db"
+
+	Complete = "order"
+	DbFile   = "records.db"
 
 	OrderName = "Order" //in main system.db
 )

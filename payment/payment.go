@@ -98,6 +98,16 @@ func InitialPayment(db *bolt.DB, mux *bone.Mux) {
 			logger.Debug("Error in check Request db")
 			return err
 		}
+		_, err = tx.CreateBucketIfNotExists([]byte(data.DBPayPayTransaction))
+		if err != nil {
+			logger.Debug("Error in check Transaction db")
+			return err
+		}
+		_, err = tx.CreateBucketIfNotExists([]byte(data.DBPayPayIPN))
+		if err != nil {
+			logger.Debug("Error in check IPN db")
+			return err
+		}
 		return nil
 	})
 

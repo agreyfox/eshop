@@ -238,7 +238,7 @@ Content-Type: application/json
               "full_name":"geRobinson"
             },
       "address":{
-              "address_line_1": "4th Floor",139947674N552203W
+              "address_line_1": "4th Floor",
               "address_line_2":"",
               "admin_area_2": "San Jose",
               "admin_area_1": "CA",
@@ -1104,10 +1104,7 @@ Content-Type: applications/json
     },
     "seller_protection": {
       "dispute_categories": [
-        "ITEM_NOT_RECEIVED",
-        "UNAUTHORIZED_TRANSACTION"
-      ],
-      "status": "ELIGIBLE"
+        "ITEM_NOT_RECEIVED",The sender of this payment is Verified
     },
     "update_time": "2020-12-02T11:00:18Z",
     "create_time": "2020-12-02T11:00:18Z",
