@@ -60,7 +60,7 @@ func createOrder(r *data.UserSubmitOrderRequest) (*Order, error) {
 			Value:    fmt.Sprint(r.Amount),
 		},
 		InvoiceID:   invoiceID,
-		Description: r.ContactInfo,
+		Description: r.RequestInfo,
 	}
 	order.ItemList = append(order.ItemList, pu)
 
@@ -223,6 +223,7 @@ func getOrderIDFromUrl(link []Link) string {
 
 // create order by notification data and history data
 func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap Resource) (int, data.Order, bool) {
+	logger.Debug("Create new order process start")
 	var status string
 	if cap.Status == PaypalPending {
 		status = data.OrderCreated
@@ -238,7 +239,7 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap Resource) (int, da
 	detail := string(capdetail)
 
 	databin, _ := json.Marshal(notifyData)
-	TransactionId := cap.PurchaseUnits[0].Payments.Captures[0].ID
+	TransactionId := cap.ID //PurchaseUnits[0].Payments.Captures[0].ID
 	logger.Warnf("Transaction id is %s", TransactionId)
 	order := data.Order{
 
@@ -283,7 +284,7 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap Resource) (int, da
 	}
 
 	if cap.Status == PaypalCompleted {
-		logger.Warn("Paypal Notified message is completed. checking exsiting order with order_id")
+		logger.Warn("Paypal Notified message is completed. checking exsiting order with order_id:%s", ID)
 		// validreturn 0, data.Order{}, false
 		oid, err := GetIdByOrderID(ID)
 
@@ -320,6 +321,7 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap Resource) (int, da
 		logger.Debug("Order created!", retcode)
 		return retcode, order, true
 	} else {
+		logger.Errorf("Order created error %s,%s!", ID, retcode)
 		return 0, data.Order{}, false
 	}
 
@@ -613,6 +615,14 @@ func GetTransationDetail(id string) (*SearchTransactionDetails, error) {
 	notification, err := GetIPNbyID(order.OrderID)
 	if err == nil { // have the ipn record
 		logger.Debugf("notification get %s", notification)
+		userstatus := "N"
+		addrstatus := "N"
+		if notification.PayerStatus == "verified" {
+			userstatus = "Y"
+		}
+		if notification.AddressStatus == "confirmed" {
+			addrstatus = "Y"
+		}
 		sdtail := SearchTransactionDetails{}
 		sdtail.PayerInfo = SearchPayerInfo{
 			PayerName: SearchPayerName{
@@ -620,8 +630,8 @@ func GetTransationDetail(id string) (*SearchTransactionDetails, error) {
 				Surname:   notification.LastName,
 			},
 			EmailAddress:  notification.PayerEmail,
-			PayerStatus:   notification.PayerStatus,
-			AddressStatus: notification.AddressStatus,
+			PayerStatus:   userstatus,
+			AddressStatus: addrstatus,
 		}
 		sdtail.ShippingInfo = SearchShippingInfo{
 			Name: notification.AddressName,
@@ -633,23 +643,25 @@ func GetTransationDetail(id string) (*SearchTransactionDetails, error) {
 			},
 		}
 		sdtail.TransactionInfo = SearchTransactionInfo{
+			InvoiceID:              notification.Invoice,
 			PayPalAccountID:        notification.PayerID,
 			TransactionID:          notification.TxnID,
 			TransactionSubject:     notification.TxnType,
 			TransactionStatus:      string(notification.PaymentStatus),
-			TransactionUpdatedDate: notification.PaymentDate.Time.Local().Format("yyyy-MM-dd HH:mm:ss"),
+			TransactionUpdatedDate: notification.PaymentDate, //.Time.Local().Format("yyyy-MM-dd HH:mm:ss"),
 			PaymentMethodType:      string(notification.PaymentType),
 			TransactionAmount: Money{
 				Currency: notification.Currency,
-				Value:    fmt.Sprint("%.2f", notification.Gross),
+				Value:    fmt.Sprintf("%.2f", notification.Gross),
 			},
 			FeeAmount: &Money{
 				Currency: notification.Currency,
-				Value:    fmt.Sprint("%.2f", notification.Fee),
+				Value:    fmt.Sprintf("%.2f", notification.Fee),
 			},
 		}
 		return &sdtail, nil // fill enough data and return
 	}
+	logger.Error("We got ipn call with error:%s,have to turn to transaction search", err.Error())
 	// Following the get transacation data from paypal and transaction db
 	now := time.Now()
 	now = now.Add(10 * time.Hour)
@@ -809,9 +821,10 @@ func GetIPNbyID(orderid string) (*IPNNotification, error) {
 		return nil, err
 	}
 	rr := IPNNotification{}
-
+	logger.Debugf(string(ret))
 	datasrc := bytes.NewReader(ret)
 	err = json.NewDecoder(datasrc).Decode(&rr)
+	logger.Debug(err)
 	return &rr, err
 }
 

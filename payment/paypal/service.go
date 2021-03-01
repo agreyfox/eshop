@@ -7,7 +7,9 @@ import (
 	"io/ioutil"
 
 	"github.com/agreyfox/eshop/payment/data"
+	"github.com/agreyfox/eshop/prometheus"
 	"github.com/agreyfox/eshop/system/db"
+	"github.com/agreyfox/eshop/system/email"
 	"github.com/go-zoo/bone"
 
 	"net/http"
@@ -143,6 +145,8 @@ func userSubmit(w http.ResponseWriter, r *http.Request) {
 
 	rettxt, _ := json.MarshalIndent(respond, "", "  ")
 	payload.Respond = string(rettxt)
+
+	go prometheus.OrderCounter.WithLabelValues("paypal").Add(1) //metric order creation
 
 	errcreateorder := data.SaveOrderRequest(payload) //finished save request,
 	logger.Infof("Create paypal request in db with err:", errcreateorder)
@@ -439,6 +443,9 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 	go saveNotify(notification) // Save the notification
 
 	logger.Infof("paypal notification %s arrival with resource %v", notification.ID, notification.EventType)
+
+	go prometheus.PaypalNotifiyCounter.WithLabelValues(notification.EventType).Inc() //notification 次数
+
 	switch {
 	case notification.EventType == EventPaymentCapturePending:
 		logger.Infof("Step 4 Capture after customer approve,The resource is :%s", fmt.Sprint(notification.Resource))
@@ -447,17 +454,19 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 		//	ProgramMode = "DEBUG"
 		//if verifyResp.VerificationStatus == PaypalVerified || ProgramMode == "DEBUG" {
 		if ProgramMode == "DEBUG" {
+			go prometheus.PaypalOrderCreateCounter.Inc()
+
 			resource := Resource{}
 			rr, _ := json.Marshal(notification.Resource)
 			err := json.Unmarshal(rr, &resource)
 			if err != nil {
-				logger.Debug("Notification checkout resource unmarshal failed", err)
+				logger.Error("Notification checkout resource unmarshal failed", err)
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
 			//logger.Debug("capture resource is ", resource)
 			if len(resource.Amount.Value) == 0 || len(resource.InvoiceID) == 0 {
-				logger.Debug("The return checkout resource has no valid data ", err)
+				logger.Warn("The return checkout resource has no valid data ", err)
 				w.WriteHeader(http.StatusBadRequest)
 				return
 			}
@@ -476,13 +485,15 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	case notification.EventType == EventCheckOrderApproved:
 		logger.Infof("Step 4 Capture after customer approve,The resource is :%s", fmt.Sprint(notification.Resource))
-		//verifyResp, _ := payClient.VerifyWebhookSignatureWithData(r, webHookID, bodybytes)
-		//logger.Debug(verifyResp)
-		if ProgramMode == "DEBUG" {
-			//if verifyResp.VerificationStatus == PaypalVerified || ProgramMode == "DEBUG" {
+		verifyResp, _ := payClient.VerifyWebhookSignatureWithData(r, webHookID, bodybytes)
+		logger.Debug("VERIFIE Notification:", verifyResp)
+		//if ProgramMode == "DEBUG" {
+		if verifyResp.VerificationStatus == PaypalVerified || ProgramMode == "DEBUG" {
+			go prometheus.PaypalOrderCreateCounter.Inc()
 			//if ProgramMode == "DEBUG" {
 			//resource := CaptureResource{}
 			resource := Resource{}
+
 			rr, _ := json.Marshal(notification.Resource)
 			err := json.Unmarshal(rr, &resource)
 			if err != nil {
@@ -501,7 +512,55 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 				if len(oo.Payer) > 0 {
 					orderid := oo.OrderID
 					logger.Debugf("paypal send eamil for order accept %s,%s", oo.Payer, GetPurchaseContent(orderid))
-					go data.SendConfirmEmail(orderid, GetPurchaseContent(orderid), resource.PurchaseUnits[0].Amount.Value, resource.PurchaseUnits[0].Amount.Currency, oo.Payer)
+					emailConfbuf, err := db.Content("Email:2") //2 mean order tempalte
+					if err != nil {
+						logger.Warnf("Skip order comfirmation email send job,Error:%s", err)
+					} else {
+
+						emailstruct := data.UserEmailInfo{}
+
+						err := json.Unmarshal(emailConfbuf, &emailstruct)
+
+						if err != nil {
+							logger.Warnf("Skip Order email send job,Error:%s", err)
+
+						} else {
+							//go data.SendConfirmEmail(orderid, GetPurchaseContent(orderid), resource.PurchaseUnits[0].Amount.Value, resource.PurchaseUnits[0].Amount.Currency, oo.Payer)
+							go func() {
+								logger.Debugf("send Order email to User!", oo.Payer)
+								bodyTemplate := emailstruct.EmailBody
+								if ok || len(bodyTemplate) == 0 {
+									logger.Warnf("Skip order email With no template setting!")
+									return
+								}
+								body := fmt.Sprintf(bodyTemplate, orderid, oo.UpdateTime, GetPurchaseContent(orderid), oo.Comments, oo.Total, oo.PaymentMethod, oo.User, oo.PayerIP)
+								tomail := []string{string(oo.Payer)}
+								ccmail := emailstruct.CC
+								if ok {
+									tomail = append(tomail, ccmail)
+								}
+								subj := fmt.Sprint(emailstruct.Subject, orderid)
+								logger.Infof("also try to send admin notification email to %v\n", tomail)
+								emailtarget := email.Email{
+									//From: admin.MailUser,
+									To:       tomail,
+									Subject:  subj,
+									TextBody: body,
+									HtmlBody: body,
+								}
+								res, err := email.Send(&emailtarget)
+								if err != nil {
+									logger.Warnf("Email alter with n Error Occurred: %s\n", err)
+								} else if res.Data.Succeeded == 1 {
+									logger.Infof("Email alter sent Successfully: %v\n", res)
+								} else {
+									logger.Warnf("Email alter Sent with error: %v\n", res)
+								}
+
+							}()
+						}
+					}
+
 				}
 				logger.Infof("New paypal order %d Created!", oid)
 
@@ -628,6 +687,9 @@ func IPNListener(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	logger.Infof("IPN message verified, save to transations")
+
+	go prometheus.PaypalNotifiyCounter.WithLabelValues(notification.TxnID).Inc() //notification 次数
+
 	// notification confirmed here
 	err = SaveIPNData(notification)
 	// tell PayPal to not send more notificatins

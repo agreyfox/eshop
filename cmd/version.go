@@ -72,7 +72,7 @@ var emailCmd = &cobra.Command{
 	Long:    `Testing email send via admin email configuration.`,
 	Example: `$ eshop email`,
 	Run: func(cmd *cobra.Command, args []string) {
-		db.Init()
+		db.Init(systemdb)
 		defer db.Close()
 		//db.PutConfig("Key", config.GenerateKey())
 
@@ -112,7 +112,7 @@ var ipCmd = &cobra.Command{
 	Long:    `Found the right country for specified IP .`,
 	Example: `$ eshop ip 193.168.3.3`,
 	Run: func(cmd *cobra.Command, args []string) {
-		db.Init()
+		db.Init(systemdb)
 		defer db.Close()
 		//db.PutConfig("Key", config.GenerateKey())
 
@@ -146,7 +146,7 @@ var createUserCmd = &cobra.Command{
 	Long:    `Assign new addmin to system .`,
 	Example: `$ eshop user  add jihua.gao@gmail.com axxdsdawe`,
 	Run: func(cmd *cobra.Command, args []string) {
-		db.Init()
+		db.Init(systemdb)
 		defer db.Close()
 		//db.PutConfig("Key", config.GenerateKey())
 

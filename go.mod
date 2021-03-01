@@ -28,6 +28,7 @@ require (
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/schema v1.1.0
 	github.com/jmhodges/levigo v1.0.0 // indirect
+	github.com/konoui/boltdb-exporter v0.0.1 // indirect
 	github.com/motomux/skrill-go v1.0.2
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/nilslice/email v0.1.0
@@ -46,6 +47,8 @@ require (
 	github.com/tidwall/sjson v1.0.4
 	go.uber.org/zap v1.14.1
 	golang.org/x/crypto v0.0.0-20200323165209-0ec3e9974c59
+	golang.org/x/sys v0.0.0-20210223212115-eede4237b368 // indirect
 	golang.org/x/text v0.3.2
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

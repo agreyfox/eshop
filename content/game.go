@@ -12,6 +12,7 @@ type Game struct {
 
 	Name         string `json:"name"`
 	Sname        string `json:"sname,omitempty"`
+	SlugName     string `json:"slugname"`
 	Logo         string `json:"logo,omitempty"`
 	Image        string `json:"barImage,omitempty"`
 	Online       bool   `json:"online"`
@@ -88,6 +89,11 @@ func (o *Game) ContentStruct() map[string]interface{} {
 			DataType:   "field",
 			DataSource: []string{},
 			Order:      2},
+		"slugname": {
+			Type:       "input",
+			DataType:   "field",
+			DataSource: []string{},
+			Order:      8},
 		"coinName": {
 			Type:       "input",
 			DataType:   "field",
@@ -184,4 +190,8 @@ func (o *Game) ContentStruct() map[string]interface{} {
 // fields from the Game struct type
 func (g *Game) String() string {
 	return fmt.Sprintf("Game: %s", g.Name)
+}
+
+func (g *Game) IndexContent() bool {
+	return true
 }

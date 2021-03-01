@@ -10,7 +10,7 @@
       "request": "launch",
       "mode": "debug",
       "program": "/home/lq/ifb/src/eshop/cli.go",
-      "args": ["serve", "admin,db,paypal,payssion,skrill,static,monitor,api"]
+      "args": ["serve", "admin,api,db,paypal,payssion,skrill,static"]
     },
     {
       "name": "Launch",
@@ -19,7 +19,60 @@
       "mode": "auto",
       "program": "/home/lq/ifb/src/eshop/cli.go",
       "env": {},
-      "args": ["serve", "admin,paypal"]
+      "args": ["serve", "admin,api,db,paypal,payssion,skrill,static,monitor"]
+    },
+    {
+      "name": "Test cmd ",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "/home/lq/ifb/src/eshop/cli.go",
+      "env": {},
+      "args": [
+        "db",
+        "restore",
+        "--in",
+        "Email.json",
+        "--out",
+        "test.db",
+        "--name",
+        "Email"
+      ]
+    },
+    {
+      "name": "list cmd ",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "/home/lq/ifb/src/eshop/cli.go",
+      "env": {},
+      "args": [
+        "db",
+        "list",
+        "--in",
+       "test.db",
+        "--name",
+        "Email",
+        "10"
+      ]
+    },
+    {
+      "name": "delete cmd ",
+      "type": "go",
+      "request": "launch",
+      "mode": "auto",
+      "program": "/home/lq/ifb/src/eshop/cli.go",
+      "env": {},
+      "args": [
+        "db",
+        "remove",
+        "--in",
+        "test.db",
+        "--name",
+        "Email",
+        "yes"
+      ]
     }
   ]
 }
+, args

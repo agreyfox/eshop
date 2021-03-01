@@ -140,7 +140,7 @@ func AddonExists(key string) bool {
 	var exists bool
 
 	if store == nil {
-		Init()
+		Init("system.db")
 	}
 
 	err := store.Update(func(tx *bolt.Tx) error {

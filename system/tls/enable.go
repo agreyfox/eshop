@@ -88,5 +88,7 @@ func Enable(mux http.Handler) {
 	//go http.ListenAndServe(":http", m.HTTPHandler(nil))
 
 	//logger.Fatal(server.ListenAndServeTLS("", ""))
-	logger.Fatal(http.ListenAndServeTLS(fmt.Sprintf(":%s", db.ConfigCache("https_port").(string)), "key/prod/server.pem", "key/prod/server.key", mux))
+	po := fmt.Sprintf(":%s", db.ConfigCache("https_port").(string))
+	logger.Warnf("Start https server at port:%s", po)
+	logger.Fatal(http.ListenAndServeTLS(po, "key/prod/server.pem", "key/prod/server.key", mux))
 }

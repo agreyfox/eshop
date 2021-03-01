@@ -8,7 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/agreyfox/eshop/prometheus"
 	"github.com/agreyfox/eshop/system/admin/user"
+	"github.com/agreyfox/eshop/system/email"
 	smtp2go "github.com/agreyfox/eshop/system/email"
 	"github.com/agreyfox/eshop/system/ip"
 
@@ -75,21 +77,54 @@ func RegisterUsersHandler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+type userEmailInfo struct {
+	Name      string `json:"name"`
+	Subject   string `json:"subject"`
+	EmailBody string `json:"emailbody"`
+	CC        string `json:"cc,omitempty"`
+	Enable    bool   `json:"enable"`
+	Desc      bool   `json:"description,omitempty"`
+}
+
 // for user register , and return new user id
 func RegisterUser(res http.ResponseWriter, req *http.Request) {
-	logger.Debugf("User try to register , from:", GetIP(req))
-	reqJSON := GetJsonFromBody(req)
+	ip := GetIP(req)
+	logger.Debugf("User try to register , from:%s", ip)
+	go prometheus.ApiCounter.WithLabelValues(ip, "尝试注册").Add(1)
 
-	email := strings.ToLower(reqJSON["email"].(string))
-	password := reqJSON["password"].(string)
+	reqJSON := GetJsonFromBody(req)
+	var ok bool
+	e, ok := reqJSON["email"].(string)
+	if !ok {
+		logger.Error("user email  must provide")
+		RenderJSON(res, req, RetUser{
+			RetCode: -20,
+			Msg:     "lack of user email information"})
+		return
+	}
+	inputemail := strings.ToLower(e)
+	password, ok := reqJSON["password"].(string)
+	if !ok {
+		logger.Error("user passsword must provide")
+		RenderJSON(res, req, RetUser{
+			RetCode: -22,
+			Msg:     "lack of user password"})
+		return
+	}
 	social := ""
 	//phone := ""
 	meta := ""
-	social = reqJSON["social_link"].(string)
-	//phone = reqJSON["phone"].(string)
-	meta = reqJSON["social_type"].(string)
 
-	if email == "" || password == "" {
+	social, ok = reqJSON["social_link"].(string)
+	if !ok {
+		social = ""
+	}
+	//phone = reqJSON["phone"].(string)
+	meta, ok = reqJSON["social_type"].(string)
+	if !ok {
+		meta = ""
+	}
+	if inputemail == "" || password == "" {
 		logger.Error("Insufficient user register information")
 		RenderJSON(res, req, RetUser{
 			RetCode: -21,
@@ -97,7 +132,7 @@ func RegisterUser(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	usr, err := user.NewCustomerWithSocial(email, password, meta, social)
+	usr, err := user.NewCustomerWithSocial(inputemail, password, meta, social)
 	if err != nil {
 		logger.Error(err)
 		RenderJSON(res, req,
@@ -114,13 +149,69 @@ func RegisterUser(res http.ResponseWriter, req *http.Request) {
 	_, err = db.SetUser(usr)
 	if err != nil {
 		logger.Error(err)
-		res.WriteHeader(http.StatusInternalServerError)
+		//res.WriteHeader(http.StatusInternalServerError)
+		RenderJSON(res, req,
+			RetUser{
+				RetCode: -1,
+				Msg:     err.Error(),
+				Data:    "",
+			})
 		return
 	}
-
+	go prometheus.RegisterCounter.Inc()
 	//http.Redirect(res, req, req.URL.String(), http.StatusFound)
 	//res.WriteHeader(http.StatusAccepted)
+	//emailaddr := inputemail
+	emailConfbuf, err := db.Content("Email:1")
+	if err != nil {
+		logger.Warnf("Skip register email send job,Error:%s", err)
+	} else {
+		//emailstruct := item.Types["Email"]()
+		emailstruct := userEmailInfo{}
+		//emailmap := map[string]interface{}{}
+		err := json.Unmarshal(emailConfbuf, &emailstruct)
+		fmt.Println(err, emailstruct.Subject)
+		//	emailstruct.Subject
+		if err != nil {
+			logger.Warnf("Skip register email send job,Error:%s", err)
 
+		} else {
+
+			go func() {
+				logger.Debugf("send register email to User!", inputemail)
+				bodyTemplate := emailstruct.EmailBody
+				if ok || len(bodyTemplate) == 0 {
+					logger.Warnf("Skip register email With no template setting")
+					return
+				}
+				body := fmt.Sprintf(bodyTemplate, inputemail, ip)
+				tomail := []string{string(inputemail)}
+				ccmail := emailstruct.CC
+				if ok {
+					tomail = append(tomail, ccmail)
+				}
+				subj := emailstruct.Subject
+				logger.Infof("also try to send admin notification email to %v\n", tomail)
+				emailtarget := email.Email{
+					//From: admin.MailUser,
+					To:       tomail,
+					Subject:  subj,
+					TextBody: body,
+					HtmlBody: body,
+				}
+				res, err := email.Send(&emailtarget)
+				if err != nil {
+					logger.Warnf("Send Alert email with n Error Occurred: %s\n", err)
+				} else if res.Data.Succeeded == 1 {
+					logger.Infof("Email allter sent Successfully: %v\n", res)
+				} else {
+					logger.Warnf("Email allter Sent with error: %v\n", res)
+				}
+
+			}()
+		}
+
+	}
 	RenderJSON(res, req, RetUser{
 		RetCode: 0,
 		Msg:     "Done",
@@ -143,6 +234,7 @@ update for user profile,
 func UpdateUser(res http.ResponseWriter, req *http.Request) {
 	ipAddr := GetIP(req)
 	logger.Debugf("User try to update user account , from:", ipAddr)
+	go prometheus.ApiCounter.WithLabelValues(ipAddr, "更新profile").Add(1)
 	//reqJSON := GetJsonFromBody(req)
 	if !user.IsValid(req) {
 		logger.Error("invalid user update profile")
@@ -207,7 +299,10 @@ func UpdateUser(res http.ResponseWriter, req *http.Request) {
 
 	if err != nil {
 		logger.Error(err)
-		res.WriteHeader(http.StatusInternalServerError)
+		//res.WriteHeader(http.StatusInternalServerError)
+		RenderJSON(res, req, RetUser{
+			RetCode: -1,
+			Msg:     err.Error()})
 		return
 	}
 
@@ -267,13 +362,14 @@ func UpdateUser(res http.ResponseWriter, req *http.Request) {
 func Login(res http.ResponseWriter, req *http.Request) {
 	ipAddr := GetIP(req)
 	logger.Debugf("User login, from:", ipAddr)
+	go prometheus.ApiCounter.WithLabelValues(ipAddr, "登陆").Add(1)
 	if user.IsValid(req) {
 		logger.Debug("is valid")
 		//http.Redirect(res, req, req.URL.Scheme+req.URL.Host+"/admin", http.StatusFound)
 		RenderJSON(res, req,
 			RetUser{
 				RetCode: 2,
-				Msg:     "Already Loggin",
+				Msg:     "user already login",
 				Data:    "",
 			})
 		return
@@ -288,7 +384,7 @@ func Login(res http.ResponseWriter, req *http.Request) {
 		RenderJSON(res, req,
 			RetUser{
 				RetCode: -2,
-				Msg:     "No Login Information",
+				Msg:     "lack of login information",
 			})
 		return
 	}
@@ -331,7 +427,7 @@ func Login(res http.ResponseWriter, req *http.Request) {
 		logger.Warn("wrong user login attempt")
 		RenderJSON(res, req, RetUser{
 			RetCode: -1,
-			Msg:     "Wrong email or password!",
+			Msg:     "wrong email or password!",
 			Data:    "",
 		})
 		return
@@ -356,7 +452,7 @@ func Login(res http.ResponseWriter, req *http.Request) {
 		logger.Debug(err)
 		RenderJSON(res, req, RetUser{
 			RetCode: -1,
-			Msg:     "Internal Error",
+			Msg:     "internal error",
 			Data:    "",
 		})
 		return
@@ -394,7 +490,7 @@ func Login(res http.ResponseWriter, req *http.Request) {
 func Config(res http.ResponseWriter, req *http.Request) {
 	ipAddr := GetIP(req)
 	logger.Debugf("User access web site , from:%s", ipAddr)
-
+	go prometheus.ApiCounter.WithLabelValues(ipAddr, "访问首页").Add(1)
 	ipSearchHandler := ip.NewClient("", true)
 
 	countryInfor, _ := ipSearchHandler.QueryIPByDB(ipAddr)
@@ -498,7 +594,9 @@ func Logout(res http.ResponseWriter, req *http.Request) {
 
 // allow user to request recover key
 func Forgot(res http.ResponseWriter, req *http.Request) {
-	logger.Debugf("User try to recover password, from:", GetIP(req))
+	ip := GetIP(req)
+	logger.Debugf("User try to recover password, from:", ip)
+	go prometheus.ApiCounter.WithLabelValues(ip, "忘记密码").Add(1)
 	reqJSON := GetJsonFromBody(req)
 
 	// check email for user, if no user return Error
@@ -696,7 +794,8 @@ func LogoutHandler(res http.ResponseWriter, req *http.Request) {
 }
 
 func LoginHandler(res http.ResponseWriter, req *http.Request) {
-	logger.Debugf("User login, from:", GetIP(req))
+	ip := GetIP(req)
+	logger.Debugf("User login, from:", ip)
 	switch req.Method {
 
 	case http.MethodPost:
@@ -726,10 +825,10 @@ func LoginHandler(res http.ResponseWriter, req *http.Request) {
 		}
 		*/
 		// check email & password
-		email := requestJson["email"].(string)
+		inputemail := requestJson["email"].(string)
 		password := requestJson["password"].(string)
-		logger.Debug("The Request email is :", email)
-		j, err := db.User(strings.ToLower(email))
+		logger.Debug("The Request email is :", inputemail)
+		j, err := db.User(strings.ToLower(inputemail))
 
 		if err != nil {
 			log.Println(err)
@@ -798,6 +897,7 @@ func LoginHandler(res http.ResponseWriter, req *http.Request) {
 		})
 
 		logger.Debugf("User %s logged in !", usr)
+
 		RenderJSON(res, req, RetUser{
 			RetCode: 0,
 			Msg:     "Done",

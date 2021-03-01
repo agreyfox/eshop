@@ -256,3 +256,7 @@ func (p *Product) ContentStruct() map[string]interface{} {
 		"no":   40,
 	}
 }
+
+func (g *Product) IndexContent() bool {
+	return true
+}

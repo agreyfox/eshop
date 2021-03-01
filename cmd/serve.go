@@ -15,6 +15,7 @@ import (
 	"github.com/agreyfox/eshop/system/api"
 	"github.com/agreyfox/eshop/system/api/analytics"
 	"github.com/agreyfox/eshop/system/db"
+	"github.com/agreyfox/eshop/system/logs"
 	"github.com/agreyfox/eshop/system/tls"
 	"github.com/go-zoo/bone"
 	"github.com/rs/cors"
@@ -34,7 +35,7 @@ var serveCmd = &cobra.Command{
 			return ErrWrongOrMissingService
 		}
 
-		db.Init()
+		db.Init(systemdb)
 		defer db.Close()
 		//db.PutConfig("Key", config.GenerateKey())
 
@@ -83,9 +84,19 @@ var serveCmd = &cobra.Command{
 			admin.Docs(docsport)
 		}
 
-		// init search index
+		// init search index 初始化搜索引擎的内容
 		go db.InitSearchIndex()
 
+		// 设置log level
+		wholelevel := db.ConfigCache("log_level").(string)
+		if len(wholelevel) > 0 {
+			logs.SetLevel(wholelevel)
+		} else {
+			wholelevel := "info" // 若没有设置，强制为info
+			db.PutConfig("log_level", wholelevel)
+			logs.SetLevel(wholelevel)
+		}
+		logger.Warn("Log system debug level is ", wholelevel)
 		// save the https port the system is listening on
 		err := db.PutConfig("https_port", fmt.Sprintf("%d", httpsport))
 		if err != nil {
@@ -94,16 +105,16 @@ var serveCmd = &cobra.Command{
 
 		// cannot run production HTTPS and development HTTPS together
 		if devhttps {
-			logger.Info("Enabling self-signed HTTPS... [DEV]")
+			logger.Warn("Enabling self-signed HTTPS... [DEV]")
 
 			go tls.EnableDev(cmainMux)
-			logger.Info("Server listening on https://localhost:10443 for requests... [DEV]")
+			logger.Warn("Server listening on https://localhost:10443 for requests... [DEV]")
 
-			logger.Info("If your browser rejects HTTPS requests, try allowing insecure connections on localhost.")
-			logger.Info("on Chrome, visit chrome://flags/#allow-insecure-localhost")
+			logger.Warn("If your browser rejects HTTPS requests, try allowing insecure connections on localhost.")
+			logger.Warn("on Chrome, visit chrome://flags/#allow-insecure-localhost")
 
 		} else if https {
-			logger.Info("Enabling HTTPS...")
+			logger.Warn("Enabling HTTPS...")
 
 			go tls.Enable(cmainMux)
 			logger.Warnf("Server listening on :%s for HTTPS requests...\n", db.ConfigCache("https_port").(string))
@@ -126,8 +137,8 @@ var serveCmd = &cobra.Command{
 			logger.Fatalf("System failed to save config. Please try to run again.", err)
 		}
 
-		logger.Infof("Server listening at %s:%d for HTTP requests...\n", bind, port)
-		logger.Info("\nVisit '/admin' to get started.")
+		logger.Warnf("Server listening at %s:%d for HTTP requests...\n", bind, port)
+		logger.Warn("\nVisit '/admin' to get started.")
 
 		fmt.Println(http.ListenAndServe(fmt.Sprintf("%s:%d", bind, port), cmainMux))
 

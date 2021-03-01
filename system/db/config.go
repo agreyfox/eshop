@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	// DefaultMaxAge provides a 2592000 second (30-day) cache max-age setting
-	DefaultMaxAge = int64(60 * 60 * 24 * 30)
+	// DefaultMaxAge provides a 2592000 second (15-day) cache max-age setting
+	DefaultMaxAge = int64(60 * 60 * 24 * 15)
 )
 
 var mu = &sync.Mutex{}

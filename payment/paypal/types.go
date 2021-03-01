@@ -102,6 +102,7 @@ const (
 	EventPaymentCapturePending         string = "PAYMENT.CAPTURE.PENDING"
 	EventPaymentCaptureDenied          string = "PAYMENT.CAPTURE.DENIED"
 	EventPaymentCaptureRefunded        string = "PAYMENT.CAPTURE.REFUNDED"
+	EventPaymentSALECompleted          string = "PAYMENT.SALE.COMPLETED" // new order completed status
 	EventPaymentOrderCreated           string = "PAYMENT.ORDER.CREATED"
 	EventCheckOrderApproved            string = "CHECKOUT.ORDER.APPROVED"
 	EventCustomerDisputeResolved       string = "CUSTOMER.DISPUTE.RESOLVED"

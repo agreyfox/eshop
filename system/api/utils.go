@@ -356,7 +356,7 @@ func CustomerAuth(next http.HandlerFunc) http.HandlerFunc {
 			next.ServeHTTP(res, req)
 		} else {
 			res.WriteHeader(http.StatusForbidden)
-			logger.Error("Action %s without user permission:", req.RequestURI)
+			logger.Errorf("Action %s without user permission:", req.RequestURI)
 			return
 		}
 	})

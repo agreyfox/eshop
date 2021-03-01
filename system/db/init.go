@@ -46,13 +46,74 @@ func Close() {
 }
 
 // Init creates a db connection, initializes db with required info, sets secrets
-func Init() {
+func Init(dbfile string) {
 	if store != nil {
 		return
 	}
 
 	var err error
-	store, err = bolt.Open("system.db", 0666, nil)
+	//store, err = bolt.Open("system.db", 0666, nil)
+	store, err = bolt.Open(dbfile, 0666, nil)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
+	err = store.Update(func(tx *bolt.Tx) error {
+		// initialize db with all content type buckets & sorted bucket for type
+		for t := range item.Types {
+			_, err := tx.CreateBucketIfNotExists([]byte(t))
+			if err != nil {
+				return err
+			}
+
+			_, err = tx.CreateBucketIfNotExists([]byte(t + "__sorted"))
+			if err != nil {
+				return err
+			}
+		}
+
+		// init db with other buckets as needed
+		buckets = append(buckets, bucketsToAdd...)
+
+		for _, name := range buckets {
+			_, err := tx.CreateBucketIfNotExists([]byte(name))
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		logger.Fatal("Coudn't initialize db with buckets.", err)
+	}
+
+	err = LoadCacheConfig()
+	if err != nil {
+		logger.Fatal("Failed to load config cache.", err)
+	}
+
+	clientSecret := ConfigCache("client_secret").(string)
+
+	if clientSecret != "" {
+		jwt.Secret([]byte(clientSecret))
+	}
+
+	// invalidate cache on system start
+	err = InvalidateCache()
+	if err != nil {
+		logger.Fatal("Failed to invalidate cache.", err)
+	}
+}
+
+// Init creates a db connection, initializes db with required info, sets secrets
+func InitWithDbPath(dbpath string) {
+	if store != nil {
+		return
+	}
+
+	var err error
+	store, err = bolt.Open(dbpath, 0666, nil)
 	if err != nil {
 		logger.Fatal(err)
 	}

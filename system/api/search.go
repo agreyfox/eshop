@@ -232,7 +232,7 @@ func advSearchContent(w http.ResponseWriter, r *http.Request) {
 			}
 
 		} else if regexsearch != "" { // use regex to search
-			re := regexp.MustCompile(regexsearch)
+			re := regexp.MustCompile("(?i)" + regexsearch)
 			if re.Match(posts[i]) {
 				item := make(map[string]interface{})
 				err := json.Unmarshal(posts[i], &item)
@@ -281,7 +281,7 @@ func advSearchContent(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	total := len(posts)
+	total := len(retData)
 
 	meta := MetaData{
 		Total:     uint(total),

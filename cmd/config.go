@@ -63,7 +63,7 @@ var getCmd = &cobra.Command{
 // manully initial db
 func InitilizedDb() error {
 
-	db.Init()
+	db.Init(systemdb)
 	defer db.Close()
 
 	fmt.Println("System DB initialized!")
@@ -73,7 +73,7 @@ func InitilizedDb() error {
 // DistplayAllConfig to Display all the system configuration
 func DistplayAllConfig() {
 	logger.Info("Trying to get the all configuration in system db")
-	db.Init()
+	db.Init(systemdb)
 	defer db.Close()
 
 	config, err := db.ConfigAll()
@@ -91,7 +91,7 @@ func DistplayAllConfig() {
 // SetConfig set config one pair
 func SetConfig(key string, value interface{}) {
 	fmt.Printf("Try to save the config %s--%v\n ", key, value)
-	db.Init()
+	db.Init(systemdb)
 	defer db.Close()
 
 	err := db.PutConfig(key, value)
@@ -104,7 +104,7 @@ func SetConfig(key string, value interface{}) {
 // GetConfig to get one key's value
 func GetConfig(key string) {
 	fmt.Printf("Try to get the config %s\n", key)
-	db.Init()
+	db.Init(systemdb)
 	defer db.Close()
 
 	result, err := db.Config(key)

@@ -162,6 +162,21 @@ func User(email string) ([]byte, error) {
 	return val.Bytes(), nil
 }
 
+func IsValidAdminUser(req *http.Request) bool {
+	userbin, err := CurrentUser(req)
+	if err != nil {
+		return false
+	}
+	usr := &user.User{}
+
+	err = json.Unmarshal(userbin, usr)
+	if err != nil {
+		logger.Error(err)
+		return false
+	}
+	return usr.Perm.Admin
+}
+
 // User gets the user by email from the db
 func FindUser(email string) ([][]byte, error) {
 	var posts [][]byte
@@ -232,13 +247,22 @@ func CurrentUser(req *http.Request) ([]byte, error) {
 	if !user.IsValid(req) {
 		return nil, fmt.Errorf("Error. Invalid User.")
 	}
+	jwttoken := ""
+	tt := req.Header.Get(user.Lqcmstoken)
 
-	token, err := req.Cookie(user.Lqcmstoken)
-	if err != nil {
-		return nil, err
+	if len(tt) > 0 {
+
+		jwttoken = tt
+		//return jwt.Passes(token)
+	} else {
+		jwttokencookie, err := req.Cookie(user.Lqcmstoken)
+		if err != nil {
+			return nil, err
+		}
+		jwttoken = jwttokencookie.Value
 	}
 
-	claims := jwt.GetClaims(token.Value)
+	claims := jwt.GetClaims(jwttoken)
 	email, ok := claims["user"]
 	if !ok {
 		return nil, fmt.Errorf("Error. No user data found in request token.")

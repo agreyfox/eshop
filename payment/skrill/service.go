@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/agreyfox/eshop/payment/data"
+	"github.com/agreyfox/eshop/prometheus"
 )
 
 var (
@@ -140,6 +141,9 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 	ll, err := payClient.Prepare(&para)
 
 	if err == nil {
+
+		go prometheus.OrderCounter.WithLabelValues("skirll").Add(1) //metric order creation
+
 		para.TransactionID = ll
 		retData := map[string]interface{}{
 			"transaction":  para,

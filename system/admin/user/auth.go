@@ -6,7 +6,6 @@ import (
 	"bytes"
 	crand "crypto/rand"
 	"encoding/base64"
-	"fmt"
 	mrand "math/rand"
 	"net/http"
 
@@ -145,6 +144,7 @@ func IsValid(req *http.Request) bool {
 	var token string
 	tt := req.Header.Get(Lqcmstoken)
 	if len(tt) > 0 {
+		logger.Debug("get token from header:", tt)
 		token = tt
 		return jwt.Passes(token)
 	}
@@ -154,6 +154,7 @@ func IsValid(req *http.Request) bool {
 		logger.Error("Cookie Token is not found!")
 		logger.Debug(req)
 	} else {
+		logger.Debug("get token from cookei:", tt)
 		token = cookie.Value
 	}
 	if len(token) == 0 {
@@ -193,7 +194,10 @@ func IsValidAdmin(req *http.Request) bool {
 	token := cookie.Value
 	if jwt.Passes(token) {
 		clienInfo := jwt.GetClaims(token)
-		fmt.Println(clienInfo)
+
+		username := clienInfo["user"].(string)
+		logger.Debug("User validation for admin:", username)
+
 		return true
 	} else {
 		return false

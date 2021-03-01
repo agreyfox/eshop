@@ -23,14 +23,14 @@ func Run(mainMux *bone.Mux) {
 
 	//apiv1Mux.HandleFunc("/content", Record(CORS(Gzip(contentHandler))))
 	apiv1Mux.Get("/content", Record(CORS(Gzip(content))))
-	apiv1Mux.Post("/content/create", Record(CORS(createContent)))
+	apiv1Mux.Post("/content/create", Record(CORS(CustomerAuth(createContent)))) //2021/1/23
 
 	//apiv1Mux.HandleFunc("/content/create", Record(CORS(createContentHandler)))
 
-	apiv1Mux.HandleFunc("/content/update", Record(CORS(updateContentHandler)))
+	apiv1Mux.HandleFunc("/content/update", Record(CORS(CustomerAuth(updateContentHandler)))) //2021/1/23
 
-	apiv1Mux.HandleFunc("/content/delete", Record(CORS(deleteContentHandler)))
-	apiv1Mux.HandleFunc("/content/search", Record(CORS(advSearchContent)))
+	apiv1Mux.HandleFunc("/content/delete", Record(CORS(CustomerAuth(deleteContentHandler)))) //2021/1/23
+	apiv1Mux.HandleFunc("/content/search", Record(CORS(Gzip(advSearchContent))))             //2021/1/23
 	apiv1Mux.Get("/search", Record(CORS(Gzip(searchContent))))
 
 	//apiv1Mux.HandleFunc("/search", Record(CustomerAuth(CORS(Gzip(searchContentHandler)))))
@@ -41,21 +41,21 @@ func Run(mainMux *bone.Mux) {
 
 	//apiv1Mux.HandleFunc("/user/register", CORS(user.RegisterUsersHandler))
 	apiv1Mux.Post("/register", Record(CORS(RegisterUser)))
-	apiv1Mux.HandleFunc("/user/update", CORS(UpdateUser))
+	apiv1Mux.HandleFunc("/user/update", CORS(CustomerAuth(UpdateUser)))
 	apiv1Mux.Get("/renew", CORS(Renew))
 	apiv1Mux.Post("/logout", CORS(CustomerAuth(Logout)))
 	apiv1Mux.Post("/forgot", CORS(Forgot))
 	apiv1Mux.Post("/login", Record(CORS(Login)))
-	apiv1Mux.Post("/user/login", Record(CORS(Login)))
+	//apiv1Mux.Post("/user/login", Record(CORS(Login)))
 	apiv1Mux.Post("/recovery", CORS(Recovery))
 	apiv1Mux.Post("/config", Record(CORS(Config)))
 
-	apiv1Mux.HandleFunc("/user/login", CORS(LoginHandler))
+	//	apiv1Mux.HandleFunc("/user/login", CORS(LoginHandler))
 
 	apiv1Mux.HandleFunc("/user/renew", CORS(RenewHandler))
 	//apiv1Mux.HandleFunc("/user/logout", CustomerAuth(LogoutHandler))
 
-	apiv1Mux.HandleFunc("/user/forgot", ForgotPasswordHandler)
-	apiv1Mux.HandleFunc("/user/recovery", RecoveryKeyHandler)
+	//	apiv1Mux.HandleFunc("/user/forgot", ForgotPasswordHandler)
+	//	apiv1Mux.HandleFunc("/user/recovery", RecoveryKeyHandler)
 	mainMux.SubRoute("/api", apiv1Mux)
 }

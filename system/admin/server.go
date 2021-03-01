@@ -106,12 +106,12 @@ func Run(mainMux *bone.Mux) {
 	v1Mux.Post("/user/login", api.CORS(http.HandlerFunc(login)))
 	v1Mux.Post("/user/register", http.HandlerFunc(newAdmin))
 	v1Mux.Post("/user/update", http.HandlerFunc(updateAdmin))
-	v1Mux.Delete("/user/remove", http.HandlerFunc(deleteAdmin))
+	v1Mux.Delete("/user/remove", user.Auth(http.HandlerFunc(deleteAdmin)))
 	v1Mux.Post("/user/search", user.Auth(searchUser))
 	v1Mux.Get("/user/search", user.Auth(searchUser))
 	//v1Mux.HandleFunc("/logout", http.HandlerFunc(logout))
 	v1Mux.Post("/user/logout", http.HandlerFunc(logout))
-	v1Mux.Post("/logout", http.HandlerFunc(logout))
+	v1Mux.Post("/logout", api.CORS(http.HandlerFunc(logout)))
 
 	v1Mux.Post("/user/recover", http.HandlerFunc(recoverRequest))
 	v1Mux.Post("/recover/key", http.HandlerFunc(recoverPassword))
@@ -124,7 +124,7 @@ func Run(mainMux *bone.Mux) {
 	v1Mux.HandleFunc("/addon", user.Auth(addonRestHandler))
 
 	v1Mux.Get("/config", http.HandlerFunc(getConfig))
-	v1Mux.Post("/config", http.HandlerFunc(saveConfig))
+	v1Mux.Post("/config", user.Auth(http.HandlerFunc(saveConfig)))
 
 	//v1Mux.HandleFunc("/configure", user.Auth(configRestHandler))
 	//v1Mux.HandleFunc("/configure/users", user.Auth(configUsersRestHandler))
@@ -134,7 +134,7 @@ func Run(mainMux *bone.Mux) {
 	//v1Mux.HandleFunc("/uploads", user.Auth(uploadContentsRestHandler))
 	//v1Mux.HandleFunc("/uploads/search", user.Auth(uploadSearchRestHandler))
 	v1Mux.Get("/file", http.HandlerFunc(getMedia))
-	v1Mux.Delete("/file", http.HandlerFunc(deleteMediaContent))
+	v1Mux.Delete("/file", user.Auth(http.HandlerFunc(deleteMediaContent)))
 	v1Mux.Post("/file", http.HandlerFunc(uploadMediaContent))
 	v1Mux.Get("/files/search", http.HandlerFunc(searchMediaContent))
 
@@ -142,6 +142,7 @@ func Run(mainMux *bone.Mux) {
 	v1Mux.Get("/contents", http.HandlerFunc(getContents))
 	v1Mux.Get("/contents/search", http.HandlerFunc(searchContent))
 	v1Mux.Get("/contents/export", http.HandlerFunc(export))
+	v1Mux.Get("/contents/ss", http.HandlerFunc(searchContentEnhanced))
 
 	//v1Mux.HandleFunc("/contents/search", user.Auth(searchRestHandler))
 
@@ -154,13 +155,13 @@ func Run(mainMux *bone.Mux) {
 	//v1Mux.HandleFunc("/content/delete", http.HandlerFunc(deleteContent))
 	v1Mux.Post("/content/approve", http.HandlerFunc(approveContent))
 	v1Mux.Post("/content/reject", http.HandlerFunc(rejectContent))
-	v1Mux.Delete("/content", http.HandlerFunc(deleteContent))
+	v1Mux.Delete("/content", user.Auth(http.HandlerFunc(deleteContent)))
 
 	//v1Mux.HandleFunc("/edit/approve", user.Auth(approveContentRestHandler))
 	//v1Mux.HandleFunc("/edit/upload", user.Auth(editUploadRestHandler))
 	//v1Mux.HandleFunc("/edit/upload/delete", user.Auth(deleteUploadRestHandler))
 
-	logger.Debugf("Magement server   root is %s\n", pageDir)
+	logger.Debugf("Magement server  root is %s\n", pageDir)
 
 	mainMux.Handle("/mgt/", http.StripPrefix("/mgt", http.FileServer(restrict(http.Dir(pageDir)))))
 

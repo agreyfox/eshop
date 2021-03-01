@@ -13,7 +13,7 @@ type Country struct {
 	Name     string `json:"name"`
 	Fullname string `json:"fullname,omitempty"`
 	Icon     string `json:"icon,omitempty"`
-	Desc     string `json:"description:omitempty"`
+	Desc     string `json:"description,omitempty"`
 	Paypal   string `json:"paypal,omitempty"`
 	SkrilL   string `json:"skrill,omitempty"`
 	Payssion string `json:"payssion,omitempty"`

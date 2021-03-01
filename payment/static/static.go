@@ -40,7 +40,7 @@ func usage(appName, version string) {
 func Start(mainMux *bone.Mux) {
 
 	logger.Info("starting static page payment  service...")
-
+	initStatic()
 	pwd, erro := os.Getwd()
 	if erro != nil {
 		logger.Error("Couldn't find current directory for file server.")

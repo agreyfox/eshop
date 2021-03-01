@@ -206,3 +206,7 @@ func (o *Server) ContentStruct() map[string]interface{} {
 		"no":   30,
 	}
 }
+
+func (g *Server) IndexContent() bool {
+	return true
+}

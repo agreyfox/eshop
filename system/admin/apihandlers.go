@@ -426,6 +426,8 @@ func getConfig(res http.ResponseWriter, req *http.Request) {
 
 	ret["admin_email"] = c.AdminEmail
 	ret["cors_disabled"] = c.DisableCORS
+	ret["cache_max_age"] = c.CacheMaxAge
+
 	ret["cache_disabled"] = c.DisableHTTPCache
 	ret["zip_disabled"] = c.DisableGZIP
 	ret["log_level"] = c.LogLevel
@@ -441,7 +443,7 @@ func getConfig(res http.ResponseWriter, req *http.Request) {
 //save the config to system, could be key-value and multiple is support
 func saveConfig(res http.ResponseWriter, req *http.Request) {
 	logger.Debugf("Admin try to save the system configuration,from", GetIP(req))
-	if user.IsValidAdmin(req) {
+	if db.IsValidAdminUser(req) {
 		//fmt.Println("is admin")
 		ret := getJsonFromBody(req)
 		if ret == nil {
@@ -532,7 +534,7 @@ func updateAdmin(w http.ResponseWriter, r *http.Request) {
 	ipaddr := GetIP(r)
 	logger.Debugf("Admin  try to update admin user :%s", ipaddr)
 	reqJSON := getJsonFromBody(r)
-	if !user.IsValidAdmin(r) {
+	if !db.IsValidAdminUser(r) {
 		logger.Error(err)
 		renderJSON(w, r, ReturnData{
 			RetCode: -99,
@@ -2024,6 +2026,7 @@ func getContents(w http.ResponseWriter, r *http.Request) {
 		pageSize = count
 	}
 	//default
+	//	pageSize = -1 // admin interface return all record at once
 
 	offset, err := strconv.Atoi(q.Get("offset")) // int: multiplier of count for pagination (0 default)
 	if err != nil {
@@ -2611,7 +2614,7 @@ func searchContent(w http.ResponseWriter, r *http.Request) {
 			}
 
 		} else if regexsearch != "" { // use regex to search
-			re := regexp.MustCompile(regexsearch)
+			re := regexp.MustCompile("(?i)" + regexsearch)
 			if re.Match(posts[i]) {
 				item := make(map[string]interface{})
 				err := json.Unmarshal(posts[i], &item)
@@ -2671,6 +2674,201 @@ func searchContent(w http.ResponseWriter, r *http.Request) {
 	}
 	returnStructData(w, r, retData, meta)
 	logger.Infof("Search content Finished")
+
+}
+
+// to search content get back a search result
+func searchContentEnhanced(w http.ResponseWriter, r *http.Request) {
+
+	q := r.URL.Query()
+	t := q.Get("type")
+	search := q.Get("q")
+	logger.Infof("Search content %s with %s from %s", t, search, GetIP(r))
+	status := q.Get("status")
+	regexsearch := q.Get("r")
+	starttime := q.Get("start") // this is base on time query
+	endtime := q.Get("end")     // this is base on time query
+	filter := q.Get("filter")   // add 2020/10/27 增加filter，在查询结果上加上filter，必须冒号分割,key:value,key !开头就是否（包含的不要）
+	var filterObj *ResultFilter
+	if len(filter) > 0 {
+		filterStr := strings.Split(filter, ":")
+		if len(filterStr) != 2 {
+			filterStr = []string{}
+			filterObj = nil
+		} else {
+			filterObj = &ResultFilter{}
+			if filterStr[0][0] == '!' {
+				filterObj.KeyName = filterStr[0][1:]
+				filterObj.Value = filterStr[1]
+				filterObj.Include = false
+			} else {
+				filterObj.KeyName = filterStr[0]
+				filterObj.Value = filterStr[1]
+				filterObj.Include = true
+			}
+		}
+	} else {
+		filterObj = &ResultFilter{
+			KeyName: "slug",
+			Value:   search,
+			Include: false,
+		}
+	}
+	var checkTime bool
+	checkTime = false
+	var stime, etime uint64
+	var err error
+	if len(starttime) > 0 || len(endtime) > 0 {
+		checkTime = true
+		stime, err = strconv.ParseUint(starttime, 10, 64)
+		if err != nil {
+			stime = 0
+			logger.Warn("Search no start time")
+		} else {
+			logger.Debug("Search start time is ", stime)
+		}
+		etime, err = strconv.ParseUint(endtime, 10, 64)
+		if err != nil {
+			etime = 0
+			logger.Warn("Search no end time")
+		} else {
+			logger.Debug("Search end time is ", etime)
+		}
+	} else {
+		logger.Debug("No Time range search present ")
+		stime = 0
+		etime = 0
+	}
+
+	var specifier string
+
+	if t == "" || (search == "" && regexsearch == "" && !checkTime) {
+		logger.Debugf("Search parameter missing")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	if status == "pending" {
+		specifier = "__" + status
+	}
+	var posts [][]byte
+	total := 0
+	if !checkTime {
+		logger.Debug("Get all match content:")
+		if len(q) > 0 {
+			total, posts = db.QueryContent(t+specifier, search, true)
+		} else if len(regexsearch) > 0 {
+			total, posts = db.RegexContent(t+specifier, regexsearch, true)
+		}
+
+	} else {
+		logger.Debug("Get content based on time frame:", stime, etime)
+		posts = db.ContentByUpdatedTime(t+specifier, stime, etime)
+	}
+
+	retData := make([]map[string]interface{}, 0)
+	//	match := strings.ToLower(search)
+
+	for i := range posts { // do filters
+
+		item := make(map[string]interface{})
+
+		err := json.Unmarshal(posts[i], &item)
+		if err != nil {
+			logger.Debug("Error unmarshal search result json into", t, err, posts[i])
+			continue
+		}
+		if len(q) > 0 {
+			aquery := regexp.MustCompile("(?i)" + search)
+			indd := aquery.FindAllIndex(posts[i], -1)
+			if len(indd) > 1 {
+				retData = append(retData, item)
+				continue
+			}
+		} else if len(regexsearch) > 0 {
+			aquery := regexp.MustCompile("(?i)" + regexsearch)
+			indd := aquery.FindAllIndex(posts[i], -1)
+			if len(indd) > 1 {
+				retData = append(retData, item)
+				continue
+			}
+		}
+		if filterObj != nil {
+
+			value := fmt.Sprint(item[filterObj.KeyName])
+			if filterObj.Include {
+				if strings.Contains(strings.ToLower(value), strings.ToLower(filterObj.Value)) {
+
+					retData = append(retData, item)
+				}
+			} else {
+				if !strings.Contains(strings.ToLower(value), strings.ToLower(filterObj.Value)) {
+					retData = append(retData, item)
+				}
+			}
+		} else {
+			retData = append(retData, item)
+		}
+
+	}
+	total = len(retData)
+	offset := q.Get("offset")
+	count := q.Get("count")
+	var o, c int
+	o, err = strconv.Atoi(offset)
+	if err != nil {
+		o = 0
+	} else {
+		if o > 0 {
+			o = o - 1
+		} else if o < 0 {
+			o = 0
+		}
+	}
+	c, err = strconv.Atoi(count)
+	if err != nil {
+		c = -1 //default
+	}
+	if c == -1 { //return all result
+		meta := MetaData{
+			Total:     uint(total),
+			PageCount: 1,
+			Page:      1,
+			Order:     "",
+			PageSize:  c, //-1 means all
+		}
+		returnStructData(w, r, retData, meta)
+	} else {
+		start := o * c
+		end := (o + 1) * c
+		if start > len(retData) {
+			meta := MetaData{
+				Total:     uint(total),
+				PageCount: int(len(retData) / c),
+				Page:      o + 1,
+				Order:     "",
+				PageSize:  c,
+			}
+			returnStructData(w, r, retData, meta)
+		} else {
+			realend := end
+			if end > len(retData) {
+				realend = len(retData)
+			}
+			realDataRet := retData[start:realend]
+			meta := MetaData{
+				Total:     uint(total),
+				PageCount: int(len(retData) / c),
+				Page:      o + 1,
+				Order:     "",
+				PageSize:  c, //-1 means all
+			}
+			returnStructData(w, r, realDataRet, meta)
+		}
+
+	}
+
+	logger.Infof("super Search content Finished %s", search)
 
 }
 

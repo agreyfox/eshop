@@ -20,6 +20,8 @@ var (
 	MailKey                           = "api-E408790EAED711EA8BC0F23C91C88F4E"
 	MailUser                          = "support@bk.cloudns.cc"
 	logger         *zap.SugaredLogger = logs.Log.Sugar()
+	api_root       string
+	api_key        string
 )
 
 const api_root_env string = "ESHOP_MAIL_ROOT"
@@ -92,19 +94,19 @@ func (f InvalidJSONError) Error() string {
 func api_request(endpoint string, request io.Reader) (*Smtp2goApiResult, error) {
 
 	// grab the api_root_env, set it if it's empty
-	api_root, found := os.LookupEnv(api_root_env)
-	if !found || len(api_root) == 0 {
-		r, err := db.Config("email_domain")
-		if err == nil {
-			api_root = string(r)
-			MailServerHTTP = string(r)
-		}
-		api_root = MailServerHTTP
+	/* 	api_root, found := os.LookupEnv(api_root_env)
+	   	if !found || len(api_root) == 0 {
+	   		r, err := db.Config("email_domain")
+	   		if err == nil {
+	   			api_root = string(r)
+	   			MailServerHTTP = string(r)
+	   		}
+	   		api_root = MailServerHTTP
 
-	}
+	   	} */
 
 	// grab the api_key env
-	api_key, found := os.LookupEnv(api_key_env)
+	/* api_key, found := os.LookupEnv(api_key_env)
 	if !found || len(api_key) == 0 {
 		r, err := db.Config("admin_email")
 		if err == nil {
@@ -115,7 +117,7 @@ func api_request(endpoint string, request io.Reader) (*Smtp2goApiResult, error) 
 			MailKey = string(r)
 		}
 		api_key = MailKey
-	}
+	} */
 
 	// check if the api key is valid
 	if !api_key_regex.MatchString(api_key) {
@@ -176,9 +178,36 @@ func Send(e *Email) (*Smtp2goApiResult, error) {
 	if len(e.TextBody) == 0 {
 		return nil, MissingRequiredFieldError{field: "TextBody"}
 	}
+	found := false
+	// grab the api_root_env, set it if it's empty
+	api_root, found = os.LookupEnv(api_root_env)
+	if !found || len(api_root) == 0 {
+		r, err := db.Config("email_domain")
+		if err == nil {
+			api_root = string(r)
+			MailServerHTTP = string(r)
+		}
+		api_root = MailServerHTTP
+
+	}
+
+	// grab the api_key env
+	api_key, found = os.LookupEnv(api_key_env)
+	if !found || len(api_key) == 0 {
+		r, err := db.Config("admin_email")
+		if err == nil {
+			MailUser = string(r)
+		}
+		r, err = db.Config("email_password")
+		if err == nil {
+			MailKey = string(r)
+		}
+		api_key = MailKey
+	}
+
 	e.ApiKey = MailKey
 	e.From = MailUser
-	fmt.Printf("%v", e)
+	//	fmt.Printf("%v", e)
 	// if we get here we have enough information to send
 	request_json, err := json.Marshal(e)
 	if err != nil {

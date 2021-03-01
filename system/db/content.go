@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"regexp"
 	"runtime/debug"
 	"sort"
 	"strconv"
@@ -549,6 +550,130 @@ func ContentAll(namespace string) [][]byte {
 	})
 
 	return posts
+}
+
+// QueryContent will  retrives all items if it contain query str
+// skip the sub buckets
+func QueryContent(namespace string, matchstr string, in bool) (int, [][]byte) {
+	var posts [][]byte
+	total := 0
+	searchtxt := strings.ToLower(matchstr)
+	err := store.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(namespace))
+		if b == nil {
+			return bolt.ErrBucketNotFound
+		}
+
+		numKeys := b.Stats().KeyN
+		posts = make([][]byte, 0, numKeys)
+
+		b.ForEach(func(k, v []byte) error {
+			total++
+			if v == nil {
+				//fmt.Println("====>", string(k[:]), " is buckets")
+				return nil
+			}
+			valuestr := strings.ToLower(string(v))     // caseinsensitive
+			if strings.Contains(valuestr, searchtxt) { //包含
+				if in {
+					posts = append(posts, v)
+				}
+			} else { // 不包含
+				if !in {
+					posts = append(posts, v)
+				}
+			}
+			return nil
+		})
+
+		return nil
+	})
+	if err == nil {
+		return total, posts
+	} else {
+		return -1, posts
+	}
+
+}
+
+// QueryContentKey will  retrives all items key if
+func QueryContentKey(namespace string, in bool) (int, []string) {
+	var posts []string
+	total := 0
+
+	err := store.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(namespace))
+		if b == nil {
+			return bolt.ErrBucketNotFound
+		}
+
+		numKeys := b.Stats().KeyN
+		posts = make([]string, 0, numKeys)
+
+		b.ForEach(func(k, v []byte) error {
+			total++
+			if v == nil {
+
+				return nil
+			}
+			posts = append(posts, string(k))
+
+			return nil
+		})
+
+		return nil
+	})
+	if in {
+		sort.Strings(posts)
+	}
+	if err == nil {
+		return total, posts
+	} else {
+		return -1, posts
+	}
+
+}
+
+// RegexContent will  retrives all items if it contain query str
+// skip the sub buckets
+func RegexContent(namespace string, matchstr string, in bool) (int, [][]byte) {
+	var posts [][]byte
+	total := 0
+
+	err := store.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(namespace))
+		if b == nil {
+			return bolt.ErrBucketNotFound
+		}
+
+		numKeys := b.Stats().KeyN
+		posts = make([][]byte, 0, numKeys)
+
+		b.ForEach(func(k, v []byte) error {
+			total++
+			if v == nil {
+				return nil
+			}
+			if found, _ := regexp.Match("(?i)"+matchstr, v); found { //包含 无关大小写
+				if in {
+					posts = append(posts, v)
+				}
+			} else { // 不包含
+				if !in {
+					posts = append(posts, v)
+				}
+			}
+			return nil
+		})
+
+		return nil
+	})
+	if err == nil {
+		return total, posts
+	} else {
+		return -1, posts
+	}
+
 }
 
 // ContentByUpdatedTime get all record in date range  and return

@@ -54,7 +54,7 @@ var (
 	PaymentLogHandler *bolt.DB // log db
 
 	SystemDBHandler *bolt.DB //system db
-	OnlineURL       = "https://support.bk.cloudns.cc/#/Result"
+	OnlineURL       = "https://www2.egpal.com/#/Result"
 )
 
 type (
@@ -173,5 +173,14 @@ type (
 		RefundTime     string `json:"refund_time,omitempty"`
 		UpdateTime     string `json:"last_update,omitempty"`
 		Coupon         string `json:"coupon.omitempty"`
+	}
+
+	UserEmailInfo struct {
+		Name      string `json:"name"`
+		Subject   string `json:"subject"`
+		EmailBody string `json:"emailbody"`
+		CC        string `json:"cc,omitempty"`
+		Enable    bool   `json:"enable"`
+		Desc      bool   `json:"description,omitempty"`
 	}
 )

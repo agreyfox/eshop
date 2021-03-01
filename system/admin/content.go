@@ -58,6 +58,51 @@ func CreateContent(ctype string, content []byte) (int, bool) {
 	return id, true
 }
 
+// RestoreContent to specified ctype and report error
+func RestoreContent(ctype string, cid int, content []byte) error {
+	if content == nil || len(content) == 0 {
+
+		return fmt.Errorf("no content need to be restore")
+	}
+
+	//ts := fmt.Sprintf("%d", int64(time.Nanosecond)*time.Now().UTC().UnixNano()/int64(time.Millisecond))
+
+	pt := ctype
+
+	p, ok := item.Types[pt]
+	if !ok {
+		logger.Errorf("no such content in the content system ")
+		return fmt.Errorf("no such content in the content system")
+	}
+
+	post := p()
+	updatecontent := map[string]interface{}{}
+
+	err := json.Unmarshal(content, &updatecontent)
+	if err != nil {
+		logger.Debug("The date conversion is no ok,anyway will try to save data ", err)
+	}
+	ts := fmt.Sprintf("%d", int64(time.Nanosecond)*time.Now().UTC().UnixNano()/int64(time.Millisecond))
+
+	updatecontent["updated"] = ts
+
+	upp := formatData(updatecontent)
+
+	dec := schema.NewDecoder()
+	dec.IgnoreUnknownKeys(true)
+	dec.SetAliasTag("json")
+	err = dec.Decode(post, upp)
+
+	_, err = db.SetContent(ctype+":"+fmt.Sprint(cid), upp)
+	if err != nil {
+		logger.Error(err.Error())
+
+		return err
+	}
+
+	return nil
+}
+
 // update ad content by muilt filed
 func UpdateContents(t string, cid string, key []string, updateValue *url.Values) (int, error) {
 
@@ -173,5 +218,17 @@ func FindContentID(t string, searchTxt string, searchKey string) string {
 
 	}
 	return ""
+
+}
+
+// search all key in list by content type
+
+func GetAllKeyOfContent(ctype string) ([]string, error) {
+	total, keylist := db.QueryContentKey(ctype, true)
+	if total == 0 {
+		return nil, fmt.Errorf("no key found")
+	} else {
+		return keylist, nil
+	}
 
 }

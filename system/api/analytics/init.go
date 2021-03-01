@@ -44,7 +44,14 @@ const RANGE = 14
 // Record queues an apiRequest for metrics
 func Record(req *http.Request) {
 	external := strings.Contains(req.URL.Path, "/external/")
-
+	ipp := req.RemoteAddr
+	ip := strings.Split(ipp, ":")
+	ipaddr := ""
+	if len(ip) == 2 {
+		ipaddr = ip[0]
+	} else {
+		ipaddr = ipp
+	}
 	ts := int64(time.Nanosecond) * time.Now().UnixNano() / int64(time.Millisecond)
 
 	r := apiRequest{
@@ -52,7 +59,7 @@ func Record(req *http.Request) {
 		Method:     req.Method,
 		Origin:     req.Header.Get("Origin"),
 		Proto:      req.Proto,
-		RemoteAddr: req.RemoteAddr,
+		RemoteAddr: ipaddr, //req.RemoteAddr,
 		Timestamp:  ts,
 		External:   external,
 	}

@@ -22,6 +22,7 @@ var (
 	email     bool
 	ipip      string
 	usercmd   string
+	systemdb  string
 
 	gocmd string
 	fork  string
@@ -36,11 +37,12 @@ func init() {
 	//cobra.OnInitialize(initConfig)
 
 	rootCmd.SetVersionTemplate("lqcms version {{printf \"%s\" .Version}}\n")
-	fmt.Println("\t\t========================================")
-	fmt.Printf("\t\t\tlqcms engine starting.......\n")
-	fmt.Println("\t\t========================================")
+	fmt.Println("\t\t==================================================")
+	fmt.Printf("\t\t\tlqcms for eshop engine starting.......\n")
+	fmt.Println("\t\t==================================================")
 	pflags := rootCmd.PersistentFlags()
 	pflags.StringVar(&gocmd, "gocmd", "go", "custom go command if using beta or new release of Go")
+	pflags.StringVar(&systemdb, "db", "system.db", "specified system db file ")
 
 }
 
@@ -53,6 +55,7 @@ func addServerFlags(flags *pflag.FlagSet) {
 	flags.StringP("root", "r", ".", "root to prepend to relative paths")
 	flags.String("socket", "", "socket to listen to (cannot be used with address, port, cert nor key flags)")
 	flags.StringP("baseurl", "b", "", "base url")
+
 }
 
 // Execute executes the commands.

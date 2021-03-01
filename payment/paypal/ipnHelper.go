@@ -107,7 +107,8 @@ type IPNNotification struct {
 	Fee      float64 `schema:"mc_fee"`
 	Gross    float64 `schema:"mc_gross"`
 
-	PaymentDate   Time          `schema:"payment_date"`
+	//	PaymentDate   Time          `schema:"payment_date"`
+	PaymentDate   string        `schema:"payment_date"`
 	PaymentStatus PaymentStatus `schema:"payment_status"`
 	PaymentType   PaymentType   `schema:"payment_type"`
 	PendingReason PendingReason `schema:"pending_reason"`

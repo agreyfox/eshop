@@ -1,9 +1,9 @@
-POST  http://view.bk.cloudns.cc:8080/admin/v1/login
+POST  http://127.0.0.1:8080/admin/v1/login
 HEAD: "Content-Type: applications/json"
 
 {
     "email":"lq@163.com",
-    "password":"qweasdzxc"
+    "password":"1"
 }
 
 ### to login paypal site
@@ -1151,13 +1151,14 @@ Content-Type: applications/json
 POST http://127.0.0.1:8080/api/v1/login 
 Content-Type: applications/json
 
-{"email":"lq@163.com","password":"123456"}
+{"email":"lq@163.com","password":"1"}
 
 ###
 
 
 POST http://127.0.0.1:8080/api/v1/user/update
 Content-Type: applications/json
+
 Set-Cookie: lqcms_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImNvdW50cnkiOiIiLCJleHAiOiIyMDIwLTEyLTAxVDEzOjI5OjM5LjQ2NDUyODE2MSswODowMCIsImlhdCI6bnVsbCwiaXNzIjpudWxsLCJqdGkiOm51bGwsIm5iZiI6bnVsbCwic3ViIjpudWxsLCJ1c2VyIjoibHFAMTYzLmNvbSJ9.UX7uGXv3hgkpAGNJ8gC5yl1XhkAxrLLftP6GjlDpCXI
 
 {"email":"lq@163.com","new_password":"1","social_link":"ab@cd.om","social_type":"twitter"}
@@ -1166,10 +1167,70 @@ Set-Cookie: lqcms_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImN
 
 POST http://127.0.0.1:8080/api/v1/logout 
 Content-Type: applications/json
+lqcms_token:eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImNvdW50cnkiOiIiLCJleHAiOiIyMDIwLTEyLTAxVDEzOjI5OjM5LjQ2NDUyODE2MSswODowMCIsImlhdCI6bnVsbCwiaXNzIjpudWxsLCJqdGkiOm51bGwsIm5iZiI6bnVsbCwic3ViIjpudWxsLCJ1c2VyIjoibHFAMTYzLmNvbSJ9.UX7uGXv3hgkpAGNJ8gC5yl1XhkAxrLLftP6GjlDpCXI
 Set-Cookie: lqcms_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImNvdW50cnkiOiIiLCJleHAiOiIyMDIwLTEyLTAxVDEzOjA0OjMyLjgzNDgwODYxNSswODowMCIsImlhdCI6bnVsbCwiaXNzIjpudWxsLCJqdGkiOm51bGwsIm5iZiI6bnVsbCwic3ViIjpudWxsLCJ1c2VyIjoibHFAMTYzLmNvbSJ9.d_TPWHHmU2AkfILpxue9zPGpO2BFmmC93FpP5fhkQsg
 
 ###
 
+POST https://www2.egpal.com:8081/api/v1/login 
+Content-Type: applications/json
+
+{"email":"lq@163.com","password":"qweasdzxc"}
+###
 
 GET http://127.0.0.1:8080/payment/paypal/info/27
 Content-Type: applications/json
+
+###
+
+POST http://127.0.0.1:8080/admin/v1/config
+Content-Type: applications/json
+lqcms_token:eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImNvdW50cnkiOiIiLCJleHAiOiIyMDIxLTAyLTA5VDIzOjM1OjI5LjUwMjg4NzU5MyswODowMCIsImlhdCI6bnVsbCwiaXNzIjpudWxsLCJqdGkiOm51bGwsIm5iZiI6bnVsbCwic3ViIjpudWxsLCJ1c2VyIjoibHFAMTYzLmNvbSJ9.wpm0rescZZ26GxLHEkjD4JBWgzYpsEzRyg_S0oIRPbA
+Set-Cookie: lqcms_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImNvdW50cnkiOiIiLCJleHAiOiIyMDIxLTAyLTA5VDIzOjM1OjI5LjUwMjg4NzU5MyswODowMCIsImlhdCI6bnVsbCwiaXNzIjpudWxsLCJqdGkiOm51bGwsIm5iZiI6bnVsbCwic3ViIjpudWxsLCJ1c2VyIjoibHFAMTYzLmNvbSJ9.wpm0rescZZ26GxLHEkjD4JBWgzYpsEzRyg_S0oIRPbA
+
+{"admin_email":"1@su.com"}
+
+
+
+###
+
+POST http://127.0.0.1:8080/api/v1/logout 
+Content-Type: applications/json
+lqcms_token:eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImNvdW50cnkiOiJDTiIsImV4cCI6IjIwMjEtMDItMThUMDg6MzA6MTYuODg3MzY3NjU0WiIsImlhdCI6bnVsbCwiaXNzIjpudWxsLCJqdGkiOm51bGwsIm5iZiI6bnVsbCwic3ViIjpudWxsLCJ1c2VyIjoibHFAMTYzLmNvbSJ9.EAGwFBjMhjtiYEgaT57KqSFP2HWZn4WYp_HK84ohwMA
+Set-Cookie: lqcms_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImNvdW50cnkiOiJDTiIsImV4cCI6IjIwMjEtMDItMThUMDg6MzA6MTYuODg3MzY3NjU0WiIsImlhdCI6bnVsbCwiaXNzIjpudWxsLCJqdGkiOm51bGwsIm5iZiI6bnVsbCwic3ViIjpudWxsLCJ1c2VyIjoibHFAMTYzLmNvbSJ9.EAGwFBjMhjtiYEgaT57KqSFP2HWZn4WYp_HK84ohwMA
+
+###
+
+
+POST https://www2.egpal.com:8081/api/v1/config
+Content-Type: applications/json
+lqcms_token:yJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImNvdW50cnkiOiJDTiIsImV4cCI6IjIwMjEtMDItMjhUMTY6Mjc6NTQuOTAzODMyNjg1WiIsImlhdCI6bnVsbCwiaXNzIjpudWxsLCJqdGkiOm51bGwsIm5iZiI6bnVsbCwic3ViIjpudWxsLCJ1c2VyIjoibHFAMTYzLmNvbSJ9.w9Vk4XbDuOsbrM3b7JHivoJAe3txhlINgBbaMpgfdrk
+Set-Cookie: lqcms_token=yJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImNvdW50cnkiOiJDTiIsImV4cCI6IjIwMjEtMDItMjhUMTY6Mjc6NTQuOTAzODMyNjg1WiIsImlhdCI6bnVsbCwiaXNzIjpudWxsLCJqdGkiOm51bGwsIm5iZiI6bnVsbCwic3ViIjpudWxsLCJ1c2VyIjoibHFAMTYzLmNvbSJ9.w9Vk4XbDuOsbrM3b7JHivoJAe3txhlINgBbaMpgfdrk
+
+{
+  "domain":"www2.egpal.com"
+}
+###
+
+POST http://127.0.0.1:8080/api/v1/register 
+Content-Type: applications/json
+
+{"email":"18901882538@189.cn",
+"password":"abc"
+}
+###
+
+
+POST https://www2.egpal.com:8081/api/v1/register 
+Content-Type: applications/json
+
+{"email":"18901882538@189.cn",
+"password":"abc"
+}
+###
+
+POST http://127.0.0.1:8080/api/v1/login 
+Content-Type: applications/json
+
+{"email":"e_raeb@tianya.com","password":"abc"}
+###

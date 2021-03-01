@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/agreyfox/eshop/payment/data"
+	"github.com/agreyfox/eshop/prometheus"
 	"github.com/agreyfox/eshop/system/db"
 )
 
@@ -115,6 +116,8 @@ func userSubmit(w http.ResponseWriter, r *http.Request) {
 	payload.Respond = string(rettxt)
 
 	err = data.SaveOrderRequest(payload) //finished save request,
+
+	go prometheus.OrderCounter.WithLabelValues("payssion").Add(1) //metric order creation
 
 	if err != nil {
 		data.RenderJSON(w, r, map[string]interface{}{

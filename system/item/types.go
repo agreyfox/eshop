@@ -33,4 +33,5 @@ var (
 
 func init() {
 	Types = make(map[string]func() interface{})
+
 }

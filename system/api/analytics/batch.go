@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/agreyfox/eshop/prometheus"
 	"github.com/boltdb/bolt"
 )
 
@@ -15,7 +16,10 @@ func batchInsert(requests chan apiRequest) error {
 	batchSize := len(requestChan)
 
 	for i := 0; i < batchSize; i++ {
+		aReq := <-requestChan
+		go prometheus.ApiCounter.WithLabelValues(aReq.RemoteAddr, aReq.Origin+"|"+aReq.URL).Inc() //add the request to apicounter
 		reqs = append(reqs, <-requestChan)
+
 	}
 
 	err := store.Update(func(tx *bolt.Tx) error {
