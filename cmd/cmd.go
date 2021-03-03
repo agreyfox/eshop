@@ -23,6 +23,7 @@ var (
 	ipip      string
 	usercmd   string
 	systemdb  string
+	searchdir string
 
 	gocmd string
 	fork  string
@@ -43,6 +44,7 @@ func init() {
 	pflags := rootCmd.PersistentFlags()
 	pflags.StringVar(&gocmd, "gocmd", "go", "custom go command if using beta or new release of Go")
 	pflags.StringVar(&systemdb, "db", "system.db", "specified system db file ")
+	pflags.StringVar(&searchdir, "search", ".", "specified system search directory ")
 
 }
 

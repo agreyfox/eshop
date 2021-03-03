@@ -744,7 +744,7 @@ func Query(namespace string, opts QueryOptions) (int, [][]byte) {
 	if opts.Offset < 0 {
 		opts.Offset = 0
 	}
-
+	//sort := "__sorted"
 	store.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(namespace))
 		if b == nil {
@@ -784,6 +784,7 @@ func Query(namespace string, opts QueryOptions) (int, [][]byte) {
 		switch opts.Order {
 		case "desc", "":
 			for k, v := c.Last(); k != nil; k, v = c.Prev() {
+				//fmt.Println(string(k), string(v))
 				if cur < start {
 					cur++
 					continue
@@ -792,7 +793,7 @@ func Query(namespace string, opts QueryOptions) (int, [][]byte) {
 				if cur >= end {
 					break
 				}
-
+				//fmt.Print(k)
 				posts = append(posts, v)
 				i++
 				cur++
@@ -808,7 +809,7 @@ func Query(namespace string, opts QueryOptions) (int, [][]byte) {
 				if cur >= end {
 					break
 				}
-
+				//fmt.Print(k)
 				posts = append(posts, v)
 				i++
 				cur++
@@ -825,7 +826,7 @@ func Query(namespace string, opts QueryOptions) (int, [][]byte) {
 				if cur >= end {
 					break
 				}
-
+				//fmt.Print(k)
 				posts = append(posts, v)
 				i++
 				cur++
@@ -1084,6 +1085,7 @@ func SortContent(namespace string) {
 	err := store.Update(func(tx *bolt.Tx) error {
 		bname := []byte(namespace + "__sorted")
 		err := tx.DeleteBucket(bname)
+		logger.Debugf("Remove old sort %s", namespace)
 		if err != nil && err != bolt.ErrBucketNotFound {
 			return err
 		}
@@ -1095,7 +1097,12 @@ func SortContent(namespace string) {
 
 		// encode to json and store as 'post.Time():i':post
 		for i := range bb {
-			cid := fmt.Sprintf("%d:%d", posts[i].Time(), i)
+			tt := posts[i].Time()
+			if tt == 0 {
+				//tt = int64(time.Nanosecond) * time.Now().UTC().UnixNano() / int64(time.Millisecond)
+				tt = posts[i].Touch()
+			}
+			cid := fmt.Sprintf("%d:%d", tt, i)
 			err = b.Put([]byte(cid), bb[i])
 			if err != nil {
 				return err
@@ -1107,6 +1114,7 @@ func SortContent(namespace string) {
 	if err != nil {
 		logger.Error("Error while updating db with sorted", namespace, err)
 	}
+	logger.Debugf("%s Sorted index created!", namespace)
 
 }
 
@@ -1117,7 +1125,12 @@ func (s sortableContent) Len() int {
 }
 
 func (s sortableContent) Less(i, j int) bool {
-	return s[i].Time() > s[j].Time()
+	if s[i].Time() != 0 {
+		return s[i].Time() > s[j].Time()
+	} else {
+		return s[i].SortID() > s[j].SortID()
+	}
+
 }
 
 func (s sortableContent) Swap(i, j int) {

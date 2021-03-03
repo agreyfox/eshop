@@ -13,6 +13,7 @@ import (
 	"github.com/agreyfox/eshop/system/admin"
 	"github.com/agreyfox/eshop/system/db"
 	"github.com/agreyfox/eshop/system/item"
+	"github.com/agreyfox/eshop/system/search"
 	"github.com/spf13/cobra"
 )
 
@@ -36,12 +37,15 @@ func init() {
 	deleteCmd.Flags().StringVar(&bucketname, "name", "", "the name of bucket in output db need to be deleted")
 	listCmd.Flags().StringVar(&bucketname, "name", "", "the name of bucket in output db")
 	listCmd.Flags().StringVar(&inputdb, "in", "", "the name of bucket ")
+	rebuildContentIndexCmd.Flags().StringVar(&bucketname, "name", "", "the name of bucket in input db")
+	rebuildContentIndexCmd.Flags().StringVar(&inputdb, "in", "", "the dump input bolt db file")
 
 	dbCmd.AddCommand(dumpCmd)
 	dbCmd.AddCommand(restoreCmd)
 	dbCmd.AddCommand(deleteCmd)
 	dbCmd.AddCommand(listCmd)
 	dbCmd.AddCommand(listContentCmd)
+	dbCmd.AddCommand(rebuildContentIndexCmd)
 
 	RegisterCmdlineCommand(dbCmd)
 }
@@ -183,6 +187,19 @@ var listContentCmd = &cobra.Command{
 	},
 }
 
+var rebuildContentIndexCmd = &cobra.Command{
+	Use: "index <content>",
+	//Aliases: []string{"rm"},
+	Short: "rebuild the content 's index",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(bucketname) == 0 {
+			fmt.Println("请指定内容库操作")
+		}
+		RebuildIndex(bucketname, searchdir)
+		return nil
+	},
+}
+
 var listCmd = &cobra.Command{
 	Use: "list [flags] <number>",
 	//Aliases: []string{"rm"},
@@ -262,4 +279,60 @@ func FileCopy(src, dst string) error {
 		return err
 	}
 	return out.Close()
+}
+
+func RebuildIndex(name, searchdir string) {
+	fmt.Printf("try to rebuild search index dir in %s for  bucketname %s from db %s\n", searchdir, bucketname, inputdb)
+	db.Init(inputdb)
+	search.SetSearchDir(searchdir)
+	db.InitSearchIndex()
+	contents := db.ContentAll(bucketname)
+	fmt.Println("1. dump all content total is ", len(contents))
+	tempfile := "." + bucketname + ".json"
+	f, err := os.Create(tempfile)
+	if err != nil {
+		logger.Panic(err)
+	}
+	w := bufio.NewWriter(f)
+	defer f.Close()
+	for _, item := range contents {
+		w.Write(item)
+		w.WriteByte('\n')
+	}
+	w.Flush()
+	fmt.Println("done!")
+	f.Close()
+	fmt.Println("2. indexing ")
+	//contents := db.ContentAll(bucketname)
+	contenttype := item.Types[bucketname]()
+
+	//	fmt.Println("Total entires is ", len(contents))
+	f, err = os.Open(tempfile)
+	if err != nil {
+		logger.Panic(err)
+	}
+	scanner := bufio.NewScanner(f)
+	scanner.Split(bufio.ScanLines)
+
+	defer f.Close()
+	for scanner.Scan() {
+		fmt.Print("\tA Line:")
+		buf := scanner.Bytes()
+		//fmt.Println(string(buf))
+		_ = json.Unmarshal(buf, contenttype)
+
+		item, ok := contenttype.(item.Identifiable) //.(item.Item)
+		if !ok {
+			fmt.Println("Error in data ")
+			continue
+		}
+		fmt.Printf("\tid:%d==>", item.ItemID())
+		search.UpdateIndex(bucketname+":"+fmt.Sprint(item.ItemID()), buf)
+		//admin.RestoreContent(bucketname, item.ItemID(), buf)
+		fmt.Print("done")
+	}
+	//dd, _ := search.TypeMatchAll(bucketname, 10, 1)
+	//fmt.Println()
+	fmt.Printf("\tIndex rebuild done!\n")
+
 }

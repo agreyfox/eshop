@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/agreyfox/eshop/system/admin"
+	"github.com/agreyfox/eshop/system/db"
 	"github.com/agreyfox/eshop/system/email"
 	"github.com/boltdb/bolt"
 )
@@ -372,6 +373,59 @@ func SendConfirmEmail(orderid, content, price, currency string, mailaddr string)
 		logger.Debugf("Order Sent Successfully: %s\n", orderid)
 	} else {
 		logger.Errorf("Order Sent with error: %v\n", res.Data)
+	}
+}
+
+func SendOrderConfirmEmail(method, orderid, content, ordertime, comments, price, currency string, mailaddr, ip string) {
+	//orderid := oo.OrderID
+	logger.Debugf("%s send email for order accept %s,%s", method, mailaddr, content)
+	emailConfbuf, err := db.Content("Email:2") //2 mean order tempalte
+	if err != nil {
+		logger.Warnf("Skip order comfirmation email send job,Error:%s", err)
+	} else {
+
+		emailstruct := UserEmailInfo{}
+
+		err := json.Unmarshal(emailConfbuf, &emailstruct)
+
+		if err != nil {
+			logger.Warnf("Skip Order email send job,Error:%s", err)
+
+		} else {
+			//go data.SendConfirmEmail(orderid, GetPurchaseContent(orderid), resource.PurchaseUnits[0].Amount.Value, resource.PurchaseUnits[0].Amount.Currency, oo.Payer)
+			go func() {
+				logger.Debugf("send Order email to User!", mailaddr)
+				bodyTemplate := emailstruct.EmailBody
+				if len(bodyTemplate) == 0 {
+					logger.Warnf("order email Without  template setting!")
+				}
+				body := fmt.Sprintf(bodyTemplate, orderid, ordertime, content, comments, price, method, mailaddr, ip)
+				tomail := []string{string(mailaddr)}
+
+				ccmail := strings.Split(emailstruct.CC, ",")
+
+				tomail = append(tomail, ccmail...)
+
+				subj := fmt.Sprintf(emailstruct.Subject, orderid)
+				logger.Infof("try to send admin notification email to %v\n", tomail)
+				emailtarget := email.Email{
+					//From: admin.MailUser,
+					To:       tomail,
+					Subject:  subj,
+					TextBody: body,
+					HtmlBody: body,
+				}
+				res, err := email.Send(&emailtarget)
+				if err != nil {
+					logger.Warnf("Email alter with n Error Occurred: %s\n", err)
+				} else if res.Data.Succeeded == 1 {
+					logger.Infof("Email alter sent Successfully: %v\n", res)
+				} else {
+					logger.Warnf("Email alter Sent with error: %v\n", res)
+				}
+
+			}()
+		}
 	}
 }
 

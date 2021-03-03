@@ -241,6 +241,7 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap Resource) (int, da
 	databin, _ := json.Marshal(notifyData)
 	TransactionId := cap.ID //PurchaseUnits[0].Payments.Captures[0].ID
 	logger.Warnf("Transaction id is %s", TransactionId)
+	logger.Debugf("cap resource is :%v", cap)
 	order := data.Order{
 
 		Status: status,
@@ -265,10 +266,15 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap Resource) (int, da
 		IsChargeBack: false,
 		Payer:        cap.Payer.EmailAddress, // add 2020/11/25
 	}
-	if len(cap.PurchaseUnits[0].Payments.Captures) > 0 && cap.PurchaseUnits[0].Payments.Captures[0].SellerPayableBreakdown != nil {
+	/* if len(cap.PurchaseUnits[0].Payments.Captures) > 0 && cap.PurchaseUnits[0].Payments.Captures[0].SellerPayableBreakdown != nil {
 		order.Paid = cap.PurchaseUnits[0].Payments.Captures[0].SellerPayableBreakdown.PayPalFee.Value
 		order.Net = cap.PurchaseUnits[0].Payments.Captures[0].SellerPayableBreakdown.NetAmount.Value
+	} */
+	if cap.SellerReceivableBreakdown != nil {
+		order.Paid = cap.SellerReceivableBreakdown.GrossAmount.Value
+		order.Net = cap.SellerPayableBreakdown.NetAmount.Value
 	}
+
 	request, err := data.GetRequestByID(ID)
 
 	if err == nil {
@@ -519,17 +525,6 @@ func GetBytes(key interface{}) ([]byte, error) {
 		return nil, err
 	}
 	return buf.Bytes(), nil
-}
-
-// GetPurchaseContent via invoice id
-func GetPurchaseContent(id string) string {
-	request, err := data.GetRequestByID(id)
-	if err != nil {
-		logger.Error("can not find order request id  ")
-		return ""
-	}
-	purchaselist, _ := json.MarshalIndent(request.ItemList, "", "  ")
-	return string(purchaselist)
 }
 
 // 生成购买物品的简单内容

@@ -176,7 +176,8 @@ func CreateOrderByNotify(Notifydata []byte) error {
 			oid, oo, ok := CreateNewOrderInDB(&retData)
 			if ok {
 				if len(oo.Payer) > 0 {
-					go data.SendConfirmEmail(oo.OrderID, "Game item", values.Get("amount"), values.Get("currency"), oo.Payer)
+					//go data.SendConfirmEmail(oo.OrderID, "Game item", values.Get("amount"), values.Get("currency"), oo.Payer)
+					go data.SendOrderConfirmEmail("skrill", oo.OrderID, data.GetPurchaseContent(oo.OrderID), oo.UpdateTime, oo.Comments, oo.Total, oo.Currency, oo.User, oo.PayerIP)
 				}
 			}
 			logger.Debugf("Skrill Order created with id:%d, OrderID is %s", oid, oo.OrderID)

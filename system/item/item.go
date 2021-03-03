@@ -59,6 +59,7 @@ type Identifiable interface {
 type Sortable interface {
 	Time() int64
 	Touch() int64
+	SortID() int // for sort by id gaojihua
 }
 
 // Hookable provides our user with an easy way to intercept or add functionality
@@ -151,6 +152,11 @@ func (i Item) Time() int64 {
 // Touch partially implements the Sortable interface
 func (i Item) Touch() int64 {
 	return i.Updated
+}
+
+// Touch partially implements the Sortable interface
+func (i Item) SortID() int {
+	return i.ID
 }
 
 // SetSlug sets the item's slug for its URL

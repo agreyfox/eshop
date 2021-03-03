@@ -2285,7 +2285,7 @@ func updateContent(w http.ResponseWriter, r *http.Request) {
 		ts := fmt.Sprintf("%d", int64(time.Nanosecond)*time.Now().UTC().UnixNano()/int64(time.Millisecond))
 		//up := r.PostForm.Set("updated", ts)
 		updateData["updated"] = ts
-
+		delete(updateData, "timestamp") // add 2021/3/3 cause the timestamp formation issue
 		pt := t
 		if strings.Contains(t, "__") {
 			pt = strings.Split(t, "__")[0]
@@ -2393,9 +2393,11 @@ func createContent(w http.ResponseWriter, r *http.Request) {
 			logger.Debug("It is update request")
 		} */
 		ts := fmt.Sprintf("%d", int64(time.Nanosecond)*time.Now().UTC().UnixNano()/int64(time.Millisecond))
+		updateData["timestamp"] = ts
+		//ts := fmt.Sprintf("%d", int64(time.Nanosecond)*time.Now().UTC().UnixNano()/int64(time.Millisecond))
 		//up := r.PostForm.Set("updated", ts)
 		updateData["updated"] = ts
-
+		PrettyPrint(updateData)
 		pt := t
 		if strings.Contains(t, "__") {
 			pt = strings.Split(t, "__")[0]
@@ -2585,13 +2587,16 @@ func searchContent(w http.ResponseWriter, r *http.Request) {
 
 	for i := range posts {
 		// skip posts that don't have any matching search criteria
+		matchq := false
+		matchr := false
 		if search != "" { // contain str
 			all := strings.ToLower(string(posts[i]))
 
-			if !strings.Contains(all, match) {
-				continue
+			if strings.Contains(all, match) {
+				matchq = true
 			}
-			item := make(map[string]interface{})
+
+			/* item := make(map[string]interface{})
 
 			err := json.Unmarshal(posts[i], &item)
 			if err != nil {
@@ -2611,12 +2616,14 @@ func searchContent(w http.ResponseWriter, r *http.Request) {
 				}
 			} else {
 				retData = append(retData, item)
-			}
+			} */
 
-		} else if regexsearch != "" { // use regex to search
+		}
+		if regexsearch != "" { // use regex to search
 			re := regexp.MustCompile("(?i)" + regexsearch)
 			if re.Match(posts[i]) {
-				item := make(map[string]interface{})
+				matchr = true
+				/* item := make(map[string]interface{})
 				err := json.Unmarshal(posts[i], &item)
 
 				if err != nil {
@@ -2637,9 +2644,11 @@ func searchContent(w http.ResponseWriter, r *http.Request) {
 					}
 				} else {
 					retData = append(retData, item)
-				}
+				} */
 			}
-		} else {
+		}
+		if matchq || matchr { //r search and q search match one will be append
+
 			item := make(map[string]interface{})
 			err := json.Unmarshal(posts[i], &item)
 
@@ -2662,6 +2671,7 @@ func searchContent(w http.ResponseWriter, r *http.Request) {
 				retData = append(retData, item)
 			}
 		}
+
 	}
 	total := len(posts)
 
@@ -2673,7 +2683,7 @@ func searchContent(w http.ResponseWriter, r *http.Request) {
 		PageSize:  len(retData), //-1 means all
 	}
 	returnStructData(w, r, retData, meta)
-	logger.Infof("Search content Finished")
+	logger.Debug("Super Search content Finished")
 
 }
 
@@ -2708,6 +2718,7 @@ func searchContentEnhanced(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
+
 		filterObj = &ResultFilter{
 			KeyName: "slug",
 			Value:   search,
@@ -2755,7 +2766,7 @@ func searchContentEnhanced(w http.ResponseWriter, r *http.Request) {
 	total := 0
 	if !checkTime {
 		logger.Debug("Get all match content:")
-		if len(q) > 0 {
+		if len(search) > 0 {
 			total, posts = db.QueryContent(t+specifier, search, true)
 		} else if len(regexsearch) > 0 {
 			total, posts = db.RegexContent(t+specifier, regexsearch, true)
@@ -2778,7 +2789,7 @@ func searchContentEnhanced(w http.ResponseWriter, r *http.Request) {
 			logger.Debug("Error unmarshal search result json into", t, err, posts[i])
 			continue
 		}
-		if len(q) > 0 {
+		if len(search) > 0 {
 			aquery := regexp.MustCompile("(?i)" + search)
 			indd := aquery.FindAllIndex(posts[i], -1)
 			if len(indd) > 1 {
@@ -2793,7 +2804,7 @@ func searchContentEnhanced(w http.ResponseWriter, r *http.Request) {
 				continue
 			}
 		}
-		if filterObj != nil {
+		if filterObj != nil && filterObj.Value != "" { // 20210303 filter 显得非常ugly
 
 			value := fmt.Sprint(item[filterObj.KeyName])
 			if filterObj.Include {

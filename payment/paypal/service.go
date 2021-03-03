@@ -9,7 +9,6 @@ import (
 	"github.com/agreyfox/eshop/payment/data"
 	"github.com/agreyfox/eshop/prometheus"
 	"github.com/agreyfox/eshop/system/db"
-	"github.com/agreyfox/eshop/system/email"
 	"github.com/go-zoo/bone"
 
 	"net/http"
@@ -306,7 +305,7 @@ func createPayment(w http.ResponseWriter, r *http.Request) {
 	order, err := payClient.CreateOrder(intent, orderReq.ItemList, orderPayer, context)
 	//	client.Unlock()
 	if err != nil {
-		logger.Debug("create paypal order error:", err)
+		logger.Error("create paypal order error:", err)
 		data.RenderJSON(w, r, map[string]interface{}{
 			"retCode": -2,
 			"msg":     "创建订单失败",
@@ -374,7 +373,7 @@ func Succeed(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		logger.Error("Capture Order has some error ", err)
 		url := data.OnlineURL
-		url += fmt.Sprintf("status=0&msg=%s", err.Error())
+		url += fmt.Sprintf("?status=0&msg=%s", err.Error())
 		http.Redirect(w, r, url, http.StatusFound)
 	}
 	if captureRes.Status == PaypalCompleted {
@@ -386,13 +385,13 @@ func Succeed(w http.ResponseWriter, r *http.Request) {
 		if len(captureRes.ID) > 0 {
 			url += fmt.Sprintf("?status=1&orderno=%s", captureRes.PurchaseUnits[0].InvoiceID)
 		} else {
-			url += fmt.Sprintf("status=0&msg=%s", "Payment finished with error")
+			url += fmt.Sprintf("?status=0&msg=%s", "Payment finished with error")
 		}
 		http.Redirect(w, r, url, http.StatusFound)
 	} else {
-		logger.Debug("Paypal Step 3 send capture order   return with error:", captureRes.Status)
+		logger.Error("Paypal Step 3 send capture order   return with error:", captureRes.Status)
 		url := data.OnlineURL
-		url += fmt.Sprintf("status=0&msg=%s", captureRes.Status)
+		url += fmt.Sprintf("?status=0&msg=%s", captureRes.Status)
 		http.Redirect(w, r, url, http.StatusFound)
 	}
 
@@ -510,8 +509,10 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 			oid, oo, ok := CreateNewOrderInDB(&notification, resource)
 			if ok {
 				if len(oo.Payer) > 0 {
-					orderid := oo.OrderID
-					logger.Debugf("paypal send eamil for order accept %s,%s", oo.Payer, GetPurchaseContent(orderid))
+					//method, orderid, content, ordertime, comments, price, currency string, mailaddr, ip string
+					go data.SendOrderConfirmEmail("paypal", oo.OrderID, data.GetPurchaseContent(oo.OrderID), oo.UpdateTime, oo.Comments, oo.Total, oo.Currency, oo.User, oo.PayerIP)
+					/* orderid := oo.OrderID
+					logger.Debugf("paypal send email for order accept %s,%s", oo.Payer, GetPurchaseContent(orderid))
 					emailConfbuf, err := db.Content("Email:2") //2 mean order tempalte
 					if err != nil {
 						logger.Warnf("Skip order comfirmation email send job,Error:%s", err)
@@ -529,16 +530,16 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 							go func() {
 								logger.Debugf("send Order email to User!", oo.Payer)
 								bodyTemplate := emailstruct.EmailBody
-								if ok || len(bodyTemplate) == 0 {
-									logger.Warnf("Skip order email With no template setting!")
-									return
+								if len(bodyTemplate) == 0 {
+									logger.Warnf("order email Without  template setting!")
 								}
 								body := fmt.Sprintf(bodyTemplate, orderid, oo.UpdateTime, GetPurchaseContent(orderid), oo.Comments, oo.Total, oo.PaymentMethod, oo.User, oo.PayerIP)
 								tomail := []string{string(oo.Payer)}
-								ccmail := emailstruct.CC
-								if ok {
-									tomail = append(tomail, ccmail)
-								}
+
+								ccmail := strings.Split(emailstruct.CC, ",")
+
+								tomail = append(tomail, ccmail...)
+							}
 								subj := fmt.Sprint(emailstruct.Subject, orderid)
 								logger.Infof("also try to send admin notification email to %v\n", tomail)
 								emailtarget := email.Email{
@@ -559,7 +560,7 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 
 							}()
 						}
-					}
+					} */
 
 				}
 				logger.Infof("New paypal order %d Created!", oid)
@@ -574,11 +575,15 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 
 	case notification.EventType == EventPaymentCaptureCompleted:
-		logger.Debug("The new payment order capture approved", notification.ID)
+		logger.Warn("The new payment notification capture approved", notification.ID)
+		w.WriteHeader(http.StatusOK)
+	case notification.EventType == EventPaymentSALECompleted:
+		logger.Warn("The new payment notification payment Sale compeleted ", notification.ID)
+		w.WriteHeader(http.StatusOK)
 
 	case notification.EventType == EventPaymentOrderCreated:
-		logger.Debug("The new payment order created", notification.ID)
-
+		logger.Warn("The new payment notification created", notification.ID)
+		w.WriteHeader(http.StatusOK)
 	case notification.EventType == EventPaymentCaptureDenied:
 		logger.Debug("Payment is denied: ", notification.ID)
 
@@ -686,7 +691,7 @@ func IPNListener(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	logger.Infof("IPN message verified, save to transations")
+	logger.Infof("IPN message verified, save to transations,id:%s", notification.Invoice)
 
 	go prometheus.PaypalNotifiyCounter.WithLabelValues(notification.TxnID).Inc() //notification 次数
 

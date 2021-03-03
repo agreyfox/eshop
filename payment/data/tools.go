@@ -229,3 +229,41 @@ func IsNil(i interface{}) bool {
 	}
 	return false
 }
+
+// GetPurchaseContent via invoice id
+func GetPurchaseContent(id string) string {
+	request, err := GetRequestByID(id)
+	if err != nil {
+		logger.Error("can not find order request id  ")
+		return ""
+	}
+	//purchaselist, _ := json.MarshalIndent(request.ItemList, "", "  ")
+	/*Game      string  `json:"game"`
+	Server    string  `json:"server,omitempty"`
+	Category  string  `json:"category"`
+	Product   string  `json:"product"`
+	UnitPrice float64 `json:"unit_price"`
+	Quantity  int     `json:"quantity"`
+	*/
+	var game, server, category string
+	liststr := make([][]string, len(request.ItemList))
+
+	for i, item := range request.ItemList {
+		game = item.Game
+		server = item.Server
+		category = item.Category
+		price := item.UnitPrice
+		quantity := item.Quantity
+		liststr[i] = []string{}
+		liststr[i] = append(liststr[i], fmt.Sprintf("Game:%s", game))
+		liststr[i] = append(liststr[i], fmt.Sprintf("Category:%s", category))
+		liststr[i] = append(liststr[i], fmt.Sprintf("Server:%s", server))
+		liststr[i] = append(liststr[i], fmt.Sprintf("Price:%f,Quantity:%d,subtotal:%0.3f", price, quantity, price*float64(quantity)))
+		liststr[i] = append(liststr[i], "<br>\n")
+	}
+	result := ""
+	for i := range liststr {
+		result = result + strings.Join(liststr[i], ",")
+	}
+	return result
+}

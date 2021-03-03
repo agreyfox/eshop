@@ -54,7 +54,7 @@ var (
 	PaymentLogHandler *bolt.DB // log db
 
 	SystemDBHandler *bolt.DB //system db
-	OnlineURL       = "https://www2.egpal.com/#/Result"
+	OnlineURL       = "https://www2.egpal.com/result"
 )
 
 type (

@@ -1234,3 +1234,22 @@ Content-Type: applications/json
 
 {"email":"e_raeb@tianya.com","password":"abc"}
 ###
+
+
+
+POST https://www2.egpal.com:8081/api/v1/content?type=Game
+Content-Type: applications/json
+lqcms_token:yJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImNvdW50cnkiOiJDTiIsImV4cCI6IjIwMjEtMDItMjhUMTY6Mjc6NTQuOTAzODMyNjg1WiIsImlhdCI6bnVsbCwiaXNzIjpudWxsLCJqdGkiOm51bGwsIm5iZiI6bnVsbCwic3ViIjpudWxsLCJ1c2VyIjoibHFAMTYzLmNvbSJ9.w9Vk4XbDuOsbrM3b7JHivoJAe3txhlINgBbaMpgfdrk
+
+
+###
+
+GET http://127.0.0.1:8080/admin/v1/contents/ss?type=Order&r='Need Verify'
+Content-Type: applications/json
+
+{"email":"e_raeb@tianya.com","password":"abc"}
+###
+
+
+Get http://127.0.0.1:8080/admin/v1/contents/ss?type=Order&start=1614528000000&end=1614700800000
+Content-Type: applications/json

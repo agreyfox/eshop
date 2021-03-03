@@ -22,7 +22,8 @@ var (
 	Search map[string]bleve.Index
 
 	// ErrNoIndex is for failed checks for an index in Search map
-	ErrNoIndex = errors.New("No search index found for type provided")
+	ErrNoIndex      = errors.New("No search index found for type provided")
+	SearchDirectory = "."
 )
 
 // Searchable ...
@@ -34,12 +35,21 @@ type Searchable interface {
 func init() {
 	Search = make(map[string]bleve.Index)
 }
+func PrintSearchType() {
+	for item := range Search {
+		fmt.Println(item, Search[item].Name())
+	}
+}
+func SetSearchDir(dir string) {
+	SearchDirectory = dir
+	fmt.Printf("搜索引擎目录为%s\n", dir)
+}
 
 // MapIndex creates the mapping for a type and tracks the index to be used within
 // the system for adding/deleting/checking data
 func MapIndex(typeName string) error {
 	// type assert for Searchable, get configuration (which can be overridden)
-	// by Ponzu user if defines own SearchMapping()
+
 	it, ok := item.Types[typeName]
 	if !ok {
 		return fmt.Errorf("[search] MapIndex Error: Failed to MapIndex for %s, type doesn't exist", typeName)
@@ -63,12 +73,12 @@ func MapIndex(typeName string) error {
 	var idx bleve.Index
 
 	// check if index exists, use it or create new one
-	pwd, err := os.Getwd()
+	/* pwd, err := os.Getwd()
 	if err != nil {
 		return err
-	}
+	}*/
 
-	searchPath := filepath.Join(pwd, "search")
+	searchPath := filepath.Join(SearchDirectory, "search")
 
 	err = os.MkdirAll(searchPath, os.ModeDir|os.ModePerm)
 	if err != nil {
@@ -158,6 +168,28 @@ func TypeQuery(typeName, query string, count, offset int) ([]string, error) {
 	var results []string
 	for _, hit := range res.Hits {
 		results = append(results, hit.ID)
+	}
+
+	return results, nil
+}
+
+func TypeMatchAll(typeName string, count, offset int) ([]string, error) {
+	idx, ok := Search[typeName]
+	if !ok {
+		return nil, ErrNoIndex
+	}
+
+	q := bleve.NewMatchAllQuery()
+	req := bleve.NewSearchRequestOptions(q, count, offset, false)
+	res, err := idx.Search(req)
+	if err != nil {
+		return nil, err
+	}
+
+	var results []string
+	for i, _ := range res.Hits {
+
+		results = append(results, res.Hits[i].ID)
 	}
 
 	return results, nil

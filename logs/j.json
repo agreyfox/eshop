@@ -1,0 +1,40 @@
+({
+  "game": "Anarchy Online",
+  "server": "General",
+  "category": "Rubi-Ka",
+  "product": "Combat Nano Can: Premium Experience Boost (2000)",
+  "unit_price": 1,
+  "quantity": 1
+},
+{
+  "game": "Anarchy Online",
+  "server": "General",
+  "category": "Rubi-Ka",
+  "product": "Hercules' Olympic Pills (2000)",
+  "unit_price": 1,
+  "quantity": 1
+},
+{
+  "game": "Anarchy Online",
+  "server": "General",
+  "category": "Rubi-Ka",
+  "product": "Guardian Faction Package: 10000",
+  "unit_price": 1,
+  "quantity": 1
+},
+{
+  "game": "Anarchy Online",
+  "server": "General",
+  "category": "Rubi-Ka",
+  "product": "Nano Can: Instant Fixer Grid Conversion (1000)",
+  "unit_price": 1,
+  "quantity": 1
+},
+{
+  "game": "Anarchy Online",
+  "server": "General",
+  "category": "Rubi-Ka",
+  "product": "Nano Can: Resurrection Sickness Removal (2000)",
+  "unit_price": 1,
+  "quantity": 1
+})

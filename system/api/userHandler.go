@@ -166,11 +166,10 @@ func RegisterUser(res http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		logger.Warnf("Skip register email send job,Error:%s", err)
 	} else {
-		//emailstruct := item.Types["Email"]()
+
 		emailstruct := userEmailInfo{}
-		//emailmap := map[string]interface{}{}
 		err := json.Unmarshal(emailConfbuf, &emailstruct)
-		fmt.Println(err, emailstruct.Subject)
+		logger.Debugf("email template is %v", emailstruct)
 		//	emailstruct.Subject
 		if err != nil {
 			logger.Warnf("Skip register email send job,Error:%s", err)
@@ -178,18 +177,19 @@ func RegisterUser(res http.ResponseWriter, req *http.Request) {
 		} else {
 
 			go func() {
-				logger.Debugf("send register email to User!", inputemail)
+				logger.Debugf("send register email to User %s!", inputemail)
 				bodyTemplate := emailstruct.EmailBody
-				if ok || len(bodyTemplate) == 0 {
+				if len(bodyTemplate) == 0 {
 					logger.Warnf("Skip register email With no template setting")
-					return
+					//return
 				}
+				logger.Debugf("email body template len is %d", len(bodyTemplate))
 				body := fmt.Sprintf(bodyTemplate, inputemail, ip)
 				tomail := []string{string(inputemail)}
-				ccmail := emailstruct.CC
-				if ok {
-					tomail = append(tomail, ccmail)
-				}
+				ccmail := strings.Split(emailstruct.CC, ",")
+
+				tomail = append(tomail, ccmail...)
+
 				subj := emailstruct.Subject
 				logger.Infof("also try to send admin notification email to %v\n", tomail)
 				emailtarget := email.Email{

@@ -40,7 +40,7 @@ func CreateContent(ctype string, content []byte) (int, bool) {
 	ts := fmt.Sprintf("%d", int64(time.Nanosecond)*time.Now().UTC().UnixNano()/int64(time.Millisecond))
 
 	updatecontent["updated"] = ts
-
+	updatecontent["timestamp"] = ts //2021/3/1重要，首次创建
 	upp := formatData(updatecontent)
 
 	dec := schema.NewDecoder()
