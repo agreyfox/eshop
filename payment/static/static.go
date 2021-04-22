@@ -68,6 +68,15 @@ func Start(mainMux *bone.Mux) {
 		http.ServeFile(w, r, payfile)
 
 	}))
+	boltMux.HandleFunc("/paypage", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		logger.Debug("usr call static page:", r)
+		//w.Write([]byte(paymentpage))
+		fmt.Println(paymentpage)
+
+		fmt.Fprint(w, paymentpage)
+		///w.WriteHeader(http.StatusOK)
+	}))
 	//boltMux.Handle("//", http.StripPrefix("/static/", db.CacheControl(http.FileServer(restrict(http.Dir(staticDir))))))
 	pageDir := filepath.Join(pwd, "pages")
 

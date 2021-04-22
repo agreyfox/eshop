@@ -6,11 +6,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/agreyfox/eshop/system/admin/user"
 	"github.com/agreyfox/eshop/system/db"
@@ -424,3 +426,18 @@ func DecodeJwt(token string) map[string]interface{} {
 	fmt.Println(target)
 	return target
 } */
+
+// to create new password, 8 letter
+func GeneratePassword() string {
+	rand.Seed(time.Now().UnixNano())
+	chars := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+		"abcdefghijklmnopqrstuvwxyz" +
+		"0123456789-+#$%")
+	length := 8
+	var b strings.Builder
+	for i := 0; i < length; i++ {
+		b.WriteRune(chars[rand.Intn(len(chars))])
+	}
+	str := b.String() // E.g. "ExcbsVQs"
+	return str
+}

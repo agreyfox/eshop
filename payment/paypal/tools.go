@@ -225,14 +225,16 @@ func getOrderIDFromUrl(link []Link) string {
 func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap Resource) (int, data.Order, bool) {
 	logger.Debug("Create new order process start")
 	var status string
+	status = data.OrderUnPaid
 	if cap.Status == PaypalPending {
-		status = data.OrderCreated
+		status = data.OrderPending
 	}
 	if cap.Status == PaypalCompleted {
-		status = data.OrderCompleted
+		status = data.OrderPaid
 	}
+	/*   */
 	ID := cap.PurchaseUnits[0].InvoiceID // our order id
-	logger.Debugf("notified result is %v", cap)
+	logger.Debugf("notified resource is %v", cap)
 
 	paymentid := getOrderIDFromUrl(cap.Links)
 	capdetail, _ := json.Marshal(cap.PurchaseUnits)
@@ -287,48 +289,70 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap Resource) (int, da
 		order.Description = string(purchaselist)
 	} else {
 		logger.Errorf("The request is not found, This is wired!,ID is %f", ID)
-	}
-
-	if cap.Status == PaypalCompleted {
-		logger.Warn("Paypal Notified message is completed. checking exsiting order with order_id:%s", ID)
-		// validreturn 0, data.Order{}, false
-		oid, err := GetIdByOrderID(ID)
-
-		id, err := strconv.ParseInt(oid, 10, 0)
+		logger.Warnf("try to find previous id for paypal sometime change invoiceID")
+		modifiedid := GetPreviousOrderID(ID)
+		logger.Warnf("will use the previous request id is %s", modifiedid)
+		request, err := data.GetRequestByID(modifiedid)
 		if err == nil {
-			logger.Infof("Found order with id %s need to update status:", oid)
-			ok := UpdateOrderByOrderID(ID, &order)
-			/* ok := UpdateOrderStatusByID(oid, status)
-			aa, err := admin.UpdateContent("Order", oid, "transaction_id", []byte(order.TransactionID))
-			aa, err = admin.UpdateContent("Order", oid, "payer_link", []byte(order.PayerLink))
-			aa, err = admin.UpdateContent("Order", oid, "notify_info", []byte(order.NotifyInfo))
-			//net
-			//Paid
-			//paytime */
-			logger.Debug("Update order with muilti Field:", oid, order.TransactionID, order.PayerLink)
-			if ok {
-				logger.Info("Update the existing order status to ", status)
-
-			} else {
-				logger.Error("Update the existing order status error,order_id is ", oid)
-
-			}
-			return int(id), order, ok
+			order.User = request.Email //.BuyerEmail
+			order.PayerIP = request.IPAddr
+			order.PayerLink = request.ContactInfo
+			order.Comments = request.RequestInfo
+			order.RequestTime = fmt.Sprint(time.Unix(request.OrderDate, 0).Format(time.RFC1123))
+			purchaselist, _ := json.MarshalIndent(request.ItemList, "", "  ")
+			order.Description = string(purchaselist)
 		} else {
-			logger.Warn("the previous order is not found , will continue to create new order.", ID)
+			logger.Warnf("the previous id is empty, this is real strange we do find request log for nothing", modifiedid)
 		}
+
 	}
-	order.Status = data.OrderPaid //标识已付
-	mm, _ := json.Marshal(order)
+	/*
+		if cap.Status == PaypalCompleted {
+			logger.Warnf("Paypal Notified message is completed. checking exsiting order with order_id:%s", ID)
+			// validreturn 0, data.Order{}, false
+			oid, err := GetIdByOrderID(ID)
 
-	retcode, ok := admin.CreateContent("Order", mm)
+			id, err := strconv.ParseInt(oid, 10, 0)
+			if err == nil {
+				logger.Infof("Found order with id %s need to update status:%s", oid)
+				ok := UpdateOrderByOrderID(ID, &order)
+				UpdateOrderWithKey(oid, &order)
+				if ok {
+					logger.Info("Update the existing order status to ", status)
 
-	if ok {
-		logger.Debug("Order created!", retcode)
-		return retcode, order, true
+				} else {
+					logger.Error("Update the existing order status error,order_id is ", oid)
+
+				}
+				return int(id), order, ok
+			} else {
+				logger.Warn("the previous order is not found , will continue to create new order.", ID)
+			}
+		} */
+	//order.Status = data.OrderPaid //标识已付
+	oid, err := GetIdByOrderID(ID)
+	if err != nil { //只有一种错误就是没找到
+		mm, _ := json.Marshal(order)
+
+		retcode, ok := admin.CreateContent("Order", mm)
+
+		if ok {
+			logger.Debugf("Order created! id %s,orderid %s", retcode, ID)
+			return retcode, order, true
+		} else {
+			logger.Errorf("Order created error %s,%s!", ID, retcode)
+			return 0, data.Order{}, false
+		}
 	} else {
-		logger.Errorf("Order created error %s,%s!", ID, retcode)
-		return 0, data.Order{}, false
+		ok := UpdateOrderWithKey(oid, &order)
+		if ok {
+			logger.Debug("Order status change !id %s, order id %s ,status:%s", oid, ID, order.Status)
+			orderid, _ := strconv.Atoi(oid)
+			return orderid, order, true
+		} else {
+			logger.Errorf("Order(%s) status update  error %s!", ID)
+			return 0, data.Order{}, false
+		}
 	}
 
 }
@@ -336,6 +360,7 @@ func CreateNewOrderInDB(notifyData *WebHookNotifiedEvent, cap Resource) (int, da
 // create pending order by notification data and history data
 func CreateNewPendingOrderInDB(notifyData *WebHookNotifiedEvent, cap Resource) (int, data.Order, bool) {
 	var status string
+
 	if cap.Status != PaypalPending {
 		fmt.Errorf("not payapl pending order")
 		return 0, data.Order{}, false
@@ -416,6 +441,19 @@ func GetIdByOrderID(id string) (string, error) {
 	return "", fmt.Errorf("not found")
 }
 
+// paypal sometime change the order id in invoice id.
+
+func GetPreviousOrderID(orderid string) string {
+	daa, err := strconv.ParseInt(orderid, 10, 64)
+	if err != nil || daa <= 0 {
+		logger.Debug("orderid convesion is error:", err.Error())
+		return ""
+	}
+	daa = daa - 1
+	return fmt.Sprint(daa)
+
+}
+
 //get the order content return the data.Order structure data
 func GetOrder(id string) (*data.Order, error) {
 	orderbytes, err := db.Content("Order:" + id)
@@ -436,7 +474,7 @@ func UpdateOrderStatusByID(id, state string) bool {
 	oid := admin.FindContentID("Order", id, "order_id")
 	// update the record
 	if data.IsValidStatus(state) && len(oid) > 0 {
-		_, err := admin.UpdateContent("Order", fmt.Sprintf("%s", oid), "state", []byte(state))
+		_, err := admin.UpdateContent("Order", fmt.Sprintf("%s", oid), "status", []byte(state))
 		if err != nil {
 			logger.Error("update status error:", err)
 			return false
@@ -455,7 +493,7 @@ func UpdateOrderStatusByPaymentID(id, state string) bool {
 	oid := admin.FindContentID("Order", id, "payment_id")
 	// update the record
 	if data.IsValidStatus(state) && len(oid) > 0 {
-		_, err := admin.UpdateContent("Order", fmt.Sprintf("%s", oid), "state", []byte(state))
+		_, err := admin.UpdateContent("Order", fmt.Sprintf("%s", oid), "status", []byte(state))
 		if err != nil {
 			logger.Debug("update status error:", err)
 			return false
@@ -473,7 +511,7 @@ func UpdateOrderStatusByOrderID(id, state string) bool {
 	oid := admin.FindContentID("Order", id, "order_id")
 	// update the record
 	if data.IsValidStatus(state) && len(oid) > 0 {
-		_, err := admin.UpdateContent("Order", fmt.Sprintf("%s", oid), "state", []byte(state))
+		_, err := admin.UpdateContent("Order", fmt.Sprintf("%s", oid), "status", []byte(state))
 		if err != nil {
 			logger.Debug("update status error:", err)
 			return false
@@ -490,15 +528,7 @@ func UpdateOrderByOrderID(id string, newOrder *data.Order) bool {
 
 	oid := admin.FindContentID("Order", id, "order_id")
 	toUpdateData := url.Values{}
-	/*
-		ok := UpdateOrderStatusByID(oid, status)
-				aa, err := admin.UpdateContent("Order", oid, "transaction_id", []byte(order.TransactionID))
-				aa, err = admin.UpdateContent("Order", oid, "payer_link", []byte(order.PayerLink))
-				aa, err = admin.UpdateContent("Order", oid, "notify_info", []byte(order.NotifyInfo))
-				//net
-				//Paid
-				//paytime
-	*/
+
 	toUpdateData.Add("status", newOrder.Status)
 	toUpdateData.Add("transaction_id", newOrder.TransactionID)
 	toUpdateData.Add("payer_link", newOrder.PayerLink)
@@ -510,6 +540,28 @@ func UpdateOrderByOrderID(id string, newOrder *data.Order) bool {
 	toUpdateData.Add("description", newOrder.Description)
 	keys := []string{"status", "transaction_id", "payer_link", "payer", "notify_info", "net", "paid", "pay_time", "description"}
 	_, err := admin.UpdateContents("Order", oid, keys, &toUpdateData)
+	if err == nil {
+		return true
+	}
+	return false
+}
+
+// uupdate order by order key.
+func UpdateOrderWithKey(key string, orderupdate *data.Order) bool {
+
+	toUpdateData := url.Values{}
+	toUpdateData.Add("status", orderupdate.Status)
+	toUpdateData.Add("transaction_id", orderupdate.TransactionID)
+	toUpdateData.Add("payer_link", orderupdate.PayerLink)
+	toUpdateData.Add("payer", orderupdate.Payer)
+	toUpdateData.Add("notify_info", orderupdate.NotifyInfo)
+	toUpdateData.Add("net", orderupdate.Net)
+	toUpdateData.Add("paid", orderupdate.Paid)
+	toUpdateData.Add("pay_time", orderupdate.Paytime)
+	toUpdateData.Add("description", orderupdate.Description)
+
+	keys := []string{"status", "transaction_id", "payer_link", "payer", "notify_info", "net", "paid", "pay_time", "description"}
+	_, err := admin.UpdateContents("Order", key, keys, &toUpdateData)
 	if err == nil {
 		return true
 	}

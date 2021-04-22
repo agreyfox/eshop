@@ -90,7 +90,7 @@ func login(res http.ResponseWriter, req *http.Request) {
 		})
 		return
 	}
-	if !usr.Perm.Admin {
+	if !usr.IsAdmin || !usr.Perm.Admin { //  modified at 2021/4/13 } !usr.Perm.Admin {
 		logger.Warnf("Normal user try to access admin panel")
 		renderJSON(res, req, ReturnData{
 			RetCode: -99,
@@ -516,7 +516,8 @@ func newAdmin(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
+	usr.Perm.Admin = true
+	usr.IsAdmin = true
 	_, err = db.SetUser(usr)
 	if err != nil {
 		logger.Error(err)
@@ -530,6 +531,7 @@ func newAdmin(w http.ResponseWriter, r *http.Request) {
 
 }
 
+//update the user password
 func updateAdmin(w http.ResponseWriter, r *http.Request) {
 	ipaddr := GetIP(r)
 	logger.Debugf("Admin  try to update admin user :%s", ipaddr)
@@ -578,24 +580,33 @@ func updateAdmin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check if password matches
-	password, ok := reqJSON["password"].(string)
-	if !ok {
-		logger.Error(err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
+	passwordptr, newptr := reqJSON["password"], reqJSON["new_password"]
+	password := ""
+	if passwordptr != nil {
+		password = fmt.Sprint(passwordptr)
 	}
 
-	if !user.IsUser(usr, password) {
+	if len(password) == 0 {
 		logger.Errorf("Unexpected user/password combination for %s", usr.Email)
+		logger.Errorf("The admin will change user password without old password", usr.Email)
+		/* renderJSON(w, r, ReturnData{
+			RetCode: -99,
+			Msg:     "Old password is wrong",
+		})
+		return */
+	} else if !user.IsUser(usr, password) && usr.IsAdmin {
+		logger.Errorf("The admin will change user password with old password", usr.Email)
 		renderJSON(w, r, ReturnData{
 			RetCode: -99,
 			Msg:     "Old password is wrong",
 		})
 		return
 	}
-
-	newPassword, ok := reqJSON["new_password"].(string)
-	if !ok {
+	newPassword := ""
+	if newptr != nil {
+		newPassword = fmt.Sprint(newptr) //reqJSON["new_password"].(string)
+	}
+	if len(newPassword) == 0 {
 		logger.Errorf("New password setting error for user %s", usr.Email)
 		renderJSON(w, r, ReturnData{
 			RetCode: -99,
@@ -604,22 +615,16 @@ func updateAdmin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var updatedUser *user.User
-	if newPassword != "" {
-		updatedUser, err = user.New(em, newPassword)
-		if err != nil {
-			logger.Error(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	} else {
-		updatedUser, err = user.New(em, password)
-		if err != nil {
-			logger.Error(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-	}
 
+	updatedUser, err = user.New(em, newPassword)
+	if err != nil {
+		logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	updatedUser.Perm.Admin = usr.Perm.Admin
+	updatedUser.IsAdmin = usr.IsAdmin
+	
 	// set the ID to the same ID as current user
 	updatedUser.ID = usr.ID
 
@@ -630,51 +635,55 @@ func updateAdmin(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+	renderJSON(w, r, ReturnData{
+		RetCode: 0,
+		Msg:     "done",
+	})
+	/*
+		ipSearchHandler := ip.NewClient("", true)
 
-	ipSearchHandler := ip.NewClient("", true)
+		countryInfor, _ := ipSearchHandler.QueryIPByDB(ipaddr)
+		// create new token
+		week := time.Now().Add(time.Hour * 24 * 7)
+		claims := map[string]interface{}{
+			"exp":     week,
+			"user":    updatedUser.Email,
+			"country": countryInfor,
+		}
 
-	countryInfor, _ := ipSearchHandler.QueryIPByDB(ipaddr)
-	// create new token
-	week := time.Now().Add(time.Hour * 24 * 7)
-	claims := map[string]interface{}{
-		"exp":     week,
-		"user":    updatedUser.Email,
-		"country": countryInfor,
-	}
+		token, err := jwt.New(claims)
+		if err != nil {
+			logger.Error(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
-	token, err := jwt.New(claims)
-	if err != nil {
-		logger.Error(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+		// add token to cookie +1 week expiration
+		cookie := &http.Cookie{
+			Name:    user.Lqcmstoken,
+			Value:   token,
+			Expires: week,
+			Path:    "/",
+		}
+		http.SetCookie(w, cookie)
 
-	// add token to cookie +1 week expiration
-	cookie := &http.Cookie{
-		Name:    user.Lqcmstoken,
-		Value:   token,
-		Expires: week,
-		Path:    "/",
-	}
-	http.SetCookie(w, cookie)
+		// add new token cookie to the request
+		//w.AddCookie(cookie)
+		contentStructData := getContentsStruct() // 获得系统open的内容列表
+		currency := getContentList("Currency")
+		country := getContentList("Country")
+		logger.Debugf("Admin User %s logged in !", usr.Email)
+		retdata := map[string]interface{}{
+			"retCode":        0,
+			"msg":            "Done",
+			"data":           token,
+			"DefaultCountry": countryInfor,
+			"Country":        country,
+			"Currency":       currency,
+			"contents":       string(contentStructData[:]),
+		}
 
-	// add new token cookie to the request
-	//w.AddCookie(cookie)
-	contentStructData := getContentsStruct() // 获得系统open的内容列表
-	currency := getContentList("Currency")
-	country := getContentList("Country")
-	logger.Debugf("Admin User %s logged in !", usr.Email)
-	retdata := map[string]interface{}{
-		"retCode":        0,
-		"msg":            "Done",
-		"data":           token,
-		"DefaultCountry": countryInfor,
-		"Country":        country,
-		"Currency":       currency,
-		"contents":       string(contentStructData[:]),
-	}
-
-	renderJSON(w, r, retdata)
+		renderJSON(w, r, retdata) */
 }
 
 func deleteAdmin(w http.ResponseWriter, r *http.Request) {

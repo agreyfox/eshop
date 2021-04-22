@@ -5,6 +5,9 @@
     },
     {
       "path": "../../repos/shoppingMall"
+    },
+    {
+      "path": "../../repos/shoppingMall/UserManagerSystem"
     }
   ],
   "settings": {

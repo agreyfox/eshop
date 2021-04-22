@@ -638,7 +638,7 @@ func getMedia(w http.ResponseWriter, r *http.Request) {
 LABEL_IMAGE_HANDLE_FINISHED:
 
 	w.Write(dat)
-	logger.Debugf("Media(id %s) sent!", id)
+	//logger.Debugf("Media(id %s) sent!", id)
 	w.WriteHeader(http.StatusOK)
-	//http.Redirect(w, r, "/api/uploads"+fmt.Sprint(item["path"]), http.StatusFound)
+
 }

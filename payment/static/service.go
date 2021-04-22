@@ -2,6 +2,7 @@ package static
 
 import (
 	"encoding/json"
+	"html"
 	"time"
 
 	"net/http"
@@ -25,6 +26,14 @@ func initStatic() {
 	if err == nil {
 		forwardpage = htpage
 	}
+	htpage, err = db.GetParameterFromConfig("PaymentSetting", "name", "static_url", "description")
+	if err == nil {
+
+		paymentpage = html.UnescapeString(htpage)
+	} else {
+		logger.Warn("paymetpage is not setting,Please check!")
+	}
+
 	payClient = &Client{}
 
 }
@@ -80,9 +89,9 @@ func userSubmit(w http.ResponseWriter, r *http.Request) {
 
 func Succeed(w http.ResponseWriter, r *http.Request) {
 
-	logger.Debugf("Call to static payment page ", okpage+payClient.GetPaymentPage())
+	logger.Debugf("Call to static payment page /payment/static/paypage")
 
-	http.Redirect(w, r, StaticURL+payClient.GetPaymentPage(), http.StatusFound)
+	http.Redirect(w, r, StaticURL+"/payment/static/paypage", http.StatusFound)
 }
 
 func Notify(w http.ResponseWriter, r *http.Request) {

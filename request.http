@@ -1151,17 +1151,27 @@ Content-Type: applications/json
 POST http://127.0.0.1:8080/api/v1/login 
 Content-Type: applications/json
 
-{"email":"lq@163.com","password":"1"}
+{"email":"lq@163.com","password":"qweasdzxc"}
 
 ###
 
-
-POST http://127.0.0.1:8080/api/v1/user/update
+POST http://127.0.0.1:8080/api/v1/login 
 Content-Type: applications/json
 
-Set-Cookie: lqcms_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImNvdW50cnkiOiIiLCJleHAiOiIyMDIwLTEyLTAxVDEzOjI5OjM5LjQ2NDUyODE2MSswODowMCIsImlhdCI6bnVsbCwiaXNzIjpudWxsLCJqdGkiOm51bGwsIm5iZiI6bnVsbCwic3ViIjpudWxsLCJ1c2VyIjoibHFAMTYzLmNvbSJ9.UX7uGXv3hgkpAGNJ8gC5yl1XhkAxrLLftP6GjlDpCXI
+{"email":"18901882538@189.cn","password":"abc"}
 
-{"email":"lq@163.com","new_password":"1","social_link":"ab@cd.om","social_type":"twitter"}
+###
+
+POST http://127.0.0.1:8080/admin/v1/user/update
+Content-Type: applications/json
+Set-Cookie: lqcms_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImNvdW50cnkiOiIiLCJleHAiOiIyMDIxLTAzLTE5VDEwOjE0OjM3Ljk5ODI0NzMxKzA4OjAwIiwiaWF0IjpudWxsLCJpc3MiOm51bGwsImp0aSI6bnVsbCwibmJmIjpudWxsLCJzdWIiOm51bGwsInVzZXIiOiJsQGwuY29tIn0.9yokEmeZScByDo77m_orijLAZ7FYLl0SM2dPrdZbN08
+
+{"email":"18901882538@189.cn",
+ "new_password":"1",
+ "password":"",
+ "social_link":"ab@cd.om",
+ "social_type":"twitter"
+ }
 
 ###
 
@@ -1185,8 +1195,7 @@ Content-Type: applications/json
 
 POST http://127.0.0.1:8080/admin/v1/config
 Content-Type: applications/json
-lqcms_token:eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImNvdW50cnkiOiIiLCJleHAiOiIyMDIxLTAyLTA5VDIzOjM1OjI5LjUwMjg4NzU5MyswODowMCIsImlhdCI6bnVsbCwiaXNzIjpudWxsLCJqdGkiOm51bGwsIm5iZiI6bnVsbCwic3ViIjpudWxsLCJ1c2VyIjoibHFAMTYzLmNvbSJ9.wpm0rescZZ26GxLHEkjD4JBWgzYpsEzRyg_S0oIRPbA
-Set-Cookie: lqcms_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImNvdW50cnkiOiIiLCJleHAiOiIyMDIxLTAyLTA5VDIzOjM1OjI5LjUwMjg4NzU5MyswODowMCIsImlhdCI6bnVsbCwiaXNzIjpudWxsLCJqdGkiOm51bGwsIm5iZiI6bnVsbCwic3ViIjpudWxsLCJ1c2VyIjoibHFAMTYzLmNvbSJ9.wpm0rescZZ26GxLHEkjD4JBWgzYpsEzRyg_S0oIRPbA
+Set-Cookie: lqcms_token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdWQiOm51bGwsImNvdW50cnkiOiIiLCJleHAiOiIyMDIxLTAzLTE5VDEwOjE0OjM3Ljk5ODI0NzMxKzA4OjAwIiwiaWF0IjpudWxsLCJpc3MiOm51bGwsImp0aSI6bnVsbCwibmJmIjpudWxsLCJzdWIiOm51bGwsInVzZXIiOiJsQGwuY29tIn0.9yokEmeZScByDo77m_orijLAZ7FYLl0SM2dPrdZbN08
 
 {"admin_email":"1@su.com"}
 
@@ -1232,7 +1241,7 @@ Content-Type: applications/json
 POST http://127.0.0.1:8080/api/v1/login 
 Content-Type: applications/json
 
-{"email":"e_raeb@tianya.com","password":"abc"}
+{"email":"18901882538@189.cn","password":"1D6A7fvC"}
 ###
 
 
@@ -1253,3 +1262,13 @@ Content-Type: applications/json
 
 Get http://127.0.0.1:8080/admin/v1/contents/ss?type=Order&start=1614528000000&end=1614700800000
 Content-Type: applications/json
+###
+
+
+
+POST http://127.0.0.1:8080/api/v1/forgot
+Content-Type: application/json
+
+{
+  "email":"18901882538@189.cn"
+}

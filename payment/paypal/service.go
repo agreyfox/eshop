@@ -140,12 +140,10 @@ func userSubmit(w http.ResponseWriter, r *http.Request) {
 	}
 	payload.OrderID = data.GetShortOrderID()
 	payload.OrderDate = time.Now().Unix()
-	respond, err := createOrder(payload) //create payssion call
+	respond, err := createOrder(payload) //create  call
 
 	rettxt, _ := json.MarshalIndent(respond, "", "  ")
 	payload.Respond = string(rettxt)
-
-	go prometheus.OrderCounter.WithLabelValues("paypal").Add(1) //metric order creation
 
 	errcreateorder := data.SaveOrderRequest(payload) //finished save request,
 	logger.Infof("Create paypal request in db with err:", errcreateorder)
@@ -157,6 +155,8 @@ func userSubmit(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+
+	go prometheus.OrderCounter.WithLabelValues("paypal").Add(1) //metric order creation
 
 	if respond.Status == PaypalCreated {
 		logger.Info("Pay Payment Step 1 done")
@@ -448,11 +448,11 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case notification.EventType == EventPaymentCapturePending:
 		logger.Infof("Step 4 Capture after customer approve,The resource is :%s", fmt.Sprint(notification.Resource))
-		//verifyResp, _ := payClient.VerifyWebhookSignatureWithData(r, webHookID, bodybytes)
+		verifyResp, _ := payClient.VerifyWebhookSignatureWithData(r, webHookID, bodybytes)
 		//logger.Debug(verifyResp)
 		//	ProgramMode = "DEBUG"
-		//if verifyResp.VerificationStatus == PaypalVerified || ProgramMode == "DEBUG" {
-		if ProgramMode == "DEBUG" {
+		if verifyResp.VerificationStatus == PaypalVerified { //|| ProgramMode == "DEBUG" {
+			//if ProgramMode == "DEBUG" {
 			go prometheus.PaypalOrderCreateCounter.Inc()
 
 			resource := Resource{}
@@ -487,10 +487,10 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 		verifyResp, _ := payClient.VerifyWebhookSignatureWithData(r, webHookID, bodybytes)
 		logger.Debug("VERIFIE Notification:", verifyResp)
 		//if ProgramMode == "DEBUG" {
-		if verifyResp.VerificationStatus == PaypalVerified || ProgramMode == "DEBUG" {
+		if verifyResp.VerificationStatus == PaypalVerified { // || ProgramMode == "DEBUG" {
+			logger.Debugf("OrderCheckOrder Approved:")
 			go prometheus.PaypalOrderCreateCounter.Inc()
-			//if ProgramMode == "DEBUG" {
-			//resource := CaptureResource{}
+
 			resource := Resource{}
 
 			rr, _ := json.Marshal(notification.Resource)
@@ -508,7 +508,7 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 			}
 			oid, oo, ok := CreateNewOrderInDB(&notification, resource)
 			if ok {
-				if len(oo.Payer) > 0 {
+				if len(oo.Payer) > 0 && oo.Status == data.OrderPaid {
 					//method, orderid, content, ordertime, comments, price, currency string, mailaddr, ip string
 					go data.SendOrderConfirmEmail("paypal", oo.OrderID, data.GetPurchaseContent(oo.OrderID), oo.UpdateTime, oo.Comments, oo.Total, oo.Currency, oo.User, oo.PayerIP)
 					/* orderid := oo.OrderID
@@ -563,7 +563,7 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 					} */
 
 				}
-				logger.Infof("New paypal order %d Created!", oid)
+				logger.Infof("New paypal order %d Created with status %s!", oid, oo.Status)
 
 			} else {
 				logger.Info("New order Created Error!")
@@ -575,8 +575,29 @@ func Notify(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 
 	case notification.EventType == EventPaymentCaptureCompleted:
-		logger.Warn("The new payment notification capture approved", notification.ID)
-		w.WriteHeader(http.StatusOK)
+		logger.Warn("The new payment capture completed :", notification.ID)
+
+		verifyResp, _ := payClient.VerifyWebhookSignatureWithData(r, webHookID, bodybytes)
+		logger.Debug("VERIFIE Notification:", verifyResp)
+		if verifyResp.VerificationStatus == PaypalVerified {
+
+			resource := Resource{}
+
+			rr, _ := json.Marshal(notification.Resource)
+			err := json.Unmarshal(rr, &resource)
+			if err != nil {
+				logger.Debug("Notification checkout resource unmarshal failed", err)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			logger.Debugf("capture %s is completed,update the order state", resource.InvoiceID)
+			if resource.Status == PaypalCompleted {
+				UpdateOrderStatusByID(resource.InvoiceID, data.OrderPaid) //
+				//logger.Debugf("Update order %s to %s ", resource.InvoiceID)
+			}
+
+			w.WriteHeader(http.StatusOK)
+		}
 	case notification.EventType == EventPaymentSALECompleted:
 		logger.Warn("The new payment notification payment Sale compeleted ", notification.ID)
 		w.WriteHeader(http.StatusOK)

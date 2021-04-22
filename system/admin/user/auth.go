@@ -43,7 +43,7 @@ var (
 	logger *zap.SugaredLogger = logs.Log.Sugar()
 )
 
-// New creates a user
+// New creates a user template with normal user  function
 func New(email, password string) (*User, error) {
 	salt, err := randSalt()
 	if err != nil {
@@ -56,10 +56,11 @@ func New(email, password string) (*User, error) {
 	}
 
 	user := &User{
-		Email: email,
-		Hash:  string(hash),
-		Salt:  base64.StdEncoding.EncodeToString(salt),
-		Perm:  AdminPermmission,
+		Email:   email,
+		Hash:    string(hash),
+		Salt:    base64.StdEncoding.EncodeToString(salt),
+		Perm:    CustomerPermission,
+		IsAdmin: false, //add 2021/4/13
 	}
 	return user, nil
 }
@@ -101,12 +102,13 @@ func NewCustomerWithSocial(email, password, social, value string) (*User, error)
 	}
 
 	user := &User{
-		Email:  email,
-		Hash:   string(hash),
-		Salt:   base64.StdEncoding.EncodeToString(salt),
-		Perm:   CustomerPermission,
-		Meta:   social,
-		Social: value, // 保存用户的social内容
+		Email:   email,
+		Hash:    string(hash),
+		Salt:    base64.StdEncoding.EncodeToString(salt),
+		Perm:    CustomerPermission,
+		IsAdmin: false,
+		Meta:    social,
+		Social:  value, // 保存用户的social内容
 	}
 
 	return user, nil

@@ -100,9 +100,7 @@ curl -XDELETE http://127.0.0.1:8089/admin/v1/file?id=4 -H "Content-Type: applica
 ```
 将文件传入到媒体库
 
-传多个文件
-```
-curl -F 'file1=@go.mod' -F 'file2=@go.sum'  http://127.0.0.1:8089/admin/v1/file
+传多个文件"ah@189.cn0.0.1:8089/admin/v1/file
 ```
 返回多个文件地址
 ```

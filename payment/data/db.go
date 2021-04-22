@@ -322,11 +322,11 @@ func UpdateOrderByID(id, key, value string) bool {
 
 //check wether the give state is valid
 func IsValidStatus(state string) bool {
-	if state == OrderCreated || state == OrderPaid || state == OrderInValidate || state == OrderInDelivery || state == OrderCompleted || state == OrderCancel || state == OrderRefunded || state == OrderDisputed {
+	if state == OrderUnPaid || state == OrderCreated || state == OrderPaid || state == OrderInValidate || state == OrderInDelivery || state == OrderCompleted || state == OrderCancel || state == OrderRefunded || state == OrderDisputed {
 
 		return true
 	}
-	logger.Error("Status is not valide !")
+	logger.Error("Status is not valid!", state)
 	return false
 }
 

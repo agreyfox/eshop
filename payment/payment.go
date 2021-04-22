@@ -20,6 +20,7 @@ import (
 	"github.com/agreyfox/eshop/payment/payssion"
 	"github.com/agreyfox/eshop/payment/skrill"
 	"github.com/agreyfox/eshop/payment/static"
+	"github.com/agreyfox/eshop/system/db"
 	"github.com/agreyfox/eshop/system/logs"
 	"github.com/go-zoo/bone"
 	"go.uber.org/zap"
@@ -136,7 +137,11 @@ func InitialPayment(db *bolt.DB, mux *bone.Mux) {
 
 // 枢纽，跑不同的内容
 func Run(serviceName string) {
-
+	cc, err := db.GetParameterFromConfig("PaymentSetting", "name", "payment_resultpage", "valueString")
+	if err == nil {
+		data.OnlineURL = cc
+	}
+	logger.Infof("Payment service result page url is %s", data.OnlineURL)
 	//	initpaypal() // repalce to not use default initial
 	switch serviceName {
 	case "paypal":
@@ -148,9 +153,10 @@ func Run(serviceName string) {
 	case "static":
 		static.Start(mainMux)
 	default:
-		logger.Fatal(" Wrong payment service name!")
+		logger.Fatal("Wrong payment service name!")
 	}
 	mainMux.Get("/payment/orderid/:id", http.HandlerFunc(request))
+	logger.Info("Payment service started!")
 }
 
 //for other module to access db handler.

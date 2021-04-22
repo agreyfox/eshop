@@ -13,7 +13,7 @@ import (
 )
 
 func TestUpdateOrderByID(t *testing.T) {
-	db.Init()
+	db.Init("system.db")
 
 	id := "7W5147081L658180V"
 	state := "待检验"
@@ -21,8 +21,14 @@ func TestUpdateOrderByID(t *testing.T) {
 
 }
 
+func TestGetnerateOrderID(t *testing.T) {
+	db.Init("system.db")
+
+	fmt.Println(data.GetShortOrderID())
+
+}
 func TestSaveNotify(t *testing.T) {
-	db.Init()
+	db.Init("system.db")
 	mainMux := bone.New()
 	InitialPayment(db.Store(), mainMux)
 	skrill.Start(mainMux)
@@ -32,7 +38,7 @@ func TestSaveNotify(t *testing.T) {
 }
 
 func TestGetLogContent(t *testing.T) {
-	db.Init()
+	db.Init("system.db")
 	mainMux := bone.New()
 	InitialPayment(db.Store(), mainMux)
 	data, err := data.GetLogContent("55065193b261eb7da0c16c92d3dbbd3a", paypal.PaypalCreated)
@@ -40,7 +46,7 @@ func TestGetLogContent(t *testing.T) {
 }
 
 func TestGetTransationDetail(t *testing.T) {
-	db.Init()
+	db.Init("system.db")
 	mainMux := bone.New()
 	InitialPayment(db.Store(), mainMux)
 	//data, err := data.GetLogContent("55065193b261eb7da0c16c92d3dbbd3a", paypal.PaypalCreated)
@@ -49,7 +55,7 @@ func TestGetTransationDetail(t *testing.T) {
 }
 
 func TestUpdateOrderStatusByID(t *testing.T) {
-	db.Init()
+	db.Init("system.db")
 	mainMux := bone.New()
 	InitialPayment(db.Store(), mainMux)
 	//data, err := data.GetLogContent("55065193b261eb7da0c16c92d3dbbd3a", paypal.PaypalCreated)
@@ -57,7 +63,7 @@ func TestUpdateOrderStatusByID(t *testing.T) {
 	paypal.UpdateOrderStatusByID("31", "mmm")
 }
 func TestSaveOrderRequest(t *testing.T) {
-	db.Init()
+	db.Init("system.db")
 	mainMux := bone.New()
 	InitialPayment(db.Store(), mainMux)
 	//data, err := data.GetLogContent("55065193b261eb7da0c16c92d3dbbd3a", paypal.PaypalCreated)

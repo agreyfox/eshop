@@ -16,13 +16,24 @@ import (
 
 // generator short orderid  based on customer request
 func GetShortOrderID() string {
+	wei := 0
 	now := time.Now()
 	year, month, _ := time.Now().Date()
 
 	mil := int64(time.Nanosecond) * now.UnixNano() / int64(time.Millisecond)
 	str := fmt.Sprint(mil)
 	ret := fmt.Sprint(year) + fmt.Sprint(int(month)) + str[len(str)-6:len(str)-1]
-	return ret
+	retret := fmt.Sprintf("%s%d", ret, wei)
+	for _, err := GetRequestByID(retret); err == nil; {
+		wei++
+		retret = fmt.Sprintf("%s%d", ret, wei)
+		if wei > 100 {
+			retret = ret + "X"
+			logger.Warnf("订单生成警告:", retret)
+			break
+		}
+	}
+	return retret
 
 }
 

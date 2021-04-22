@@ -13,15 +13,16 @@ const (
 
 	DescriptionMarker string = "||"
 
-	OrderCreated    = "已创建"
-	OrderPaid       = "已付款"
-	OrderInValidate = "待检验"
-	OrderInDelivery = "待交付"
-	OrderCompleted  = "已完成"
-	OrderCancel     = "用户取消"
-	OrderRefunded   = "已退款"
-	OrderDisputed   = "用户欺诈"
-	OrderPending    = "等待付款"
+	OrderCreated    = "Created-已创建"
+	OrderUnPaid     = "Unpaid-未付"
+	OrderPaid       = "Paid-已付款"
+	OrderInValidate = "needverfiy-需验证"
+	OrderInDelivery = "Processing-等待"
+	OrderCompleted  = "Completed-完成"
+	OrderCancel     = "Chargeback-抽单"
+	OrderRefunded   = "Refund-已退款"
+	OrderDisputed   = "Chargeback-抽单"
+	OrderPending    = "Pending-等待付款"
 )
 
 var (

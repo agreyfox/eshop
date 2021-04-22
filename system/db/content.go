@@ -972,7 +972,7 @@ func GetParameterFromConfig(dbname string, key, keydata, valuefield string) (str
 	}
 	//fmt.Println(dbname, key, keydata, valuefield)
 	_, data := QueryByFieldValue(dbname, key, keydata, qo)
-	//fmt.Println(i, len(data))
+
 	if len(data) > 0 {
 		mm := map[string]interface{}{}
 		err := json.Unmarshal(data[0], &mm)

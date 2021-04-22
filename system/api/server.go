@@ -44,7 +44,7 @@ func Run(mainMux *bone.Mux) {
 	apiv1Mux.HandleFunc("/user/update", CORS(CustomerAuth(UpdateUser)))
 	apiv1Mux.Get("/renew", CORS(Renew))
 	apiv1Mux.Post("/logout", CORS(CustomerAuth(Logout)))
-	apiv1Mux.Post("/forgot", CORS(Forgot))
+	apiv1Mux.Post("/forgot", CORS(NewForgot)) //modifoy, origin is Forgot
 	apiv1Mux.Post("/login", Record(CORS(Login)))
 	//apiv1Mux.Post("/user/login", Record(CORS(Login)))
 	apiv1Mux.Post("/recovery", CORS(Recovery))

@@ -592,6 +592,127 @@ func Logout(res http.ResponseWriter, req *http.Request) {
 	//	http.Redirect(res, req, req.URL.Scheme+req.URL.Host+"/admin/login", http.StatusFound)
 }
 
+// modified at 2021/4/7 to send password directly
+/*
+    1 generate password 8 letter
+	2 update password with it
+	3 send password to customer with forgot mail temlate
+*/
+func NewForgot(res http.ResponseWriter, req *http.Request) {
+	ip := GetIP(req)
+	logger.Debugf("User try to recover password, from:", ip)
+	go prometheus.ApiCounter.WithLabelValues(ip, "忘记密码").Add(1)
+	reqJSON := GetJsonFromBody(req)
+
+	// check email for user, if no user return Error
+	useremail := strings.ToLower(fmt.Sprintf("%s", reqJSON["email"]))
+	if useremail == "" {
+		res.WriteHeader(http.StatusBadRequest)
+		logger.Error("Failed account recovery. No email address submitted.")
+		return
+	}
+	usr := &user.User{}
+	u, err := db.User(useremail)
+	if err == db.ErrNoUserExists {
+		res.WriteHeader(http.StatusBadRequest)
+		logger.Error("No user exists.", err)
+		return
+	} else if err != db.ErrNoUserExists && err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		logger.Error("Error:", err)
+		return
+	} else if u == nil {
+		logger.Error("No user found with email:", useremail)
+
+		RenderJSON(res, req, RetUser{RetCode: -1, Msg: "Error,  please go back and try again.", Data: ""})
+		return
+	}
+
+	newPassword := GeneratePassword()
+
+	err = json.Unmarshal(u, usr)
+	if err != nil {
+		logger.Error("Error decoding user from database:", err)
+
+		RenderJSON(res, req, RetUser{RetCode: -1, Msg: "Error, please go back and try again.", Data: ""})
+		return
+	}
+
+	update, err := user.NewCustomer(useremail, newPassword)
+	if err != nil {
+		logger.Error(err)
+
+		RenderJSON(res, req, RetUser{RetCode: -1, Msg: err.Error(), Data: ""})
+		return
+	}
+
+	update.ID = usr.ID
+
+	err = db.UpdateUser(usr, update)
+	if err != nil {
+		logger.Error("Error setting  user new password:", err)
+		RenderJSON(res, req, RetUser{RetCode: -1, Msg: "Error, please go back and try again.", Data: ""})
+		return
+	}
+
+	emailConfbuf, err := db.Content("Email:3") // 3 means forgot email
+	if err != nil {
+		logger.Warnf("Skip forget email send job,Error:%s", err)
+		RenderJSON(res, req, RetUser{RetCode: -2, Msg: "error when send mail", Data: ""})
+		return
+	} else {
+		emailstruct := userEmailInfo{}
+		err := json.Unmarshal(emailConfbuf, &emailstruct)
+		logger.Debugf("email template is %v", emailstruct)
+		//	emailstruct.Subject
+		if err != nil {
+			logger.Warnf("Skip forgot email send job,Error:%s", err)
+
+		} else {
+
+			//go func() {
+			logger.Debugf("send forget email to User %s!", useremail)
+			bodyTemplate := emailstruct.EmailBody
+			if len(bodyTemplate) == 0 {
+				logger.Warnf("Skip forget email With no template setting")
+				//return
+			}
+			logger.Debugf("email body template len is %d", len(bodyTemplate))
+			body := fmt.Sprintf(bodyTemplate, useremail, newPassword)
+			tomail := []string{string(useremail)}
+			ccmail := strings.Split(emailstruct.CC, ",")
+
+			tomail = append(tomail, ccmail...)
+
+			subj := emailstruct.Subject
+			logger.Infof("also try to send admin notification email to %v\n", tomail)
+			emailtarget := email.Email{
+				//From: admin.MailUser,
+				To:       tomail,
+				Subject:  subj,
+				TextBody: body,
+				HtmlBody: body,
+			}
+			res, err := email.Send(&emailtarget)
+			if err != nil {
+				logger.Warnf("Send Alert email with n Error Occurred: %s\n", err)
+			} else if res.Data.Succeeded == 1 {
+				logger.Infof("Email allter sent Successfully: %v\n", res)
+			} else {
+				logger.Warnf("Email allter Sent with error: %v\n", res)
+			}
+
+			//}()
+		}
+
+	}
+
+	// redirect to /admin/recover/key and send email with key and URL
+	//http.Redirect(res, req, req.URL.Scheme+req.URL.Host+"/admin/recover/key", http.StatusFound)
+	RenderJSON(res, req, RetUser{RetCode: 0, Msg: "Recovery Email sent, Please check!"})
+
+}
+
 // allow user to request recover key
 func Forgot(res http.ResponseWriter, req *http.Request) {
 	ip := GetIP(req)
@@ -852,7 +973,7 @@ func LoginHandler(res http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			log.Println(err)
 			RenderJSON(res, req, RetUser{
-				RetCode: -1,
+				RetCode: -10,
 				Msg:     err.Error(),
 				Data:    "",
 			})

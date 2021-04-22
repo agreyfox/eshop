@@ -142,8 +142,8 @@ var ipCmd = &cobra.Command{
 var createUserCmd = &cobra.Command{
 	Use:     "user",
 	Aliases: []string{"u"},
-	Short:   "Create system admin from cli.",
-	Long:    `Assign new addmin to system .`,
+	Short:   "Create system admin usr from cli.",
+	Long:    `Assign new addmin to system.`,
 	Example: `$ eshop user  add jihua.gao@gmail.com axxdsdawe`,
 	Run: func(cmd *cobra.Command, args []string) {
 		db.Init(systemdb)
@@ -163,6 +163,8 @@ var createUserCmd = &cobra.Command{
 				fmt.Println("User operation error")
 				return
 			}
+			ur.Perm.Admin = true
+			ur.IsAdmin = true // to keep it is admin user
 			_, err = db.SetUser(ur)
 			if err == nil {
 				fmt.Println("user created !")
